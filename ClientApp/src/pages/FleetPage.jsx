@@ -6,9 +6,7 @@ export default function FleetPage({ controlPlane, health, scans, selectedScanId,
   const devices = controlPlane?.devices ?? [];
   const packs = controlPlane?.signaturePacks ?? [];
 
-  const filteredDevices = selectedScanId
-    ? devices.filter((device) => device.lastScanId === selectedScanId || !device.lastScanId)
-    : devices;
+  const filteredDevices = devices;
 
   return (
     <div className="page-stack">

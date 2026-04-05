@@ -2,9 +2,7 @@ import { formatDate, formatPercent, severityTone } from "../ui/presentation";
 import ScanSelector from "../components/ScanSelector";
 
 export default function IncidentsPage({ incidents, handleResolveIncident, scans, selectedScanId, setSelectedScanId }) {
-  const filteredIncidents = selectedScanId
-    ? incidents.filter((incident) => incident.scanId === selectedScanId)
-    : incidents;
+  const filteredIncidents = incidents;
 
   return (
     <section className="panel page-panel">

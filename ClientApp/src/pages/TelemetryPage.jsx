@@ -26,9 +26,7 @@ export default function TelemetryPage({
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(needle))
       );
-  const finalFileEvents = selectedScanId
-    ? filteredFileEvents.filter((fileEvent) => fileEvent.scanJobId === selectedScanId)
-    : filteredFileEvents;
+  const finalFileEvents = filteredFileEvents;
 
   const filteredScans = !needle
     ? scans

@@ -22,3 +22,4 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\artifacts\ve
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\artifacts\verify-incidents\Antivirus.Domain.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\artifacts\verify-incidents\Antivirus.Domain.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\artifacts\verify-incidents\Antivirus.Application.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\obj\Debug\net10.0\Antivirus.Infrastructure.sourcelink.json

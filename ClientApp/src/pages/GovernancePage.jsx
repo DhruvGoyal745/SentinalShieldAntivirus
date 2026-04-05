@@ -2,17 +2,11 @@ import { formatDate, formatPercent, reviewStatusTone, sandboxVerdictTone } from 
 import ScanSelector from "../components/ScanSelector";
 
 export default function GovernancePage({ paritySnapshots, sandboxSubmissions, reviews, scans, selectedScanId, setSelectedScanId }) {
-  const filteredParitySnapshots = selectedScanId
-    ? paritySnapshots.filter((snapshot) => snapshot.scanId === selectedScanId)
-    : paritySnapshots;
+  const filteredParitySnapshots = paritySnapshots;
 
-  const filteredSandboxSubmissions = selectedScanId
-    ? sandboxSubmissions.filter((submission) => submission.scanJobId === selectedScanId)
-    : sandboxSubmissions;
+  const filteredSandboxSubmissions = sandboxSubmissions;
 
-  const filteredReviews = selectedScanId
-    ? reviews.filter((review) => review.scanId === selectedScanId)
-    : reviews;
+  const filteredReviews = reviews;
 
   return (
     <section className="panel page-panel">

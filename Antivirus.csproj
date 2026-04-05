@@ -1,9 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SentinelShieldAntivirus</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,5 +27,37 @@
     <Content Remove="Data\Quarantine\**\*" />
     <None Include="Data\Quarantine\**\*" Exclude="Data\Quarantine\**\*.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Database\**\*.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Rules\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="NativeEngine\artifacts\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="artifacts\**" />
+    <None Remove="artifacts\**" />
+    <Content Remove="Application\bin\**;Application\obj\**;Application\artifacts\**" />
+    <Content Remove="Domain\bin\**;Domain\obj\**;Domain\artifacts\**" />
+    <Content Remove="Infrastructure\bin\**;Infrastructure\obj\**;Infrastructure\artifacts\**" />
+    <Content Remove="ClientApp\**" />
+    <None Remove="Application\bin\**;Application\obj\**;Application\artifacts\**" />
+    <None Remove="Domain\bin\**;Domain\obj\**;Domain\artifacts\**" />
+    <None Remove="Infrastructure\bin\**;Infrastructure\obj\**;Infrastructure\artifacts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\Contracts\" />
+    <Folder Include="Infrastructure\Security\" />
+  </ItemGroup>
+
+  <!-- Build the React frontend before publish -->
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html')">
+    <Exec Command="npm install" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
+
+  <Target Name="PublishClientApp" BeforeTargets="Publish">
+    <Exec Command="npm install" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
 
 </Project>

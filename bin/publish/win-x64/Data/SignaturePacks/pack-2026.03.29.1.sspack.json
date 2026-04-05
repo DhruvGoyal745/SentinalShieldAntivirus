@@ -1,0 +1,70 @@
+{
+  "Version": "pack-2026.03.29.1",
+  "ParserCompatibilityVersion": "parser-1.0.0",
+  "SignatureCompilerVersion": "sigc-1.0.0",
+  "Rules": [
+    {
+      "RuleId": "sig-6",
+      "RuleName": "Archive script payload",
+      "RuleKind": "ArchiveMemberName",
+      "Pattern": "member=.js",
+      "Severity": "Medium"
+    },
+    {
+      "RuleId": "sig-1",
+      "RuleName": "Encoded PowerShell payload",
+      "RuleKind": "ContentLiteral",
+      "Pattern": "EncodedCommand",
+      "Severity": "High"
+    },
+    {
+      "RuleId": "sig-8",
+      "RuleName": "External document relationship",
+      "RuleKind": "DocumentMetadata",
+      "Pattern": "hasExternalRelationships=true",
+      "Severity": "High"
+    },
+    {
+      "RuleId": "sig-2",
+      "RuleName": "Mimikatz marker",
+      "RuleKind": "ContentLiteral",
+      "Pattern": "mimikatz",
+      "Severity": "Critical"
+    },
+    {
+      "RuleId": "sig-7",
+      "RuleName": "Office macro project",
+      "RuleKind": "DocumentMetadata",
+      "Pattern": "hasMacros=true",
+      "Severity": "High"
+    },
+    {
+      "RuleId": "sig-5",
+      "RuleName": "Packed PE section",
+      "RuleKind": "PeMetadata",
+      "Pattern": "section=UPX",
+      "Severity": "Medium"
+    },
+    {
+      "RuleId": "sig-9",
+      "RuleName": "PDF active action",
+      "RuleKind": "DocumentMetadata",
+      "Pattern": "hasOpenAction=true",
+      "Severity": "High"
+    },
+    {
+      "RuleId": "sig-4",
+      "RuleName": "Ransomware extension burst",
+      "RuleKind": "PathFragment",
+      "Pattern": ".locked",
+      "Severity": "Critical"
+    },
+    {
+      "RuleId": "sig-3",
+      "RuleName": "Suspicious double extension",
+      "RuleKind": "FileName",
+      "Pattern": ".pdf.exe",
+      "Severity": "High"
+    }
+  ]
+}

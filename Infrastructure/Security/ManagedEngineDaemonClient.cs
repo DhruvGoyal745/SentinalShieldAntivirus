@@ -285,7 +285,9 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                     progressEvent.CurrentPath,
                     progressEvent.FindingsCount,
                     token,
-                    progressEvent.CompletedAt);
+                    progressEvent.CompletedAt,
+                    progressEvent.IsSkipped,
+                    progressEvent.DetailMessage);
             }
         }
     }
@@ -687,7 +689,9 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         string? currentPath,
         int findingsCount,
         CancellationToken cancellationToken,
-        DateTimeOffset? completedAt = null)
+        DateTimeOffset? completedAt = null,
+        bool isSkipped = false,
+        string? detailMessage = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var progressEvent = new ScanProgressEvent
@@ -699,6 +703,8 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
             FilesScanned = filesScanned,
             TotalFiles = totalFiles,
             FindingsCount = findingsCount,
+            IsSkipped = isSkipped,
+            DetailMessage = detailMessage,
             StartedAt = startedAt,
             CompletedAt = completedAt,
             RecordedAt = DateTimeOffset.UtcNow

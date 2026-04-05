@@ -1,6 +1,13 @@
 import { formatDate, formatPercent } from "../ui/presentation";
+import ScanSelector from "../components/ScanSelector";
 
-export default function ReportsPage({ scanExports, complianceReports, handleCaptureCompliance, handleExportAllScans }) {
+export default function ReportsPage({ scanExports, complianceReports, handleCaptureCompliance, handleExportAllScans, scans, selectedScanId, setSelectedScanId }) {
+  const filteredScanExports = selectedScanId
+    ? scanExports.filter((scanExport) => scanExport.scanJobId === selectedScanId)
+    : scanExports;
+
+  const filteredComplianceReports = complianceReports;
+
   return (
     <div className="page-stack">
       <section className="panel page-panel">
@@ -20,6 +27,10 @@ export default function ReportsPage({ scanExports, complianceReports, handleCapt
         </div>
       </section>
 
+      <div className="toolbar">
+        <ScanSelector scans={scans} selectedScanId={selectedScanId} onChange={setSelectedScanId} />
+      </div>
+
       <section className="panel page-panel">
         <div className="panel-heading">
           <h2>Recent Excel exports</h2>
@@ -27,7 +38,7 @@ export default function ReportsPage({ scanExports, complianceReports, handleCapt
         </div>
 
         <div className="history-list">
-          {scanExports.map((scanExport) => (
+          {filteredScanExports.map((scanExport) => (
             <article key={scanExport.id} className="history-card compact-card">
               <div className="history-meta">
                 <span>Export #{scanExport.id}</span>
@@ -38,7 +49,7 @@ export default function ReportsPage({ scanExports, complianceReports, handleCapt
               <p>{scanExport.fileName} generated at {formatDate(scanExport.exportedAt)}.</p>
             </article>
           ))}
-          {scanExports.length === 0 ? <p className="empty-state">No scan reports have been exported yet.</p> : null}
+          {filteredScanExports.length === 0 ? <p className="empty-state">No scan reports have been exported yet.</p> : null}
         </div>
       </section>
 
@@ -49,7 +60,7 @@ export default function ReportsPage({ scanExports, complianceReports, handleCapt
         </div>
 
         <div className="history-list">
-          {complianceReports.map((report) => (
+          {filteredComplianceReports.map((report) => (
             <article key={`${report.id}-${report.reportDate}`} className="history-card compact-card">
               <div className="history-meta">
                 <span>Report #{report.id}</span>
@@ -66,7 +77,7 @@ export default function ReportsPage({ scanExports, complianceReports, handleCapt
               </p>
             </article>
           ))}
-          {complianceReports.length === 0 ? <p className="empty-state">No compliance snapshots have been captured yet.</p> : null}
+          {filteredComplianceReports.length === 0 ? <p className="empty-state">No compliance snapshots have been captured yet.</p> : null}
         </div>
       </section>
     </div>

@@ -46,6 +46,12 @@ export default function App() {
   const [retryingSkippedFile, setRetryingSkippedFile] = useState(false);
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedTenant, setSelectedTenant] = useState(window.localStorage.getItem("sentinel-tenant-key") ?? "sentinel-demo");
+  const [incidentsScanId, setIncidentsScanId] = useState(null);
+  const [detectionsScanId, setDetectionsScanId] = useState(null);
+  const [telemetryScanId, setTelemetryScanId] = useState(null);
+  const [fleetScanId, setFleetScanId] = useState(null);
+  const [governanceScanId, setGovernanceScanId] = useState(null);
+  const [reportsScanId, setReportsScanId] = useState(null);
   const [scanRequest, setScanRequest] = useState({
     mode: "Quick",
     targetPath: "",
@@ -513,7 +519,7 @@ export default function App() {
         ) : null}
 
         {currentPage === "incidents" ? (
-          <IncidentsPage incidents={incidents} handleResolveIncident={handleResolveIncident} />
+          <IncidentsPage incidents={incidents} handleResolveIncident={handleResolveIncident} scans={scans} selectedScanId={incidentsScanId} setSelectedScanId={setIncidentsScanId} />
         ) : null}
 
         {currentPage === "detections" ? (
@@ -523,6 +529,9 @@ export default function App() {
             setQuery={setDetectionQuery}
             handleQuarantine={handleQuarantine}
             handleReview={handleReview}
+            scans={scans}
+            selectedScanId={detectionsScanId}
+            setSelectedScanId={setDetectionsScanId}
           />
         ) : null}
 
@@ -537,16 +546,21 @@ export default function App() {
             onStopScan={handleStopScan}
             stoppingScanId={stoppingScanId}
             analysisClock={analysisClock}
+            selectedScanId={telemetryScanId}
+            setSelectedScanId={setTelemetryScanId}
           />
         ) : null}
 
-        {currentPage === "fleet" ? <FleetPage controlPlane={controlPlane} health={health} /> : null}
+        {currentPage === "fleet" ? <FleetPage controlPlane={controlPlane} health={health} scans={scans} selectedScanId={fleetScanId} setSelectedScanId={setFleetScanId} /> : null}
 
         {currentPage === "governance" ? (
           <GovernancePage
             paritySnapshots={paritySnapshots}
             sandboxSubmissions={sandboxSubmissions}
             reviews={reviews}
+            scans={scans}
+            selectedScanId={governanceScanId}
+            setSelectedScanId={setGovernanceScanId}
           />
         ) : null}
 
@@ -556,6 +570,9 @@ export default function App() {
             complianceReports={complianceReports}
             handleCaptureCompliance={handleCaptureCompliance}
             handleExportAllScans={handleExportAllScans}
+            scans={scans}
+            selectedScanId={reportsScanId}
+            setSelectedScanId={setReportsScanId}
           />
         ) : null}
       </main>
