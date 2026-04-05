@@ -1,0 +1,18 @@
+info: Antivirus.Infrastructure.Persistence.DatabaseBootstrapper[0]
+      Database and quarantine storage are ready.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\Downloads.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\Documents.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\AppData\Local\Temp.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5121
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus

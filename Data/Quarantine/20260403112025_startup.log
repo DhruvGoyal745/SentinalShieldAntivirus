@@ -1,0 +1,811 @@
+[2026-02-03 17:25:54.823] [async_logger] [info] Starting Windows 365...
+[2026-02-03 17:25:54.872] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-03 17:25:54.874] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-03 17:25:54.887] [async_logger] [info] [TaskRegistrar] Task registered: WindowsAppSilentUpdateBackgroundTask
+[2026-02-03 17:25:54.887] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-03 17:25:54.892] [async_logger] [info] [TaskRegistrar] Task registered: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-03 17:25:54.892] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-03 17:25:54.892] [async_pii_logger] [info] Command line is ''
+[2026-02-03 17:25:54.892] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-03 17:25:54.892] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-03 17:25:54.957] [async_logger] [info] SessionID: 9919a6e0-7cc3-4922-8e59-138c25a8c649
+[2026-02-03 17:35:58.139] [async_logger] [info] Starting Windows 365...
+[2026-02-03 17:35:58.170] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-03 17:35:58.172] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-03 17:35:58.179] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-03 17:35:58.179] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-03 17:35:58.179] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-03 17:35:58.180] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-03 17:35:58.180] [async_pii_logger] [info] Command line is ''
+[2026-02-03 17:35:58.180] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-03 17:35:58.180] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-03 17:35:58.248] [async_logger] [info] SessionID: da5d3296-d8c8-4e00-bd22-f34194d5fa20
+[2026-02-03 19:21:14.025] [async_logger] [info] Starting Windows 365...
+[2026-02-03 19:21:14.056] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-03 19:21:14.058] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-03 19:21:14.065] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-03 19:21:14.065] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-03 19:21:14.066] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-03 19:21:14.066] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-03 19:21:14.066] [async_pii_logger] [info] Command line is ''
+[2026-02-03 19:21:14.066] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-03 19:21:14.066] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-03 19:21:14.129] [async_logger] [info] SessionID: f89ca075-4cd5-47cc-9bec-23a8499ee874
+[2026-02-04 12:03:12.237] [async_logger] [info] Starting Windows 365...
+[2026-02-04 12:03:12.518] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-04 12:03:12.519] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-04 12:03:12.520] [async_logger] [info] SessionID: df173ff5-7681-4d31-9072-0255c7fb32b5
+[2026-02-04 18:58:20.734] [async_logger] [info] Starting Windows 365...
+[2026-02-04 18:58:20.876] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-04 18:58:20.877] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-04 18:58:20.877] [async_logger] [info] SessionID: 746da69a-6b81-4fc4-a225-d709bc18ea24
+[2026-02-05 10:36:54.501] [async_logger] [info] Starting Windows 365...
+[2026-02-05 10:36:54.642] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-05 10:36:54.643] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-05 10:36:54.643] [async_logger] [info] SessionID: 11f53e54-e68d-4329-ba76-3b9240f708bc
+[2026-02-05 17:15:56.137] [async_logger] [info] Starting Windows 365...
+[2026-02-05 17:15:56.276] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-05 17:15:56.277] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-05 17:15:56.277] [async_logger] [info] SessionID: 8e149413-527e-4bd6-ab73-7e46699a9b5a
+[2026-02-06 10:31:21.738] [async_logger] [info] Starting Windows 365...
+[2026-02-06 10:31:21.869] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-06 10:31:21.870] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-06 10:31:21.870] [async_logger] [info] SessionID: 18b0e82c-4e01-4341-8d09-a0843843f7a8
+[2026-02-06 13:00:13.514] [async_logger] [info] Starting Windows 365...
+[2026-02-06 13:00:13.573] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-06 13:00:13.576] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-06 13:00:13.584] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-06 13:00:13.584] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-06 13:00:13.585] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-06 13:00:13.587] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-06 13:00:13.587] [async_pii_logger] [info] Command line is ''
+[2026-02-06 13:00:13.587] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-06 13:00:13.587] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-06 13:00:13.687] [async_logger] [info] SessionID: 05c02675-f8c0-4de4-bb15-ea4ed8e13ffc
+[2026-02-06 17:54:40.274] [async_logger] [info] Starting Windows 365...
+[2026-02-06 17:54:40.404] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-06 17:54:40.405] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-06 17:54:40.405] [async_logger] [info] SessionID: a46de059-b8e0-421c-a007-e67786cdb460
+[2026-02-09 11:51:46.613] [async_logger] [info] Starting Windows 365...
+[2026-02-09 11:51:46.663] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-09 11:51:46.667] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-09 11:51:46.674] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-09 11:51:46.674] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-09 11:51:46.675] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-09 11:51:46.676] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-09 11:51:46.677] [async_pii_logger] [info] Command line is ''
+[2026-02-09 11:51:46.677] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-09 11:51:46.677] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-09 11:51:46.759] [async_logger] [info] SessionID: d5a5ab71-34b0-4778-932f-ace8bcfa089d
+[2026-02-09 11:54:06.484] [async_logger] [info] Starting Windows 365...
+[2026-02-09 11:54:06.611] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-09 11:54:06.612] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-09 11:54:06.612] [async_logger] [info] SessionID: 1cd51aa0-74bf-4911-8515-eb47b545fa9c
+[2026-02-09 18:43:50.422] [async_logger] [info] Starting Windows 365...
+[2026-02-09 18:43:50.610] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-09 18:43:50.611] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-09 18:43:50.611] [async_logger] [info] SessionID: 6780c86a-e2fc-4d71-b1d3-e9e52bd2846d
+[2026-02-10 11:48:35.126] [async_logger] [info] Starting Windows 365...
+[2026-02-10 11:48:35.293] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-10 11:48:35.295] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-10 11:48:35.295] [async_logger] [info] SessionID: 1690385e-7d5c-4c8b-97b8-5227dd7d1ba6
+[2026-02-10 17:13:46.178] [async_logger] [info] Starting Windows 365...
+[2026-02-10 17:13:46.301] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-10 17:13:46.302] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-02-10 17:13:46.302] [async_logger] [info] SessionID: 76e48646-4326-4693-b2f4-b82cac69794b
+[2026-02-11 10:42:46.407] [async_logger] [info] Starting Windows 365...
+[2026-02-11 10:42:46.554] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-11 10:42:46.555] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-11 10:42:46.555] [async_logger] [info] SessionID: 71961610-4b5d-4ba9-9aff-bdb3cfbc8874
+[2026-02-11 17:13:20.966] [async_logger] [info] Starting Windows 365...
+[2026-02-11 17:13:21.148] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-11 17:13:21.149] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-11 17:13:21.149] [async_logger] [info] SessionID: d9bc5738-7694-4d52-9acc-f22ab710b4a0
+[2026-02-12 02:04:23.250] [async_logger] [info] Starting Windows 365...
+[2026-02-12 02:04:23.473] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-12 02:04:23.475] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-12 02:04:23.475] [async_logger] [info] SessionID: 95d87536-c488-4327-b5d2-ed924bad8df1
+[2026-02-12 17:14:37.061] [async_logger] [info] Starting Windows 365...
+[2026-02-12 17:14:37.182] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-12 17:14:37.183] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-12 17:14:37.183] [async_logger] [info] SessionID: 689a21a7-234b-415f-bd78-1d5ffe80fdab
+[2026-02-13 09:55:13.252] [async_logger] [info] Starting Windows 365...
+[2026-02-13 09:55:13.471] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-13 09:55:13.472] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-13 09:55:13.472] [async_logger] [info] SessionID: f0ef7333-63a8-4fda-a0e6-811950057c60
+[2026-02-13 15:30:34.577] [async_logger] [info] Starting Windows 365...
+[2026-02-13 15:30:34.641] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-13 15:30:34.643] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-13 15:30:34.650] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-13 15:30:34.650] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-13 15:30:34.651] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-13 15:30:34.653] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-13 15:30:34.653] [async_pii_logger] [info] Command line is ''
+[2026-02-13 15:30:34.654] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-13 15:30:34.654] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-13 15:30:34.758] [async_logger] [info] SessionID: 07d61dc3-6e20-4848-84f1-0b1fa8a15966
+[2026-02-13 15:31:00.323] [async_logger] [info] Starting Windows 365...
+[2026-02-13 15:31:00.350] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-13 15:31:00.352] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-13 15:31:00.358] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-13 15:31:00.358] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-13 15:31:00.358] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-13 15:31:00.359] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-13 15:31:00.359] [async_pii_logger] [info] Command line is ''
+[2026-02-13 15:31:00.359] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-13 15:31:00.359] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-13 15:31:00.429] [async_logger] [info] SessionID: 8ad80b9d-79e9-46d1-9986-cd04b410ea67
+[2026-02-13 15:31:33.269] [async_logger] [info] Starting Windows 365...
+[2026-02-13 15:31:33.338] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-13 15:31:33.340] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-13 15:31:33.348] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-13 15:31:33.348] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-13 15:31:33.349] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-13 15:31:33.349] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-13 15:31:33.349] [async_pii_logger] [info] Command line is 'ms-cp:?source=SystemInitiatedRestart'
+[2026-02-13 15:31:33.349] [async_logger] [info] Action is not a valid protocol launch action for scheme
+[2026-02-13 15:31:33.349] [async_pii_logger] [info] Action "" is not a valid protocol launch action for scheme "ms-cp".
+[2026-02-13 15:31:33.349] [async_logger] [warning] Skipping evaluation of command line parameter.
+[2026-02-13 15:31:33.349] [async_pii_logger] [warning] Skipping evaluation of command line parameter: ms-cp:?source=SystemInitiatedRestart
+[2026-02-13 15:31:33.349] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-13 15:31:33.366] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-13 15:31:33.485] [async_logger] [info] SessionID: dd3c602a-e6dd-4a7f-8215-0d84b18e03a7
+[2026-02-13 17:15:58.726] [async_logger] [info] Starting Windows 365...
+[2026-02-13 17:15:58.873] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-13 17:15:58.874] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-13 17:15:58.874] [async_logger] [info] SessionID: 47aea63d-b536-43e9-ba96-2a9682c5d73f
+[2026-02-16 11:55:13.271] [async_logger] [info] Starting Windows 365...
+[2026-02-16 11:55:13.307] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-16 11:55:13.311] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-16 11:55:13.318] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-16 11:55:13.318] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-16 11:55:13.319] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-16 11:55:13.321] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-16 11:55:13.321] [async_pii_logger] [info] Command line is ''
+[2026-02-16 11:55:13.321] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-16 11:55:13.331] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-16 11:55:13.422] [async_logger] [info] SessionID: a3d8a15e-d7fa-40e6-a8c4-ec8d004899f7
+[2026-02-16 11:59:13.476] [async_logger] [info] Starting Windows 365...
+[2026-02-16 11:59:13.650] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-16 11:59:13.651] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-16 11:59:13.651] [async_logger] [info] SessionID: 487ce937-4686-417a-ad3c-2b96bc03d5cd
+[2026-02-16 13:41:55.285] [async_logger] [info] Starting Windows 365...
+[2026-02-16 13:41:55.329] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-16 13:41:55.334] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-16 13:41:55.342] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-16 13:41:55.342] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-16 13:41:55.343] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-16 13:41:55.343] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-16 13:41:55.343] [async_pii_logger] [info] Command line is ''
+[2026-02-16 13:41:55.344] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-16 13:41:55.361] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-16 13:41:55.476] [async_logger] [info] SessionID: d94838d0-6887-4e6d-ba62-61d46545315d
+[2026-02-17 11:05:23.380] [async_logger] [info] Starting Windows 365...
+[2026-02-17 11:05:23.526] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-17 11:05:23.527] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-17 11:05:23.527] [async_logger] [info] SessionID: bf2f890f-c9ab-46cb-a50f-38d21479c0a3
+[2026-02-17 11:11:08.939] [async_logger] [info] Starting Windows 365...
+[2026-02-17 11:11:08.970] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 11:11:08.972] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 11:11:08.977] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 11:11:08.977] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 11:11:08.978] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 11:11:08.978] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 11:11:08.978] [async_pii_logger] [info] Command line is ''
+[2026-02-17 11:11:08.979] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 11:11:08.989] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 11:11:09.088] [async_logger] [info] SessionID: 0e3ffa1a-e40e-4e55-b64e-c44ab4d19869
+[2026-02-17 11:16:10.175] [async_logger] [info] Starting Windows 365...
+[2026-02-17 11:16:10.219] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 11:16:10.221] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 11:16:10.229] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 11:16:10.229] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 11:16:10.230] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 11:16:10.231] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 11:16:10.231] [async_pii_logger] [info] Command line is ''
+[2026-02-17 11:16:10.231] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 11:16:10.248] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 11:16:10.358] [async_logger] [info] SessionID: 02a18ed0-e7b8-4132-87c1-68c5063ad576
+[2026-02-17 11:18:59.282] [async_logger] [info] Starting Windows 365...
+[2026-02-17 11:18:59.327] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 11:18:59.330] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 11:18:59.337] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 11:18:59.338] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 11:18:59.339] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 11:18:59.339] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 11:18:59.339] [async_pii_logger] [info] Command line is ''
+[2026-02-17 11:18:59.339] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 11:18:59.349] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 11:18:59.437] [async_logger] [info] SessionID: aa27a46f-ae5b-4060-9835-3899fb66084c
+[2026-02-17 11:19:25.712] [async_logger] [info] Starting Windows 365...
+[2026-02-17 11:19:25.757] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 11:19:25.760] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 11:19:25.770] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 11:19:25.770] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 11:19:25.771] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 11:19:25.771] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 11:19:25.771] [async_pii_logger] [info] Command line is ''
+[2026-02-17 11:19:25.771] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 11:19:25.783] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 11:19:25.972] [async_logger] [info] SessionID: 801b3083-7602-4220-a9ad-ee30ab7e3bca
+[2026-02-17 16:20:30.897] [async_logger] [info] Starting Windows 365...
+[2026-02-17 16:20:30.930] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 16:20:30.932] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 16:20:30.938] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 16:20:30.938] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 16:20:30.939] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 16:20:30.939] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 16:20:30.939] [async_pii_logger] [info] Command line is ''
+[2026-02-17 16:20:30.940] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 16:20:30.947] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 16:20:31.022] [async_logger] [info] SessionID: b00d2c94-7c97-474a-9669-f394f329eddc
+[2026-02-17 16:22:45.693] [async_logger] [info] Starting Windows 365...
+[2026-02-17 16:22:45.725] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 16:22:45.727] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 16:22:45.734] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 16:22:45.734] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 16:22:45.734] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 16:22:45.735] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 16:22:45.735] [async_pii_logger] [info] Command line is ''
+[2026-02-17 16:22:45.735] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 16:22:45.742] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 16:22:45.815] [async_logger] [info] SessionID: ed365082-fab6-4544-9ece-f22ff8e5d42e
+[2026-02-17 16:25:48.791] [async_logger] [info] Starting Windows 365...
+[2026-02-17 16:25:48.834] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 16:25:48.836] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 16:25:48.842] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 16:25:48.842] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 16:25:48.843] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 16:25:48.843] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 16:25:48.843] [async_pii_logger] [info] Command line is ''
+[2026-02-17 16:25:48.843] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 16:25:48.851] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 16:25:48.922] [async_logger] [info] SessionID: bf526937-035c-42ae-97b0-f71454610694
+[2026-02-17 16:28:09.967] [async_logger] [info] Starting Windows 365...
+[2026-02-17 16:28:09.995] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 16:28:09.996] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 16:28:10.001] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 16:28:10.001] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 16:28:10.002] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 16:28:10.002] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-17 16:28:10.002] [async_pii_logger] [info] Command line is ''
+[2026-02-17 16:28:10.002] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-17 16:28:10.009] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-17 16:28:10.058] [async_logger] [info] SessionID: 6813f738-9ab4-4587-bcf0-0cc321824326
+[2026-02-17 16:28:15.050] [async_logger] [info] Starting Windows 365...
+[2026-02-17 16:28:15.078] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-17 16:28:15.079] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-17 16:28:15.085] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-17 16:28:15.085] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-17 16:28:15.085] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-17 16:28:16.095] [async_logger] [error] WindowsAppRunning::mutex denied
+[2026-02-17 16:28:16.096] [async_pii_logger] [info] Command line is ''
+[2026-02-17 16:28:17.100] [async_logger] [error] Windows365-WebView-instance::mutex denied
+[2026-02-17 16:28:17.100] [async_logger] [info] Another instance of the app is already running. Bringing it to foreground and exiting new instance
+[2026-02-17 16:28:17.315] [async_logger] [info] Restarting app
+[2026-02-17 17:17:28.805] [async_logger] [info] Starting Windows 365...
+[2026-02-17 17:17:28.939] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-17 17:17:28.940] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-02-17 17:17:28.940] [async_logger] [info] SessionID: 17a8d0a7-b5b4-4d0a-b59d-1ae189bebdb3
+[2026-02-17 17:17:33.766] [async_logger] [info] Starting Windows 365...
+[2026-02-17 17:17:33.844] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-17 17:17:33.845] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-17 17:17:33.845] [async_logger] [info] SessionID: 85b08b4e-6282-4abb-97c0-984c46a4b06f
+[2026-02-18 10:45:21.281] [async_logger] [info] Starting Windows 365...
+[2026-02-18 10:45:21.588] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-18 10:45:21.590] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-18 10:45:21.590] [async_logger] [info] SessionID: 13907ec8-8296-4d41-beb0-41ba97c4cbcf
+[2026-02-18 17:17:29.190] [async_logger] [info] Starting Windows 365...
+[2026-02-18 17:17:29.326] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-18 17:17:29.327] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-18 17:17:29.327] [async_logger] [info] SessionID: 8ccac727-0a73-4f10-adf2-bdd80a4cd7f0
+[2026-02-18 17:59:46.163] [async_logger] [info] Starting Windows 365...
+[2026-02-18 17:59:46.282] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-18 17:59:46.288] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-18 17:59:46.303] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-18 17:59:46.303] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-18 17:59:46.306] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-18 17:59:46.307] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-18 17:59:46.307] [async_pii_logger] [info] Command line is ''
+[2026-02-18 17:59:46.307] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-18 17:59:46.325] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-18 17:59:46.518] [async_logger] [info] SessionID: 956d9f86-9524-47f1-970c-44d2daa89d3a
+[2026-02-18 18:02:33.376] [async_logger] [info] Starting Windows 365...
+[2026-02-18 18:02:33.511] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-18 18:02:33.512] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-02-18 18:02:33.513] [async_logger] [info] SessionID: 70e81090-81c9-4a26-b113-fe16db06f4b7
+[2026-02-18 18:02:33.367] [async_logger] [info] Starting Windows 365...
+[2026-02-18 18:02:33.514] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-18 18:02:33.515] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-18 18:02:33.515] [async_logger] [info] SessionID: 7b73a7ab-9677-4b15-8771-fbed64a9a8be
+[2026-02-19 10:50:52.632] [async_logger] [info] Starting Windows 365...
+[2026-02-19 10:50:52.828] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-19 10:50:52.830] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-19 10:50:52.830] [async_logger] [info] SessionID: a458a7e5-319c-4f6d-b726-e4efab596abf
+[2026-02-19 13:11:29.766] [async_logger] [info] Starting Windows 365...
+[2026-02-19 13:11:29.843] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-19 13:11:29.845] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-19 13:11:29.854] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-19 13:11:29.854] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-19 13:11:29.855] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-19 13:11:29.855] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-19 13:11:29.855] [async_pii_logger] [info] Command line is ''
+[2026-02-19 13:11:29.856] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-19 13:11:29.868] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-19 13:11:29.981] [async_logger] [info] SessionID: f9e0f9b7-e488-4f97-9e3f-5bb2fd562d45
+[2026-02-19 17:14:02.996] [async_logger] [info] Starting Windows 365...
+[2026-02-19 17:14:03.115] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-19 17:14:03.116] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-19 17:14:03.116] [async_logger] [info] SessionID: cc4a6ea5-9251-488d-8fa7-9dfaf5d94111
+[2026-02-20 12:08:58.275] [async_logger] [info] Starting Windows 365...
+[2026-02-20 12:08:58.397] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-20 12:08:58.398] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-20 12:08:58.398] [async_logger] [info] SessionID: 38eca26d-c47b-4aac-a22c-a572a311eed5
+[2026-02-20 17:14:58.161] [async_logger] [info] Starting Windows 365...
+[2026-02-20 17:14:58.374] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-20 17:14:58.375] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-20 17:14:58.375] [async_logger] [info] SessionID: 10eec612-a014-4884-91d2-c44708a40003
+[2026-02-20 17:16:16.852] [async_logger] [info] Starting Windows 365...
+[2026-02-20 17:16:16.878] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-20 17:16:16.880] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-20 17:16:16.885] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-20 17:16:16.885] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-20 17:16:16.885] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-20 17:16:16.885] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-20 17:16:16.885] [async_pii_logger] [info] Command line is ''
+[2026-02-20 17:16:16.885] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-20 17:16:16.892] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-20 17:16:16.943] [async_logger] [info] SessionID: 1059de6f-5da6-4c06-b16a-55624312e09c
+[2026-02-22 11:33:00.987] [async_logger] [info] Starting Windows 365...
+[2026-02-22 11:33:01.116] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-22 11:33:01.117] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-22 11:33:01.117] [async_logger] [info] SessionID: 046bd5d6-5ed2-4f21-bbac-807be86f0e6a
+[2026-02-23 11:39:55.134] [async_logger] [info] Starting Windows 365...
+[2026-02-23 11:39:55.258] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-23 11:39:55.259] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-23 11:39:55.259] [async_logger] [info] SessionID: 23a2e6e0-83fc-4674-b612-9387313b9649
+[2026-02-23 17:14:28.153] [async_logger] [info] Starting Windows 365...
+[2026-02-23 17:14:28.259] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-23 17:14:28.260] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-23 17:14:28.260] [async_logger] [info] SessionID: ef4fbeb7-2da1-4a37-8705-7899f0664e4e
+[2026-02-24 09:58:20.693] [async_logger] [info] Starting Windows 365...
+[2026-02-24 09:58:20.838] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-24 09:58:20.839] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-24 09:58:20.839] [async_logger] [info] SessionID: 00897b89-45b7-4a64-9013-1e7eab576d1f
+[2026-02-24 17:10:59.147] [async_logger] [info] Starting Windows 365...
+[2026-02-24 17:10:59.271] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-24 17:10:59.272] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-02-24 17:10:59.272] [async_logger] [info] SessionID: da6a57a2-f271-415f-b2f7-99ff3d1babbf
+[2026-02-24 17:11:04.130] [async_logger] [info] Starting Windows 365...
+[2026-02-24 17:11:04.201] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-24 17:11:04.202] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-24 17:11:04.202] [async_logger] [info] SessionID: a6b15a15-e4de-4d3c-a621-07a67a482344
+[2026-02-25 11:54:03.408] [async_logger] [info] Starting Windows 365...
+[2026-02-25 11:54:03.553] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-25 11:54:03.554] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-25 11:54:03.555] [async_logger] [info] SessionID: e185148c-a9bb-46a1-bf51-f47e073ec199
+[2026-02-25 11:54:54.393] [async_logger] [info] Starting Windows 365...
+[2026-02-25 11:54:54.432] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-25 11:54:54.435] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-25 11:54:54.442] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-25 11:54:54.442] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-25 11:54:54.443] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-25 11:54:54.443] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-25 11:54:54.443] [async_pii_logger] [info] Command line is ''
+[2026-02-25 11:54:54.444] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-25 11:54:54.453] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-25 11:54:54.516] [async_logger] [info] SessionID: 203e1ee9-e638-47bd-a9a7-9ee88c9455bc
+[2026-02-25 17:14:06.482] [async_logger] [info] Starting Windows 365...
+[2026-02-25 17:14:06.590] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-25 17:14:06.591] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-25 17:14:06.591] [async_logger] [info] SessionID: 89d606ae-b601-4871-9c8a-e4d82f872be6
+[2026-02-26 10:09:37.171] [async_logger] [info] Starting Windows 365...
+[2026-02-26 10:09:37.311] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-26 10:09:37.312] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-26 10:09:37.312] [async_logger] [info] SessionID: ad70aea4-decd-4002-ae4d-d3ff0031729e
+[2026-02-26 17:14:21.601] [async_logger] [info] Starting Windows 365...
+[2026-02-26 17:14:21.688] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-26 17:14:21.689] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-26 17:14:21.689] [async_logger] [info] SessionID: 37a44bea-4e24-40cd-9bb4-a8146d7647c1
+[2026-02-26 17:55:08.421] [async_logger] [info] Starting Windows 365...
+[2026-02-26 17:55:08.545] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-26 17:55:08.547] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-26 17:55:08.547] [async_logger] [info] SessionID: ad0a741f-3068-4f95-b02d-00ab866949f8
+[2026-02-26 18:01:52.962] [async_logger] [info] Starting Windows 365...
+[2026-02-26 18:01:52.999] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-02-26 18:01:53.001] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-02-26 18:01:53.007] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-02-26 18:01:53.007] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-02-26 18:01:53.008] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-02-26 18:01:53.008] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-02-26 18:01:53.008] [async_pii_logger] [info] Command line is ''
+[2026-02-26 18:01:53.008] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-02-26 18:01:53.014] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-02-26 18:01:53.083] [async_logger] [info] SessionID: 4008f902-0fe3-4bba-9be4-3e9fcca94519
+[2026-02-27 04:55:13.191] [async_logger] [info] Starting Windows 365...
+[2026-02-27 04:55:13.276] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-27 04:55:13.277] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-27 04:55:13.277] [async_logger] [info] SessionID: 68085ee8-e4ae-4c39-858a-8cffcc406e3c
+[2026-02-27 12:31:30.242] [async_logger] [info] Starting Windows 365...
+[2026-02-27 12:31:30.372] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-02-27 12:31:30.373] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-02-27 12:31:30.374] [async_logger] [info] SessionID: ff7d38a2-bacc-4f4a-9277-574965ae0d11
+[2026-03-02 12:03:18.124] [async_logger] [info] Starting Windows 365...
+[2026-03-02 12:03:18.230] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-02 12:03:18.231] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-02 12:03:18.231] [async_logger] [info] SessionID: 50e6963c-2725-4c69-97d6-7827d62c7cea
+[2026-03-02 12:10:42.861] [async_logger] [info] Starting Windows 365...
+[2026-03-02 12:10:43.010] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-02 12:10:43.012] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-02 12:10:43.012] [async_logger] [info] SessionID: 23bb99ce-ccb4-44c8-adfb-bbd61719687e
+[2026-03-02 12:49:07.164] [async_logger] [info] Starting Windows 365...
+[2026-03-02 12:49:07.227] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-02 12:49:07.231] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-02 12:49:07.238] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-02 12:49:07.238] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-02 12:49:07.239] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-02 12:49:07.240] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-02 12:49:07.240] [async_pii_logger] [info] Command line is ''
+[2026-03-02 12:49:07.240] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-02 12:49:07.248] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-02 12:49:07.345] [async_logger] [info] SessionID: 214a38e5-aba4-4c0e-863c-93df04093ed9
+[2026-03-03 10:21:48.280] [async_logger] [info] Starting Windows 365...
+[2026-03-03 10:21:48.409] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-03 10:21:48.410] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-03 10:21:48.410] [async_logger] [info] SessionID: 3b4b6190-b071-4bc3-9aac-e8e374052da1
+[2026-03-03 18:09:34.164] [async_logger] [info] Starting Windows 365...
+[2026-03-03 18:09:34.307] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-03 18:09:34.309] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-03 18:09:34.309] [async_logger] [info] SessionID: 771ca5ae-f258-458b-a2d4-f87c9e6b29b2
+[2026-03-05 10:58:37.989] [async_logger] [info] Starting Windows 365...
+[2026-03-05 10:58:38.115] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-05 10:58:38.116] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-05 10:58:38.116] [async_logger] [info] SessionID: b324fe8b-4d96-4229-b14b-c40f0a6395d2
+[2026-03-05 17:24:54.513] [async_logger] [info] Starting Windows 365...
+[2026-03-05 17:24:54.721] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-05 17:24:54.724] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-05 17:24:54.724] [async_logger] [info] SessionID: d7a25ea0-70b5-4218-9996-c3db481de026
+[2026-03-05 19:05:05.855] [async_logger] [info] Starting Windows 365...
+[2026-03-05 19:05:06.110] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-05 19:05:06.113] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-05 19:05:06.113] [async_logger] [info] SessionID: 6f05edea-4dae-4f91-a925-c0720af1d9fc
+[2026-03-06 11:43:48.269] [async_logger] [info] Starting Windows 365...
+[2026-03-06 11:43:48.356] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-06 11:43:48.360] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-06 11:43:48.370] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-06 11:43:48.370] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-06 11:43:48.372] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-06 11:43:48.374] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-06 11:43:48.374] [async_pii_logger] [info] Command line is ''
+[2026-03-06 11:43:48.374] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-06 11:43:48.386] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-06 11:43:48.538] [async_logger] [info] SessionID: 7ab6eb70-448d-42cc-b153-887b4efec79f
+[2026-03-06 11:46:27.461] [async_logger] [info] Starting Windows 365...
+[2026-03-06 11:46:27.608] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-06 11:46:27.609] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-06 11:46:27.610] [async_logger] [info] SessionID: fafa35e0-4f75-40e8-a4c3-ea24a3967b18
+[2026-03-06 18:10:34.383] [async_logger] [info] Starting Windows 365...
+[2026-03-06 18:10:34.511] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-06 18:10:34.512] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-06 18:10:34.512] [async_logger] [info] SessionID: ed1c0b2e-34ca-4af4-bca3-6540d137b3d5
+[2026-03-07 15:05:15.841] [async_logger] [info] Starting Windows 365...
+[2026-03-07 15:05:15.974] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-07 15:05:15.975] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-07 15:05:15.975] [async_logger] [info] SessionID: d23570f1-3cf6-4a99-8443-3ccbc35bc6e6
+[2026-03-07 23:01:25.439] [async_logger] [info] Starting Windows 365...
+[2026-03-07 23:01:25.651] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-07 23:01:25.653] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-07 23:01:25.654] [async_logger] [info] SessionID: 5eb34f27-c84a-483e-bc05-3df3937eeef5
+[2026-03-09 10:35:45.162] [async_logger] [info] Starting Windows 365...
+[2026-03-09 10:35:45.321] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-09 10:35:45.323] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-09 10:35:45.323] [async_logger] [info] SessionID: 24f788a7-26b1-4856-b81f-1cb42d15fc75
+[2026-03-09 17:13:19.207] [async_logger] [info] Starting Windows 365...
+[2026-03-09 17:13:19.294] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-09 17:13:19.295] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-09 17:13:19.295] [async_logger] [info] SessionID: 1c7dbd91-0dd1-48e7-a5c2-9f030c7c0980
+[2026-03-10 10:44:27.220] [async_logger] [info] Starting Windows 365...
+[2026-03-10 10:44:27.343] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-10 10:44:27.344] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-10 10:44:27.344] [async_logger] [info] SessionID: 5b62b292-c7af-496c-8269-1bbd70cc4859
+[2026-03-10 17:15:50.661] [async_logger] [info] Starting Windows 365...
+[2026-03-10 17:15:50.773] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-10 17:15:50.774] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-03-10 17:15:50.774] [async_logger] [info] SessionID: 26f470f6-97f1-40e4-b4b2-7124484342e6
+[2026-03-11 11:13:45.712] [async_logger] [info] Starting Windows 365...
+[2026-03-11 11:13:46.035] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-11 11:13:46.037] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-11 11:13:46.037] [async_logger] [info] SessionID: c07d60ab-ee48-4642-812f-311f8d1f6fee
+[2026-03-11 17:20:39.577] [async_logger] [info] Starting Windows 365...
+[2026-03-11 17:20:39.718] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-11 17:20:39.719] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-11 17:20:39.720] [async_logger] [info] SessionID: 5781cbaa-0c2e-4b74-948f-aba353b6af19
+[2026-03-12 11:44:40.609] [async_logger] [info] Starting Windows 365...
+[2026-03-12 11:44:40.725] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-12 11:44:40.725] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-12 11:44:40.726] [async_logger] [info] SessionID: 236727a7-9bce-4401-abda-9dd0e10c9c6e
+[2026-03-12 18:25:45.132] [async_logger] [info] Starting Windows 365...
+[2026-03-12 18:25:45.267] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-12 18:25:45.268] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-12 18:25:45.269] [async_logger] [info] SessionID: d1602d55-4781-4c56-95fc-2e084925b4c3
+[2026-03-13 09:57:52.670] [async_logger] [info] Starting Windows 365...
+[2026-03-13 09:57:52.859] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-13 09:57:52.860] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-13 09:57:52.860] [async_logger] [info] SessionID: 18f152b7-e0d5-4667-aa06-8413703424b1
+[2026-03-13 21:07:02.232] [async_logger] [info] Starting Windows 365...
+[2026-03-13 21:07:02.562] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-13 21:07:02.565] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-13 21:07:02.565] [async_logger] [info] SessionID: f709b9c9-9d37-4fe8-9619-19d4eb3532a4
+[2026-03-16 11:05:58.504] [async_logger] [info] Starting Windows 365...
+[2026-03-16 11:05:58.721] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-16 11:05:58.722] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-16 11:05:58.722] [async_logger] [info] SessionID: cee25b4f-7b03-4b41-823e-391b893f0454
+[2026-03-16 15:11:48.732] [async_logger] [info] Starting Windows 365...
+[2026-03-16 15:11:48.917] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-16 15:11:48.919] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-03-16 15:11:48.919] [async_logger] [info] SessionID: 5aa08731-88a2-440e-8331-17faf68189ec
+[2026-03-16 15:11:48.732] [async_logger] [info] Starting Windows 365...
+[2026-03-16 15:11:48.917] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-16 15:11:48.919] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-16 15:11:48.920] [async_logger] [info] SessionID: 8c0e2914-da98-4890-b959-64ff87a0471e
+[2026-03-16 15:12:40.571] [async_logger] [info] Starting Windows 365...
+[2026-03-16 15:12:40.598] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-16 15:12:40.600] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-16 15:12:40.606] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-16 15:12:40.606] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-16 15:12:40.607] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-16 15:12:40.607] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-16 15:12:40.607] [async_pii_logger] [info] Command line is ''
+[2026-03-16 15:12:40.607] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-16 15:12:40.613] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-16 15:12:40.673] [async_logger] [info] SessionID: 0add90c3-e6b6-41ed-a62e-714c5bff37a4
+[2026-03-16 18:30:09.290] [async_logger] [info] Starting Windows 365...
+[2026-03-16 18:30:09.471] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-16 18:30:09.472] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-16 18:30:09.472] [async_logger] [info] SessionID: e8b2bac4-7bfa-4ce9-ad01-dd381c7d2912
+[2026-03-17 11:12:19.959] [async_logger] [info] Starting Windows 365...
+[2026-03-17 11:12:20.159] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-17 11:12:20.160] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-17 11:12:20.160] [async_logger] [info] SessionID: ff193983-09bb-456f-9cbc-b0065d989e05
+[2026-03-17 16:55:02.414] [async_logger] [info] Starting Windows 365...
+[2026-03-17 16:55:02.457] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-17 16:55:02.459] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-17 16:55:02.468] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-17 16:55:02.468] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-17 16:55:02.469] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-17 16:55:02.469] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-17 16:55:02.469] [async_pii_logger] [info] Command line is ''
+[2026-03-17 16:55:02.469] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-17 16:55:02.480] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-17 16:55:02.581] [async_logger] [info] SessionID: 16c1421c-9068-464e-80be-ed755c414072
+[2026-03-17 18:13:36.544] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:13:36.643] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-17 18:13:36.643] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-17 18:13:36.643] [async_logger] [info] SessionID: fb201af7-4711-4c20-b135-af2549fa31a4
+[2026-03-17 18:13:36.539] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:13:36.643] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-17 18:13:36.644] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-03-17 18:13:36.644] [async_logger] [info] SessionID: 827a50c1-c23a-40ca-bda2-8c1b0e239963
+[2026-03-17 18:15:55.548] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:15:55.583] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-17 18:15:55.586] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-17 18:15:55.594] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-17 18:15:55.594] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-17 18:15:55.595] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-17 18:15:55.595] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-17 18:15:55.595] [async_pii_logger] [info] Command line is ''
+[2026-03-17 18:15:55.595] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-17 18:15:55.603] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-17 18:15:55.679] [async_logger] [info] SessionID: a5fec024-eab7-40d6-b224-62244b66f392
+[2026-03-17 18:18:21.713] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:18:21.746] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-17 18:18:21.748] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-17 18:18:21.755] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-17 18:18:21.755] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-17 18:18:21.756] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-17 18:18:21.756] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-17 18:18:21.756] [async_pii_logger] [info] Command line is ''
+[2026-03-17 18:18:21.756] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-17 18:18:21.765] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-17 18:18:21.844] [async_logger] [info] SessionID: 98044c77-afec-40cc-b233-146b9243f214
+[2026-03-17 18:26:02.514] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:26:02.545] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-17 18:26:02.548] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-17 18:26:02.555] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-17 18:26:02.555] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-17 18:26:02.556] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-17 18:26:02.556] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-17 18:26:02.556] [async_pii_logger] [info] Command line is ''
+[2026-03-17 18:26:02.556] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-17 18:26:02.563] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-17 18:26:02.656] [async_logger] [info] SessionID: 6d6eff44-6653-453e-a94d-4578b6de5c96
+[2026-03-17 18:42:45.821] [async_logger] [info] Starting Windows 365...
+[2026-03-17 18:42:45.855] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-17 18:42:45.858] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-17 18:42:45.865] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-17 18:42:45.865] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-17 18:42:45.866] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-17 18:42:45.866] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-17 18:42:45.866] [async_pii_logger] [info] Command line is ''
+[2026-03-17 18:42:45.866] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-17 18:42:45.874] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-17 18:42:45.960] [async_logger] [info] SessionID: 88b7747f-59ed-465b-a4d9-a97848cd9ac8
+[2026-03-18 10:21:56.932] [async_logger] [info] Starting Windows 365...
+[2026-03-18 10:21:57.098] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-18 10:21:57.099] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-18 10:21:57.099] [async_logger] [info] SessionID: a32b57ac-ec32-4b9a-be54-57b4f2f509fc
+[2026-03-18 17:24:16.878] [async_logger] [info] Starting Windows 365...
+[2026-03-18 17:24:17.075] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-18 17:24:17.077] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-18 17:24:17.077] [async_logger] [info] SessionID: ca59a2cd-d24f-4b93-a288-0eb911cf877d
+[2026-03-19 10:28:03.468] [async_logger] [info] Starting Windows 365...
+[2026-03-19 10:28:03.659] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-19 10:28:03.660] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-19 10:28:03.661] [async_logger] [info] SessionID: 51457fc9-98ad-4c6d-b6d7-5d945ef70ea8
+[2026-03-19 17:13:13.659] [async_logger] [info] Starting Windows 365...
+[2026-03-19 17:13:13.794] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-19 17:13:13.796] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-19 17:13:13.796] [async_logger] [info] SessionID: 33e633d3-d31a-4c0b-bb5a-a0cecaf62ada
+[2026-03-20 11:54:51.594] [async_logger] [info] Starting Windows 365...
+[2026-03-20 11:54:51.719] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-20 11:54:51.720] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-20 11:54:51.720] [async_logger] [info] SessionID: 3ae47e25-6bc5-4480-ab9a-6600df7e89d9
+[2026-03-20 17:56:56.663] [async_logger] [info] Starting Windows 365...
+[2026-03-20 17:56:56.883] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-20 17:56:56.884] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-20 17:56:56.885] [async_logger] [info] SessionID: 02b5e5fd-bace-4f76-9763-06c515fcaf22
+[2026-03-21 10:04:06.455] [async_logger] [info] Starting Windows 365...
+[2026-03-21 10:04:06.631] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-21 10:04:06.632] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-21 10:04:06.633] [async_logger] [info] SessionID: 2902beca-ebc6-493b-9071-f15d795ac2e8
+[2026-03-21 18:31:43.760] [async_logger] [info] Starting Windows 365...
+[2026-03-21 18:31:43.890] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-21 18:31:43.890] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-21 18:31:43.890] [async_logger] [info] SessionID: 2e1ed1ff-c810-49a7-8b7b-b073e7df6efa
+[2026-03-23 10:04:37.314] [async_logger] [info] Starting Windows 365...
+[2026-03-23 10:04:43.670] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-23 10:04:43.792] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-23 10:04:43.792] [async_logger] [info] SessionID: eb01ccbd-06a5-4331-bd17-a03f0db07ef4
+[2026-03-23 17:15:33.829] [async_logger] [info] Starting Windows 365...
+[2026-03-23 17:15:34.017] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-23 17:15:34.018] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-23 17:15:34.018] [async_logger] [info] SessionID: 1adb2f07-602c-45a9-993f-3581a7f115fd
+[2026-03-24 12:04:30.625] [async_logger] [info] Starting Windows 365...
+[2026-03-24 12:04:33.707] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-24 12:04:33.709] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-24 12:04:33.709] [async_logger] [info] SessionID: 2e565a60-79f4-483b-b445-fac1da571bff
+[2026-03-24 18:13:03.874] [async_logger] [info] Starting Windows 365...
+[2026-03-24 18:13:04.084] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-24 18:13:04.086] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-24 18:13:04.086] [async_logger] [info] SessionID: 735cf1b1-6713-4030-abe8-797289fd7d40
+[2026-03-25 11:43:07.535] [async_logger] [info] Starting Windows 365...
+[2026-03-25 11:43:07.681] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-25 11:43:07.682] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-25 11:43:07.682] [async_logger] [info] SessionID: 7e7d1016-97da-48c7-8c22-d170479d8066
+[2026-03-25 17:27:30.714] [async_logger] [info] Starting Windows 365...
+[2026-03-25 17:27:30.925] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-25 17:27:30.926] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-03-25 17:27:30.926] [async_logger] [info] SessionID: adce55e3-b2d3-43b8-a698-188012d777f3
+[2026-03-25 17:27:35.347] [async_logger] [info] Starting Windows 365...
+[2026-03-25 17:27:35.476] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-25 17:27:35.477] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-25 17:27:35.477] [async_logger] [info] SessionID: a4d49975-9dff-4e4f-88e4-f7fadbcc3d22
+[2026-03-25 19:32:45.567] [async_logger] [info] Starting Windows 365...
+[2026-03-25 19:32:45.613] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-25 19:32:45.616] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-25 19:32:45.622] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-25 19:32:45.622] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-25 19:32:45.623] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-25 19:32:45.623] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-25 19:32:45.623] [async_pii_logger] [info] Command line is ''
+[2026-03-25 19:32:45.623] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-25 19:32:45.640] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-25 19:32:45.722] [async_logger] [info] SessionID: 39e3f559-f417-4ba6-a719-e7af62021f72
+[2026-03-26 10:56:13.409] [async_logger] [info] Starting Windows 365...
+[2026-03-26 10:56:13.525] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-26 10:56:13.525] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-26 10:56:13.525] [async_logger] [info] SessionID: e2439385-dfac-424b-992e-842cd61b9a15
+[2026-03-26 17:19:18.371] [async_logger] [info] Starting Windows 365...
+[2026-03-26 17:19:18.521] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-26 17:19:18.522] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-26 17:19:18.522] [async_logger] [info] SessionID: ccc7dbb3-9295-46d1-ac11-34654c3a4e06
+[2026-03-26 20:58:10.324] [async_logger] [info] Starting Windows 365...
+[2026-03-26 20:58:10.357] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-03-26 20:58:10.360] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-03-26 20:58:10.368] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-03-26 20:58:10.368] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-03-26 20:58:10.370] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-03-26 20:58:10.370] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-03-26 20:58:10.370] [async_pii_logger] [info] Command line is ''
+[2026-03-26 20:58:10.370] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-03-26 20:58:10.381] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-03-26 20:58:10.480] [async_logger] [info] SessionID: 474d3cb6-6d0c-47c5-a67c-68ab39050291
+[2026-03-27 11:58:47.590] [async_logger] [info] Starting Windows 365...
+[2026-03-27 11:58:47.741] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-27 11:58:47.742] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-27 11:58:47.742] [async_logger] [info] SessionID: 4c0e1175-8a89-4da5-a59a-db21554d64dd
+[2026-03-29 13:56:49.401] [async_logger] [info] Starting Windows 365...
+[2026-03-29 13:56:49.629] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-29 13:56:49.630] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-29 13:56:49.630] [async_logger] [info] SessionID: 03808df9-45ab-4ccd-8abd-cf755ff4541f
+[2026-03-29 22:45:03.973] [async_logger] [info] Starting Windows 365...
+[2026-03-29 22:45:04.212] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-29 22:45:04.213] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-29 22:45:04.213] [async_logger] [info] SessionID: 282db996-2146-45f6-8209-f951b686da6c
+[2026-03-30 03:06:49.844] [async_logger] [info] Starting Windows 365...
+[2026-03-30 03:06:50.029] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-30 03:06:50.030] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-30 03:06:50.030] [async_logger] [info] SessionID: 57056bb5-9f8a-4651-9b26-6f0ad2d2930c
+[2026-03-30 10:52:55.971] [async_logger] [info] Starting Windows 365...
+[2026-03-30 10:52:56.109] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-30 10:52:56.111] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-30 10:52:56.111] [async_logger] [info] SessionID: 9830f03d-d939-456b-8050-fde236ae9e46
+[2026-03-30 17:12:20.042] [async_logger] [info] Starting Windows 365...
+[2026-03-30 17:12:20.154] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-30 17:12:20.155] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-30 17:12:20.156] [async_logger] [info] SessionID: 94bfbba7-7611-40bb-8d06-15f34657263d
+[2026-03-31 11:10:04.931] [async_logger] [info] Starting Windows 365...
+[2026-03-31 11:10:05.098] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-31 11:10:05.099] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-03-31 11:10:05.100] [async_logger] [info] SessionID: c5f1e3b3-1405-4d02-a6d3-498a7aae0227
+[2026-03-31 18:10:50.214] [async_logger] [info] Starting Windows 365...
+[2026-03-31 18:10:50.385] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-03-31 18:10:50.386] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-03-31 18:10:50.386] [async_logger] [info] SessionID: 171e3845-9b9b-4ba4-94ab-d46d2f53e5e7
+[2026-04-01 12:06:35.727] [async_logger] [info] Starting Windows 365...
+[2026-04-01 12:06:35.872] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-01 12:06:35.873] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-04-01 12:06:35.873] [async_logger] [info] SessionID: f79decec-0137-4907-8357-5f23841412bd
+[2026-04-01 17:12:41.292] [async_logger] [info] Starting Windows 365...
+[2026-04-01 17:12:41.452] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-01 17:12:41.453] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-04-01 17:12:41.453] [async_logger] [info] SessionID: 9ec95136-9595-412f-92b3-1eb0ce0cd7af
+[2026-04-01 17:17:22.723] [async_logger] [info] Starting Windows 365...
+[2026-04-01 17:17:22.749] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-04-01 17:17:22.752] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-04-01 17:17:22.757] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-04-01 17:17:22.757] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-04-01 17:17:22.758] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-04-01 17:17:22.758] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-04-01 17:17:22.758] [async_pii_logger] [info] Command line is ''
+[2026-04-01 17:17:22.758] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-04-01 17:17:22.767] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-04-01 17:17:22.817] [async_logger] [info] SessionID: e953a010-1a00-4d54-9564-c0e0301b8310
+[2026-04-02 11:49:51.037] [async_logger] [info] Starting Windows 365...
+[2026-04-02 11:49:51.647] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-02 11:49:51.649] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-04-02 11:49:51.649] [async_logger] [info] SessionID: 2ee9524a-a9b8-418b-9cfd-539397d73525
+[2026-04-03 10:08:17.537] [async_logger] [info] Starting Windows 365...
+[2026-04-03 10:08:17.653] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-03 10:08:17.654] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-04-03 10:08:17.654] [async_logger] [info] SessionID: 4d9db65c-eab5-48bc-a1ed-0c1cb1ff0c27
+[2026-04-03 11:28:22.107] [async_logger] [info] Starting Windows 365...
+[2026-04-03 11:28:22.139] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-04-03 11:28:22.145] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-04-03 11:28:22.152] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-04-03 11:28:22.152] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-04-03 11:28:22.153] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-04-03 11:28:22.153] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-04-03 11:28:22.153] [async_pii_logger] [info] Command line is ''
+[2026-04-03 11:28:22.153] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-04-03 11:28:22.165] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-04-03 11:28:22.251] [async_logger] [info] SessionID: 6f94f791-ca51-4d89-b54d-6a2a25802146
+[2026-04-03 11:37:58.171] [async_logger] [info] Starting Windows 365...
+[2026-04-03 11:37:58.266] [async_logger] [info] [TaskRegistrar] Current background access status: AllowedSubjectToSystemPolicy
+[2026-04-03 11:37:58.271] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppSilentUpdateBackgroundTask
+[2026-04-03 11:37:58.282] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppSilentUpdateBackgroundTask' is already registered.
+[2026-04-03 11:37:58.282] [async_logger] [info] [TaskRegistrar] Registering task: WindowsAppIntegrityCheckBackgroundTask
+[2026-04-03 11:37:58.284] [async_logger] [info] [TaskRegistrar] Task 'WindowsAppIntegrityCheckBackgroundTask' is already registered.
+[2026-04-03 11:37:58.286] [async_logger] [info] WindowsAppRunning::mutex acquired
+[2026-04-03 11:37:58.286] [async_pii_logger] [info] Command line is ''
+[2026-04-03 11:37:58.286] [async_logger] [info] Windows365-WebView-instance::mutex acquired
+[2026-04-03 11:37:58.295] [async_logger] [info] Logging continuing in "Windows365-WebView-instance.log".
+[2026-04-03 11:37:58.403] [async_logger] [info] SessionID: e2f1a846-fd9e-4bca-9e2a-c3fafecac943
+[2026-04-03 11:41:15.560] [async_logger] [info] Starting Windows 365...
+[2026-04-03 11:41:15.717] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-03 11:41:15.719] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
+[2026-04-03 11:41:15.719] [async_logger] [info] SessionID: d9bcd09d-29b2-48d9-9abc-39c7e95eb10e
+[2026-04-03 11:41:20.446] [async_logger] [info] Starting Windows 365...
+[2026-04-03 11:41:20.526] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
+[2026-04-03 11:41:20.528] [async_logger] [info] Creating task server for args: -BackgroundTask 907249C0-74A7-4885-AB48-A38A4dCF528F -Embedding
+[2026-04-03 11:41:20.528] [async_logger] [info] SessionID: c083f285-c65f-4790-b4ee-a48628b6ca40

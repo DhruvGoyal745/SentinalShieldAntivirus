@@ -1,0 +1,14 @@
+info: Antivirus.Infrastructure.Persistence.DatabaseBootstrapper[0]
+      Database and quarantine storage are ready.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5099
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+info: Antivirus.Middleware.RequestLoggingMiddleware[0]
+      GET /api/health/status responded 200 in 2887 ms

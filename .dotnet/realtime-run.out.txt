@@ -1,0 +1,32 @@
+info: Antivirus.Infrastructure.Persistence.DatabaseBootstrapper[0]
+      Database and quarantine storage are ready.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\Downloads.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\Documents.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\AppData\Local\Temp.
+info: Antivirus.Infrastructure.Security.FileWatcherHostedService[0]
+      Watching filesystem root C:\Users\dhruvgoyal\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://127.0.0.1:5120
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+info: Antivirus.Middleware.RequestLoggingMiddleware[0]
+      GET /api/fileevents responded 200 in 146 ms
+fail: Antivirus.Infrastructure.Security.RealtimeProtectionService[0]
+      Realtime processing failed for file event 6.
+      System.IO.IOException: The process cannot access the file 'C:\Users\dhruvgoyal\AppData\Local\Temp\etilqs_TZauthXhv2g8Gq8' because it is being used by another process.
+         at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+         at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+         at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+         at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+         at System.IO.FileInfo.OpenRead()
+         at Antivirus.Infrastructure.Security.RealtimeProtectionService.ComputeSha256Async(FileInfo fileInfo, CancellationToken cancellationToken) in C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\Security\RealtimeProtectionService.cs:line 225
+         at Antivirus.Infrastructure.Security.RealtimeProtectionService.ProcessQueuedFileEventAsync(QueuedFileEventWorkItem workItem, CancellationToken cancellationToken) in C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Infrastructure\Security\RealtimeProtectionService.cs:line 110

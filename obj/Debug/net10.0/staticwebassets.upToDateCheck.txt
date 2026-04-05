@@ -1,0 +1,6 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-BGJHD2Mq.css
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\index.html
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-u7sYQFEg.js
+wwwroot\assets\index-BGJHD2Mq.css
+wwwroot\assets\index-u7sYQFEg.js
+wwwroot\index.html
