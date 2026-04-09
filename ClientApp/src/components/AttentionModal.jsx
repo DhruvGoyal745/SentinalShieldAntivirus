@@ -1,12 +1,13 @@
-import { formatDate, severityTone } from "../ui/presentation";
+import ModalShell from "./ModalShell";
+import { formatAbsoluteTime, severityTone } from "../ui/presentation";
 
 function deriveTone(vulnerabilities) {
   if (!Array.isArray(vulnerabilities) || vulnerabilities.length === 0) {
-    return "safe";
+    return "healthy";
   }
 
   if (vulnerabilities.some((threat) => threat.severity === "High" || threat.severity === "Critical")) {
-    return "unsafe";
+    return "critical";
   }
 
   return "warning";
@@ -18,74 +19,60 @@ export default function AttentionModal({ scan, vulnerabilities, onDismiss, onRev
   }
 
   const tone = deriveTone(vulnerabilities);
-  const isUnsafe = tone === "unsafe";
-  const title = isUnsafe
-    ? "Run completed successfully, but your system needs attention."
-    : vulnerabilities.length > 0
-      ? "Run completed successfully with vulnerabilities identified."
-      : "Run completed successfully and the system looks healthy.";
-  const detail = isUnsafe
-    ? "High-priority findings were surfaced in this run and should be reviewed immediately."
-    : vulnerabilities.length > 0
-      ? "The run finished successfully and identified lower-priority vulnerabilities that still deserve review."
-      : "No vulnerabilities were identified in this run.";
+  const heading = tone === "healthy"
+    ? "Run completed successfully and the system looks healthy"
+    : tone === "warning"
+      ? "Run completed with vulnerabilities identified"
+      : "Your system needs attention";
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onDismiss}>
-      <div
-        className={`modal-card attention-modal ${tone}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="attention-modal-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <span className="history-mode">{isUnsafe ? "System needs attention" : "Run successful"}</span>
-        <h3 id="attention-modal-title">{title}</h3>
-        <p>{detail}</p>
+    <ModalShell titleId="attention-summary-title" onDismiss={onDismiss} tone={tone}>
+      <span className="modal-label">Post-Scan Attention Summary</span>
+      <h2 id="attention-summary-title">{heading}</h2>
+      <p>
+        {vulnerabilities.length === 0
+          ? "No findings were surfaced during this run."
+          : `${vulnerabilities.length} findings were surfaced during this run and are ready for analyst review.`}
+      </p>
 
-        <div className="modal-detail-list">
-          <div>
-            <span>Scan</span>
-            <strong>
-              #{scan.id} | {scan.mode} | {formatDate(scan.completedAt ?? scan.createdAt)}
-            </strong>
-          </div>
-          <div>
-            <span>Vulnerabilities identified</span>
-            <strong>
-              {vulnerabilities.length === 0
-                ? "No vulnerabilities identified"
-                : `${vulnerabilities.length} findings surfaced`}
-            </strong>
-          </div>
+      <div className="modal-detail-grid">
+        <div>
+          <span>Scan metadata</span>
+          <strong className="font-mono">
+            {`SCAN-${String(scan.id).padStart(5, "0")} • ${scan.mode} • ${formatAbsoluteTime(scan.completedAt ?? scan.createdAt)}`}
+          </strong>
         </div>
-
-        {vulnerabilities.length > 0 ? (
-          <div className="attention-list">
-            {vulnerabilities.map((threat) => (
-              <article key={`${scan.id}-${threat.id}-${threat.detectedAt}`} className="attention-item">
-                <div className="attention-item-header">
-                  <strong>{threat.name}</strong>
-                  <span className={`pill ${severityTone(threat.severity)}`}>{threat.severity}</span>
-                </div>
-                <p>{threat.description || threat.category}</p>
-                <small>{threat.resource ?? "Resource unavailable"}</small>
-              </article>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="action-row modal-actions">
-          <button className="ghost-button compact" type="button" onClick={onDismiss}>
-            Close
-          </button>
-          {vulnerabilities.length > 0 ? (
-            <button className="primary-button compact" type="button" onClick={onReview}>
-              Review detections
-            </button>
-          ) : null}
+        <div>
+          <span>Vulnerability count</span>
+          <strong>{vulnerabilities.length}</strong>
         </div>
       </div>
-    </div>
+
+      {vulnerabilities.length > 0 ? (
+        <div className="attention-findings">
+          {vulnerabilities.map((threat) => (
+            <article key={`${scan.id}-${threat.id}`} className="attention-finding">
+              <div className="attention-finding-head">
+                <strong>{threat.name}</strong>
+                <span className={`pill pill-${severityTone(threat.severity)}`}>{threat.severity}</span>
+              </div>
+              <p>{threat.description || threat.category}</p>
+              <code className="font-mono">{threat.resource ?? "Resource unavailable"}</code>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="modal-actions">
+        <button className="button button-secondary" type="button" onClick={onDismiss}>
+          Close
+        </button>
+        {vulnerabilities.length > 0 ? (
+          <button className="button button-primary" type="button" onClick={onReview}>
+            Review Detections
+          </button>
+        ) : null}
+      </div>
+    </ModalShell>
   );
 }

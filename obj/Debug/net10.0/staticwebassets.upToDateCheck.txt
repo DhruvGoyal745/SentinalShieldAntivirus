@@ -1,6 +1,0 @@
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-CHJExgDI.css
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\index.html
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-BbqPUqMz.js
-wwwroot\assets\index-BbqPUqMz.js
-wwwroot\assets\index-CHJExgDI.css
-wwwroot\index.html

@@ -55,6 +55,13 @@ public interface IControlPlaneRepository
 
     Task<FalsePositiveReview> CreateFalsePositiveReviewAsync(FalsePositiveReview review, CancellationToken cancellationToken = default);
 
+    Task<FalsePositiveReview?> DecideFalsePositiveReviewAsync(
+        int reviewId,
+        FalsePositiveReviewStatus status,
+        string analyst,
+        string? notes,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<FalsePositiveReview>> GetFalsePositiveReviewsAsync(CancellationToken cancellationToken = default);
 
     Task<SandboxSubmission> CreateSandboxSubmissionAsync(SandboxSubmission submission, CancellationToken cancellationToken = default);

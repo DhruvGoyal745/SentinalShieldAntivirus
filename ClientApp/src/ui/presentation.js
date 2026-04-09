@@ -1,19 +1,109 @@
 import { pageDefinitions } from "./constants";
 
-export function formatDate(value) {
+function clamp(value, minimum, maximum) {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
+function formatTimeUnit(value, unit) {
+  const rounded = Math.round(value);
+  return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(rounded, unit);
+}
+
+export function formatAbsoluteTime(value) {
   if (!value) {
     return "Unavailable";
   }
 
-  return new Date(value).toLocaleString();
+  return new Date(value).toISOString();
 }
 
-export function formatPercent(value) {
-  return `${Number(value ?? 0).toFixed(2)}%`;
+export function formatCompactDate(value) {
+  if (!value) {
+    return "Unknown";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(value));
 }
 
-function clamp(value, minimum, maximum) {
-  return Math.min(Math.max(value, minimum), maximum);
+export function formatRelativeTime(value) {
+  if (!value) {
+    return "Unavailable";
+  }
+
+  const now = Date.now();
+  const date = new Date(value).getTime();
+  const diffMs = date - now;
+  const diffSeconds = diffMs / 1000;
+  const diffMinutes = diffSeconds / 60;
+  const diffHours = diffMinutes / 60;
+  const diffDays = diffHours / 24;
+
+  if (Math.abs(diffSeconds) < 60) {
+    return formatTimeUnit(diffSeconds, "second");
+  }
+
+  if (Math.abs(diffMinutes) < 60) {
+    return formatTimeUnit(diffMinutes, "minute");
+  }
+
+  if (Math.abs(diffHours) < 24) {
+    return formatTimeUnit(diffHours, "hour");
+  }
+
+  return formatTimeUnit(diffDays, "day");
+}
+
+export function formatPercent(value, digits = 0) {
+  return `${Number(value ?? 0).toFixed(digits)}%`;
+}
+
+export function formatNumber(value) {
+  return Number(value ?? 0).toLocaleString();
+}
+
+export function formatFileSize(bytes) {
+  const numeric = Number(bytes ?? 0);
+  if (!numeric) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB"];
+  const exponent = Math.min(Math.floor(Math.log(numeric) / Math.log(1024)), units.length - 1);
+  const normalized = numeric / 1024 ** exponent;
+  return `${normalized.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+}
+
+export function formatDurationFromScan(scan, now = Date.now()) {
+  if (!scan) {
+    return "00:00:00";
+  }
+
+  const origin = new Date(scan.startedAt ?? scan.createdAt).getTime();
+  const endpoint = scan.completedAt ? new Date(scan.completedAt).getTime() : now;
+  const elapsedSeconds = Math.max(0, Math.floor((endpoint - origin) / 1000));
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+  const seconds = elapsedSeconds % 60;
+  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+export function formatCompactDuration(scan, now = Date.now()) {
+  const clock = formatDurationFromScan(scan, now).split(":").map(Number);
+  const [hours, minutes, seconds] = clock;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
 }
 
 export function severityTone(severity) {
@@ -24,27 +114,26 @@ export function severityTone(severity) {
       return "high";
     case "Medium":
     case "Suspicious":
-      return "medium";
+      return "warning";
     case "Low":
-      return "low";
     case "Informational":
     default:
-      return "info";
+      return "neutral";
   }
 }
 
 export function scanStatusTone(status) {
   switch (status) {
     case "Completed":
-      return "success";
-    case "Cancelled":
-      return "pending";
-    case "Failed":
-      return "danger";
+      return "healthy";
     case "Running":
       return "active";
+    case "Failed":
+      return "critical";
+    case "Cancelled":
+      return "muted";
     default:
-      return "pending";
+      return "warning";
   }
 }
 
@@ -52,16 +141,30 @@ export function fileEventTone(status) {
   switch (status) {
     case "ThreatDetected":
       return "critical";
-    case "Error":
-      return "danger";
     case "Suspicious":
-      return "medium";
+      return "warning";
     case "Clean":
-      return "success";
+      return "healthy";
     case "Processing":
       return "active";
+    case "Skipped":
+      return "muted";
     default:
-      return "pending";
+      return "neutral";
+  }
+}
+
+export function reviewStatusTone(status) {
+  switch (status) {
+    case "Approved":
+      return "healthy";
+    case "Rejected":
+      return "critical";
+    case "UnderReview":
+      return "active";
+    case "Submitted":
+    default:
+      return "warning";
   }
 }
 
@@ -70,41 +173,50 @@ export function sandboxVerdictTone(verdict) {
     case "Malicious":
       return "critical";
     case "Suspicious":
-      return "medium";
+      return "warning";
     case "Benign":
-      return "success";
+      return "healthy";
     default:
-      return "pending";
+      return "muted";
   }
 }
 
-export function reviewStatusTone(status) {
+export function incidentStatusTone(status) {
   switch (status) {
-    case "Approved":
-      return "success";
-    case "Rejected":
-      return "danger";
-    case "UnderReview":
+    case "Resolved":
+      return "healthy";
+    case "Contained":
+      return "warning";
+    case "Investigating":
       return "active";
     default:
-      return "pending";
+      return "critical";
   }
 }
 
-export function getLatestScanProgress(progressEvents) {
-  if (!Array.isArray(progressEvents) || progressEvents.length === 0) {
-    return null;
+export function complianceTone(value) {
+  const numeric = Number(value ?? 0);
+  if (numeric > 90) {
+    return "healthy";
   }
 
-  return progressEvents.reduce((latest, candidate) => {
-    if (!latest) {
-      return candidate;
-    }
+  if (numeric >= 70) {
+    return "warning";
+  }
 
-    return new Date(candidate.recordedAt).getTime() > new Date(latest.recordedAt).getTime()
-      ? candidate
-      : latest;
-  }, null);
+  return "critical";
+}
+
+export function getInitialPage() {
+  const hash = window.location.hash.replace(/^#/, "").trim().toLowerCase();
+  const pageKey = hash.split("/")[0];
+  return pageDefinitions.some((page) => page.key === pageKey) ? pageKey : "home";
+}
+
+export function getGovernanceTabFromHash() {
+  const hash = window.location.hash.replace(/^#/, "").trim().toLowerCase();
+  const [, tab = "legacy-parity"] = hash.split("/");
+  return tab || "legacy-parity";
 }
 
 export function mergeScanWithProgress(scan, progressEvent) {
@@ -129,52 +241,23 @@ export function mergeScanWithProgress(scan, progressEvent) {
   };
 }
 
+export function getLatestScanProgress(progressEvents) {
+  if (!Array.isArray(progressEvents) || progressEvents.length === 0) {
+    return null;
+  }
+
+  return progressEvents.reduce((latest, candidate) =>
+    !latest || new Date(candidate.recordedAt).getTime() > new Date(latest.recordedAt).getTime()
+      ? candidate
+      : latest, null);
+}
+
 export function getSkippedEventKey(progressEvent) {
   if (!progressEvent) {
     return "";
   }
 
   return `${progressEvent.scanJobId}-${progressEvent.recordedAt}-${progressEvent.currentPath ?? "unknown"}`;
-}
-
-export function describeFilesScanned(scan) {
-  if (!scan) {
-    return "Waiting";
-  }
-
-  if (typeof scan.totalFiles === "number" && scan.totalFiles > 0) {
-    return `${scan.filesScanned ?? 0} / ${scan.totalFiles}`;
-  }
-
-  return `${scan.filesScanned ?? 0} processed`;
-}
-
-export function describeScanTarget(scan) {
-  if (!scan) {
-    return "Awaiting scan";
-  }
-
-  return scan.currentTarget ?? scan.targetPath ?? "Working through queued targets";
-}
-
-export function describeHealthStatus(health) {
-  if (!health) {
-    return "Waiting for runtime data";
-  }
-
-  if (health.antivirusSignatureLastUpdated) {
-    const freshness = health.signaturesOutOfDate ? "Signatures stale" : "Signatures current";
-    return `${freshness} | updated ${formatDate(health.antivirusSignatureLastUpdated)}`;
-  }
-
-  return health.antivirusSignatureVersion
-    ? `Signature version ${health.antivirusSignatureVersion}`
-    : "Runtime health captured";
-}
-
-export function getInitialPage() {
-  const hash = window.location.hash.replace("#", "").trim().toLowerCase();
-  return pageDefinitions.some((page) => page.key === hash) ? hash : "home";
 }
 
 export function deriveScanProgress(scan, now) {
@@ -186,134 +269,107 @@ export function deriveScanProgress(scan, now) {
     return clamp(Math.round(scan.percentComplete), 0, 100);
   }
 
-  if (scan.status === "Completed" || scan.status === "Failed") {
+  if (scan.status === "Completed" || scan.status === "Failed" || scan.status === "Cancelled") {
     return 100;
   }
 
-  if (scan.status === "Pending") {
-    return 8;
-  }
-
-  const origin = scan.startedAt ?? scan.createdAt;
-  const elapsedSeconds = Math.max(0, (now - new Date(origin).getTime()) / 1000);
+  const startedAt = new Date(scan.startedAt ?? scan.createdAt).getTime();
+  const elapsedSeconds = Math.max(0, (now - startedAt) / 1000);
 
   switch (scan.mode) {
     case "Quick":
-      return clamp(Math.round(18 + elapsedSeconds * 5), 18, 93);
+      return clamp(Math.round(12 + elapsedSeconds * 4), 12, 96);
     case "Full":
-      return clamp(Math.round(14 + elapsedSeconds * 1.6), 14, 92);
+      return clamp(Math.round(8 + elapsedSeconds * 1.4), 8, 94);
     case "Custom":
-      return clamp(Math.round(16 + elapsedSeconds * 2.8), 16, 92);
+      return clamp(Math.round(14 + elapsedSeconds * 2.4), 14, 95);
     default:
-      return clamp(Math.round(18 + elapsedSeconds * 2), 18, 92);
+      return clamp(Math.round(10 + elapsedSeconds * 2), 10, 94);
   }
 }
 
-export function formatRuntime(scan) {
+export function describeFilesScanned(scan) {
   if (!scan) {
-    return "Waiting for a scan";
+    return "0 / 0";
   }
 
-  if (scan.status === "Pending" && !scan.startedAt) {
-    return "Awaiting worker";
+  if (typeof scan.totalFiles === "number" && scan.totalFiles > 0) {
+    return `${formatNumber(scan.filesScanned)} / ${formatNumber(scan.totalFiles)}`;
   }
 
-  if (scan.status === "Cancelled") {
-    return "Stopped";
-  }
-
-  const startedAt = scan.startedAt ?? scan.createdAt;
-  const completedAt = scan.completedAt ?? new Date().toISOString();
-  const elapsedMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
-
-  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) {
-    return "Just started";
-  }
-
-  const totalSeconds = Math.floor(elapsedMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  if (minutes <= 0) {
-    return `${seconds}s elapsed`;
-  }
-
-  return `${minutes}m ${seconds.toString().padStart(2, "0")}s elapsed`;
+  return formatNumber(scan.filesScanned);
 }
 
-export function deriveAnalysisHeadline(scan) {
+export function describeScanTarget(scan) {
   if (!scan) {
-    return "Choose a scan mode and start a customer-friendly security review.";
+    return "Awaiting target";
   }
 
-  if (scan.status === "Pending") {
-    return `Scan #${scan.id} is queued and waiting for the background worker.`;
-  }
-
-  if (scan.status === "Completed") {
-    return scan.threatCount > 0
-      ? `Scan #${scan.id} finished with ${scan.threatCount} findings ready for review.`
-      : `Scan #${scan.id} finished clean with no confirmed detections.`;
-  }
-
-  if (scan.status === "Cancelled") {
-    return `Scan #${scan.id} was stopped before completion.`;
-  }
-
-  if (scan.status === "Failed") {
-    return `Scan #${scan.id} stopped before completion.`;
-  }
-
-  return `Scan #${scan.id} is actively analyzing the endpoint in realtime.`;
+  return scan.currentTarget ?? scan.targetPath ?? "Scanning managed estate";
 }
 
-export function deriveAnalysisDetail(scan, progress) {
-  if (!scan) {
-    return "The analysis bar will light up here as soon as a user starts a scan.";
+export function describeHealthStatus(health) {
+  if (!health) {
+    return "Health snapshot pending";
   }
 
-  if (scan.notes) {
-    return scan.notes;
+  const checks = [
+    health.antivirusEnabled,
+    health.realTimeProtectionEnabled,
+    health.engineServiceEnabled,
+    !health.signaturesOutOfDate
+  ];
+  const healthyCount = checks.filter(Boolean).length;
+  return `${healthyCount} / ${checks.length} health checks passing`;
+}
+
+export function computeSystemHealthPercent(health) {
+  if (!health) {
+    return 0;
   }
 
-  if (scan.status === "Pending") {
-    return "Queued in the scheduler and reserving the engine for execution.";
+  const checks = [
+    health.antivirusEnabled,
+    health.realTimeProtectionEnabled,
+    health.ioavProtectionEnabled,
+    health.networkInspectionEnabled,
+    health.engineServiceEnabled,
+    !health.signaturesOutOfDate
+  ];
+
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+export function buildSparklinePoints(scans) {
+  const sample = scans.slice(0, 7).reverse();
+  if (sample.length === 0) {
+    return "0,24 40,24 80,24 120,24 160,24 200,24";
   }
 
-  switch (scan.stage) {
-    case "Observe":
-      return "Observing configured roots and preparing the clean-room engine pipeline.";
-    case "Normalize":
-      return "Normalizing file metadata and building the scan queue.";
-    case "StaticAnalysis":
-      return "Hashing files and applying clean-room static signatures.";
-    case "HeuristicAnalysis":
-      return "Correlating behavior signals and clean-room heuristics.";
-    case "ReputationLookup":
-      return "Checking reputation and optional sandbox enrichment.";
-    case "Response":
-      return "Applying high-confidence remediation and quarantine decisions.";
-    case "Telemetry":
-      return "Persisting verdicts, detections, and scan telemetry.";
-    default:
-      break;
+  return sample
+    .map((scan, index) => {
+      const x = sample.length === 1 ? 0 : (index / (sample.length - 1)) * 200;
+      const progress = clamp(Number(scan.percentComplete ?? scan.threatCount ?? 0), 0, 100);
+      const y = 48 - (progress / 100) * 36;
+      return `${x},${y}`;
+    })
+    .join(" ");
+}
+
+export function parseEvidenceSha(evidenceJson) {
+  if (!evidenceJson) {
+    return null;
   }
 
-  if (progress < 28) {
-    return "Preparing scan roots and normalizing endpoint context.";
+  try {
+    const evidence = JSON.parse(evidenceJson);
+    return evidence.sha256 ?? evidence.hashSha256 ?? evidence.hash ?? null;
+  } catch {
+    return null;
   }
+}
 
-  if (progress < 50) {
-    return "Hashing files and applying proprietary static signatures.";
-  }
-
-  if (progress < 72) {
-    return "Correlating behavior signals and suspicious execution patterns.";
-  }
-
-  if (progress < 88) {
-    return "Fusing reputation signals and optional sandbox enrichment.";
-  }
-
-  return "Finalizing verdicts, remediation hints, and telemetry persistence.";
+export function formatConfidence(confidence) {
+  const numeric = Number(confidence ?? 0);
+  return `${Math.round(numeric > 1 ? numeric : numeric * 100)}%`;
 }

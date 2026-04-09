@@ -28,19 +28,7 @@ public sealed class AntivirusPlatformOptions
 
     public int ProgressPersistMinIntervalMs { get; set; } = 750;
 
-    public string YaraExecutablePath { get; set; } = "Tools\\Yara\\yara64.exe";
-
-    public string YaraRulesPath { get; set; } = "Rules\\Yara\\starter-rules.yar";
-
-    public bool YaraRulesCompiled { get; set; }
-
-    public string ClamAvExecutablePath { get; set; } = "Tools\\ClamAV\\clamscan.exe";
-
-    public string ClamAvDaemonExecutablePath { get; set; } = "Tools\\ClamAV\\clamdscan.exe";
-
-    public bool PreferClamAvDaemon { get; set; }
-
-    public bool UseOpenSourceScanners { get; set; }
+    public bool UseInHouseScanners { get; set; } = true;
 
     public bool UseLegacyShadowMode { get; set; } = true;
 

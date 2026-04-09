@@ -26,6 +26,7 @@ public enum ScanStage
     ReputationLookup,
     Response,
     Telemetry,
+    WaitingForInput,
     Cancelled,
     Completed,
     Failed
@@ -50,7 +51,9 @@ public enum ThreatSource
     Behavior,
     Reputation,
     Sandbox,
-    LegacyShadow
+    LegacyShadow,
+    PatternRule,
+    SignatureHash
 }
 
 public enum FileEventType
@@ -167,6 +170,37 @@ public sealed class ScanControlResult
     public ScanStatus Status { get; init; }
 
     public string Message { get; init; } = string.Empty;
+}
+
+public enum ScanFileDecisionAction
+{
+    Retry,
+    Skip
+}
+
+public sealed class ScanFileDecision
+{
+    public required string FilePath { get; init; }
+
+    public required ScanFileDecisionAction Action { get; init; }
+}
+
+public sealed class ScanFileDecisionResult
+{
+    public bool Success { get; init; }
+
+    public string Message { get; init; } = string.Empty;
+}
+
+public sealed class PendingScanFilePrompt
+{
+    public required int ScanId { get; init; }
+
+    public required string FilePath { get; init; }
+
+    public required string Reason { get; init; }
+
+    public required DateTimeOffset OccurredAt { get; init; }
 }
 
 public sealed class ScanStatusSnapshot

@@ -1,41 +1,46 @@
-import { formatDate } from "../ui/presentation";
+import ModalShell from "./ModalShell";
+import { formatAbsoluteTime } from "../ui/presentation";
 
-export default function SkippedFileModal({ skipPrompt, onDismiss, onRetry, retryingSkippedFile }) {
+export default function SkippedFileModal({ skipPrompt, onDismiss, onRetry, onSkip, retryingSkippedFile }) {
   if (!skipPrompt) {
     return null;
   }
 
+  const isWaiting = skipPrompt.stage === "WaitingForInput";
+
   return (
-    <div className="modal-backdrop" role="presentation">
-      <div className="modal-card" role="dialog" aria-modal="true" aria-labelledby="skipped-file-title">
-        <span className="history-mode">Skipped file</span>
-        <h3 id="skipped-file-title">The antivirus skipped a file during scan #{skipPrompt.scanJobId}.</h3>
-        <p>{skipPrompt.detailMessage || "This file could not be accessed safely, so the scan continued without failing."}</p>
+    <ModalShell titleId="skipped-file-title" onDismiss={onDismiss}>
+      <span className="modal-label">{isWaiting ? "Action Required" : "Skipped File"}</span>
+      <h2 id="skipped-file-title">
+        {isWaiting
+          ? `Scan #${skipPrompt.scanJobId} is paused — waiting for your decision`
+          : `The antivirus skipped a file during scan #${skipPrompt.scanJobId}`}
+      </h2>
+      <p>{skipPrompt.detailMessage || "The file could not be scanned safely. Choose Retry to try again or Skip to continue the scan."}</p>
 
-        <div className="modal-detail-list">
-          <div>
-            <span>File</span>
-            <strong>{skipPrompt.currentPath ?? "Unknown path"}</strong>
-          </div>
-          <div>
-            <span>Stage</span>
-            <strong>{skipPrompt.stage}</strong>
-          </div>
-          <div>
-            <span>Recorded</span>
-            <strong>{formatDate(skipPrompt.recordedAt)}</strong>
-          </div>
+      <div className="modal-detail-grid">
+        <div>
+          <span>File path</span>
+          <strong className="font-mono">{skipPrompt.currentPath ?? "Unknown path"}</strong>
         </div>
-
-        <div className="action-row modal-actions">
-          <button className="ghost-button compact" type="button" onClick={onDismiss}>
-            Skip
-          </button>
-          <button className="primary-button compact" type="button" onClick={onRetry} disabled={retryingSkippedFile}>
-            {retryingSkippedFile ? "Retrying..." : "Retry"}
-          </button>
+        <div>
+          <span>Stage</span>
+          <strong>{skipPrompt.stage}</strong>
+        </div>
+        <div>
+          <span>Recorded timestamp</span>
+          <strong className="font-mono">{formatAbsoluteTime(skipPrompt.recordedAt)}</strong>
         </div>
       </div>
-    </div>
+
+      <div className="modal-actions">
+        <button className="button button-secondary" type="button" onClick={onSkip || onDismiss}>
+          Skip
+        </button>
+        <button className="button button-primary" type="button" onClick={onRetry} disabled={retryingSkippedFile}>
+          {retryingSkippedFile ? "Retrying..." : "Retry"}
+        </button>
+      </div>
+    </ModalShell>
   );
 }

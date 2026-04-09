@@ -1,19 +1,25 @@
-export default function ScanSelector({ scans, selectedScanId, onChange }) {
+import { useDashboardStore } from "../state/useDashboardStore";
+import { formatCompactDate } from "../ui/presentation";
+
+export default function ScanSelector({ scans, label = "Scan context", id = "scan-context" }) {
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
+  const setSelectedScanId = useDashboardStore((state) => state.setSelectedScanId);
+
   return (
-    <div className="scan-selector">
-      <label htmlFor="scan-dropdown">Filter by scan:</label>
+    <label className="scan-selector" htmlFor={id}>
+      <span>{label}</span>
       <select
-        id="scan-dropdown"
+        id={id}
         value={selectedScanId ?? ""}
-        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+        onChange={(event) => setSelectedScanId(event.target.value ? Number(event.target.value) : null)}
       >
         <option value="">All scans</option>
         {scans.map((scan) => (
           <option key={scan.id} value={scan.id}>
-            Scan #{scan.id} - {scan.mode} ({scan.status})
+            {`SCAN-${String(scan.id).padStart(5, "0")} - ${formatCompactDate(scan.createdAt)}`}
           </option>
         ))}
       </select>
-    </div>
+    </label>
   );
 }

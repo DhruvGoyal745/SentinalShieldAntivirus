@@ -42,4 +42,11 @@ public sealed class ScansController : ControllerBase
         var result = await _securityOrchestrator.StopScanAsync(id, cancellationToken);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    [HttpPost("{id:int}/file-decision")]
+    public async Task<IActionResult> FileDecision(int id, [FromBody] ScanFileDecision decision, CancellationToken cancellationToken)
+    {
+        var result = await _securityOrchestrator.SubmitFileDecisionAsync(id, decision, cancellationToken);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
 }

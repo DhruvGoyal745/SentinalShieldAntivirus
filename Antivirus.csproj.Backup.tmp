@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SentinelShieldAntivirus</AssemblyName>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Application\Antivirus.Application.csproj" />
+    <ProjectReference Include="Domain\Antivirus.Domain.csproj" />
+    <ProjectReference Include="Infrastructure\Antivirus.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Application\**\*.cs" />
+    <Compile Remove="Configuration\AntivirusPlatformOptions.cs" />
+    <Compile Remove="Domain\**\*.cs" />
+    <Compile Remove="Infrastructure\**\*.cs" />
+    <Compile Remove="Data\Quarantine\**\*.cs" />
+    <Content Remove="Data\Quarantine\**\*" />
+    <None Include="Data\Quarantine\**\*" Exclude="Data\Quarantine\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Database\**\*.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Rules\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="NativeEngine\artifacts\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="artifacts\**" />
+    <None Remove="artifacts\**" />
+    <Content Remove="Application\bin\**;Application\obj\**;Application\artifacts\**" />
+    <Content Remove="Domain\bin\**;Domain\obj\**;Domain\artifacts\**" />
+    <Content Remove="Infrastructure\bin\**;Infrastructure\obj\**;Infrastructure\artifacts\**" />
+    <Content Remove="ClientApp\**" />
+    <None Remove="Application\bin\**;Application\obj\**;Application\artifacts\**" />
+    <None Remove="Domain\bin\**;Domain\obj\**;Domain\artifacts\**" />
+    <None Remove="Infrastructure\bin\**;Infrastructure\obj\**;Infrastructure\artifacts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Infrastructure\Security\PatternRuleScannerEngine.cs" />
+    <Compile Include="Infrastructure\Security\SignatureHashScannerEngine.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\Contracts\" />
+    <Folder Include="Rules\Yara\" />
+  </ItemGroup>
+
+  <!-- Build the React frontend before build/publish -->
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html')">
+    <Exec Command="npm install" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
+
+  <Target Name="PublishClientApp" BeforeTargets="Publish">
+    <Exec Command="npm install" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
+
+  <!-- Auto-publish the exe after every successful build -->
+  <Target Name="AutoPublishExe" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <PublishOutputDir>$(MSBuildProjectDirectory)\bin\publish\win-x64</PublishOutputDir>
+    </PropertyGroup>
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c $(Configuration) -r win-x64 --self-contained --no-build -o &quot;$(PublishOutputDir)&quot;" />
+    <Message Importance="high" Text="Published exe to $(PublishOutputDir)\SentinelShieldAntivirus.exe" />
+  </Target>
+
+</Project>

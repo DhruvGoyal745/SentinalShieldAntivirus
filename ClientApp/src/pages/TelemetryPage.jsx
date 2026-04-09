@@ -1,145 +1,177 @@
-import { useDeferredValue } from "react";
-import { liveScanStatuses } from "../ui/constants";
-import { deriveScanProgress, describeFilesScanned, describeScanTarget, fileEventTone, formatDate } from "../ui/presentation";
+import { useDeferredValue, useMemo, useState } from "react";
+import { File, FileCog, FilePenLine, FilePlus2, FileX2 } from "lucide-react";
+import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
+import Timestamp from "../components/Timestamp";
+import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { fileEventTone, formatFileSize } from "../ui/presentation";
+
+const iconByEvent = {
+  Created: FilePlus2,
+  Changed: FilePenLine,
+  Renamed: FileCog,
+  Deleted: FileX2
+};
 
 export default function TelemetryPage({
   fileEvents,
   scans,
-  telemetryQuery,
-  setTelemetryQuery,
-  onFocusScan,
-  onExportScan,
-  onStopScan,
-  stoppingScanId,
-  analysisClock,
-  selectedScanId,
-  setSelectedScanId
+  scanProgressEvents,
+  loading,
+  error,
+  onRefresh,
+  lastUpdated
 }) {
-  const deferredQuery = useDeferredValue(telemetryQuery);
-  const needle = deferredQuery.trim().toLowerCase();
+  const [query, setQuery] = useState("");
+  const [expandedEventIds, setExpandedEventIds] = useState([]);
+  const deferredQuery = useDeferredValue(query);
 
-  const filteredFileEvents = !needle
-    ? fileEvents
-    : fileEvents.filter((fileEvent) =>
-        [fileEvent.filePath, fileEvent.notes, fileEvent.eventType, fileEvent.status]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(needle))
-      );
-  const finalFileEvents = filteredFileEvents;
-
-  const filteredScans = !needle
-    ? scans
-    : scans.filter((scan) =>
-        [scan.mode, scan.status, scan.requestedBy, scan.notes, scan.id.toString()]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(needle))
-      );
-  const finalScans = selectedScanId
-    ? filteredScans.filter((scan) => scan.id === selectedScanId)
-    : filteredScans;
+  const filteredFileEvents = useMemo(() => {
+    const needle = deferredQuery.trim().toLowerCase();
+    return !needle
+      ? fileEvents
+      : fileEvents.filter((event) =>
+          [event.filePath, event.notes, event.eventType, event.status, event.hashSha256]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(needle))
+        );
+  }, [deferredQuery, fileEvents]);
 
   return (
-    <section className="panel page-panel">
-      <div className="panel-heading">
-        <h2>Endpoint telemetry trail</h2>
-        <p>Realtime file events and scan history now live together on one clean investigation page.</p>
-      </div>
-
-      <div className="toolbar">
-        <ScanSelector scans={scans} selectedScanId={selectedScanId} onChange={setSelectedScanId} />
-        <input
-          value={telemetryQuery}
-          onChange={(event) => setTelemetryQuery(event.target.value)}
-          placeholder="Search scans, statuses, file paths, or notes"
-        />
-      </div>
-
-      <div className="two-column-grid">
-        <div className="subpanel">
-          <h3>Realtime file events</h3>
-          <div className="history-list">
-            {finalFileEvents.map((fileEvent) => (
-              <article key={fileEvent.id} className="history-card">
-                <div className="history-header">
-                  <div>
-                    <span className="history-mode">{fileEvent.eventType}</span>
-                    <h3>{fileEvent.filePath}</h3>
-                  </div>
-                  <span className={`pill ${fileEventTone(fileEvent.status)}`}>{fileEvent.status}</span>
-                </div>
-                <div className="history-meta">
-                  <span>Threats: {fileEvent.threatCount}</span>
-                  <span>Observed: {formatDate(fileEvent.observedAt)}</span>
-                  <span>Processed: {formatDate(fileEvent.processedAt)}</span>
-                  <span>Hash: {fileEvent.hashSha256 ? `${fileEvent.hashSha256.slice(0, 12)}...` : "Pending"}</span>
-                </div>
-                <p>{fileEvent.notes || "No notes recorded for this file event."}</p>
-                <div className="engine-list">
-                  {fileEvent.engineResults?.map((result) => (
-                    <span key={`${fileEvent.id}-${result.id}`} className="engine-chip">
-                      {result.engineName}: {result.status}
-                      {result.signatureName ? ` (${result.signatureName})` : ""}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-            {finalFileEvents.length === 0 ? <p className="empty-state">No telemetry events matched this filter.</p> : null}
+    <div className="page-stack">
+      <PageHeader
+        eyebrow="Real-Time Operations"
+        title="Real-Time Telemetry"
+        description="A live file-event stream and a scan-stage timeline for fast operational review."
+        lastUpdated={lastUpdated}
+        actions={
+          <div className="header-inline-actions">
+            <ScanSelector scans={scans} label="Scan context" id="telemetry-scan-selector" />
+            <label className="field field-search">
+              <span>Search telemetry</span>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search file path, status, note, or hash"
+              />
+            </label>
           </div>
-        </div>
+        }
+      />
 
-        <div className="subpanel">
-          <h3>Scan history</h3>
-          <div className="history-list">
-            {finalScans.map((scan) => (
-              <article key={scan.id} className="history-card">
-                <div className="history-header">
-                  <div>
-                    <span className="history-mode">{scan.mode}</span>
-                    <h3>Scan PK #{scan.id}</h3>
-                  </div>
-                  <div className="action-row">
-                    <button className="ghost-button compact" type="button" onClick={() => onFocusScan(scan.id)}>
-                      Focus
-                    </button>
-                    <button className="ghost-button compact" type="button" onClick={() => onExportScan(scan.id)}>
-                      Export Excel
-                    </button>
-                    {liveScanStatuses.has(scan.status) ? (
-                      <button
-                        className="ghost-button compact"
-                        type="button"
-                        onClick={() => onStopScan(scan.id)}
-                        disabled={stoppingScanId === scan.id}
-                      >
-                        {stoppingScanId === scan.id ? "Stopping..." : "Stop"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="scan-mini-track" aria-hidden="true">
-                  <div
-                    className={`scan-mini-fill ${scan.status === "Completed" ? "complete" : ""} ${scan.status === "Failed" ? "failed" : ""}`}
-                    style={{ width: `${deriveScanProgress(scan, analysisClock)}%` }}
-                  />
-                </div>
-                <div className="history-meta">
-                  <span>Primary key: {scan.id}</span>
-                  <span>Status: {scan.status}</span>
-                  <span>Stage: {scan.stage}</span>
-                  <span>Files: {describeFilesScanned(scan)}</span>
-                  <span>Threats: {scan.threatCount}</span>
-                  <span>Requested by: {scan.requestedBy}</span>
-                  <span>Created: {formatDate(scan.createdAt)}</span>
-                </div>
-                <p>{scan.notes || describeScanTarget(scan)}</p>
-              </article>
-            ))}
-            {finalScans.length === 0 ? <p className="empty-state">No scans matched this filter.</p> : null}
-          </div>
+      {error ? <ErrorState message={error} onRetry={onRefresh} /> : null}
+
+      <section className="panel">
+        <div className="section-head">
+          <h2>File Security Events</h2>
         </div>
-      </div>
-    </section>
+        {loading ? (
+          <TableSkeleton rows={6} columns={5} />
+        ) : filteredFileEvents.length === 0 ? (
+          <EmptyState title="No telemetry events" description="The realtime file event stream is currently empty for this tenant." />
+        ) : (
+          <div className="telemetry-stream">
+            {filteredFileEvents.map((fileEvent) => {
+              const Icon = iconByEvent[fileEvent.eventType] ?? File;
+              const expanded = expandedEventIds.includes(fileEvent.id);
+
+              return (
+                <article key={fileEvent.id} className="telemetry-item">
+                  <button
+                    className="telemetry-summary"
+                    type="button"
+                    onClick={() =>
+                      setExpandedEventIds((current) =>
+                        current.includes(fileEvent.id)
+                          ? current.filter((id) => id !== fileEvent.id)
+                          : [...current, fileEvent.id]
+                      )
+                    }
+                  >
+                    <div className="telemetry-path">
+                      <Icon size={18} aria-hidden="true" />
+                      <span className="font-mono" title={fileEvent.filePath}>{fileEvent.filePath}</span>
+                    </div>
+                    <div className="telemetry-badges">
+                      <span className={`pill pill-${fileEvent.eventType === "Deleted" ? "critical" : fileEvent.eventType === "Changed" ? "warning" : fileEvent.eventType === "Renamed" ? "active" : "healthy"}`}>
+                        {fileEvent.eventType}
+                      </span>
+                      <span className={`pill pill-${fileEventTone(fileEvent.status)}`}>{fileEvent.status}</span>
+                    </div>
+                    <div className="telemetry-meta">
+                      <code className="font-mono" title={fileEvent.hashSha256 ?? "Hash unavailable"}>
+                        {fileEvent.hashSha256 ? `${fileEvent.hashSha256.slice(0, 12)}...` : "Pending"}
+                      </code>
+                      <span>{formatFileSize(fileEvent.fileSizeBytes)}</span>
+                      {fileEvent.threatCount > 0 ? <span className="pill pill-critical">{fileEvent.threatCount}</span> : null}
+                      <Timestamp value={fileEvent.observedAt} />
+                    </div>
+                  </button>
+
+                  {expanded ? (
+                    <div className="telemetry-expanded">
+                      {fileEvent.engineResults?.length ? (
+                        <div className="table-shell">
+                          <table className="data-table compact-table">
+                            <thead>
+                              <tr>
+                                <th>Engine Name</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Signature Name</th>
+                                <th>Details</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fileEvent.engineResults.map((result) => (
+                                <tr key={result.id}>
+                                  <td>{result.engineName}</td>
+                                  <td>{result.source}</td>
+                                  <td>{result.status}</td>
+                                  <td>{result.signatureName ?? "Unavailable"}</td>
+                                  <td>{result.details ?? "No details recorded"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <EmptyState title="No engine results" description="This file event has no engine result records yet." />
+                      )}
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <h2>Scan Progress Timeline</h2>
+        </div>
+        {!scanProgressEvents?.length ? (
+          <EmptyState title="No timeline events" description="Select or start a scan to populate stage transitions and skipped-file activity." />
+        ) : (
+          <ul className="timeline-list">
+            {[...scanProgressEvents].reverse().map((event, index) => (
+              <li key={`${event.scanJobId}-${event.recordedAt}-${index}`} className="timeline-item">
+                <div className={`timeline-dot ${event.isSkipped ? "warning" : "active"}`} aria-hidden="true" />
+                <div className="timeline-content">
+                  <div className="timeline-head">
+                    <strong>{event.stage}</strong>
+                    <Timestamp value={event.recordedAt} />
+                  </div>
+                  <span>{`${event.filesScanned} files at this stage${event.totalFiles ? ` of ${event.totalFiles}` : ""}`}</span>
+                  {event.isSkipped ? <span className="pill pill-warning">Skipped file event</span> : null}
+                  {event.detailMessage ? <p>{event.detailMessage}</p> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }

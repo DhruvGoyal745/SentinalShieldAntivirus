@@ -17,6 +17,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
     private readonly ISandboxSubmissionClient _sandboxSubmissionClient;
     private readonly IRemediationCoordinator _remediationCoordinator;
     private readonly IControlPlaneRepository _controlPlaneRepository;
+    private readonly IScanFileDecisionRegistry _fileDecisionRegistry;
     private readonly AntivirusPlatformOptions _options;
     private readonly ILogger<ManagedEngineDaemonClient> _logger;
     private readonly ConcurrentDictionary<int, ScanStatusSnapshot> _scanStatuses = new();
@@ -31,6 +32,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         ISandboxSubmissionClient sandboxSubmissionClient,
         IRemediationCoordinator remediationCoordinator,
         IControlPlaneRepository controlPlaneRepository,
+        IScanFileDecisionRegistry fileDecisionRegistry,
         IOptions<AntivirusPlatformOptions> options,
         ILogger<ManagedEngineDaemonClient> logger)
     {
@@ -40,6 +42,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         _sandboxSubmissionClient = sandboxSubmissionClient;
         _remediationCoordinator = remediationCoordinator;
         _controlPlaneRepository = controlPlaneRepository;
+        _fileDecisionRegistry = fileDecisionRegistry;
         _options = options.Value;
         _logger = logger;
     }
@@ -106,60 +109,108 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                 cancellationToken);
         }
 
-        var parallelOptions = new ParallelOptions
+        foreach (var path in targets)
         {
-            CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = Math.Max(1, _options.MaxParallelScanWorkers)
-        };
+            cancellationToken.ThrowIfCancellationRequested();
+            await ScanSingleTargetWithDecisionAsync(path);
+        }
 
-        await Parallel.ForEachAsync(targets, parallelOptions, async (path, loopToken) =>
+        async Task ScanSingleTargetWithDecisionAsync(string targetPath)
         {
-            try
+            const int maxRetries = 3;
+            for (var attempt = 0; attempt <= maxRetries; attempt++)
             {
-                var file = new FileInfo(path);
-                if (!file.Exists)
+                try
                 {
-                    Interlocked.Increment(ref processedFiles);
+                    var file = new FileInfo(targetPath);
+                    if (!file.Exists)
+                    {
+                        _logger.LogDebug("File no longer exists, publishing WaitingForInput for scan {ScanId}: {Path}", scanJobId, targetPath);
+                        await MaybePublishManualProgressAsync(
+                            ScanStage.WaitingForInput,
+                            targetPath,
+                            processedFiles,
+                            force: true,
+                            isSkipped: true,
+                            detailMessage: "The file no longer exists. Choose Retry if the file may reappear, or Skip to continue the scan.",
+                            cancellationToken);
+
+                        var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
+                            scanJobId,
+                            targetPath,
+                            "The file no longer exists on disk.",
+                            cancellationToken);
+
+                        if (decision == ScanFileDecisionAction.Skip)
+                        {
+                            Interlocked.Increment(ref processedFiles);
+                            return;
+                        }
+
+                        continue;
+                    }
+
+                    var result = await ScanArtifactInternalAsync(
+                        null,
+                        new FileArtifact
+                        {
+                            FullPath = file.FullName,
+                            FileName = file.Name,
+                            SizeBytes = file.Length,
+                            EventType = FileEventType.Changed,
+                            ObservedAt = DateTimeOffset.UtcNow
+                        },
+                        request.RequestedBy,
+                        pack,
+                        persistOperationalArtifacts: false,
+                        cancellationToken);
+
+                    foreach (var detection in result.Detections)
+                    {
+                        detections.Add(detection);
+                    }
+
+                    var completedFiles = Interlocked.Increment(ref processedFiles);
+                    await MaybePublishManualProgressAsync(result.Stage, targetPath, completedFiles, force: false, isSkipped: false, detailMessage: null, cancellationToken);
                     return;
                 }
-
-                var result = await ScanArtifactInternalAsync(
-                    null,
-                    new FileArtifact
-                    {
-                        FullPath = file.FullName,
-                        FileName = file.Name,
-                        SizeBytes = file.Length,
-                        EventType = FileEventType.Changed,
-                        ObservedAt = DateTimeOffset.UtcNow
-                    },
-                    request.RequestedBy,
-                    pack,
-                    persistOperationalArtifacts: false,
-                    loopToken);
-
-                foreach (var detection in result.Detections)
+                catch (Exception ex) when (IsSkippableAccessException(ex))
                 {
-                    detections.Add(detection);
-                }
+                    _logger.LogWarning(ex, "File inaccessible during scan {ScanId}: {Path} (attempt {Attempt})", scanJobId, targetPath, attempt + 1);
+                    await MaybePublishManualProgressAsync(
+                        ScanStage.WaitingForInput,
+                        targetPath,
+                        processedFiles,
+                        force: true,
+                        isSkipped: true,
+                        detailMessage: "File is locked, in use by another process, or access was denied. Choose Retry or Skip to continue.",
+                        cancellationToken);
 
-                var completedFiles = Interlocked.Increment(ref processedFiles);
-                await MaybePublishManualProgressAsync(result.Stage, path, completedFiles, force: false, isSkipped: false, detailMessage: null, loopToken);
+                    var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
+                        scanJobId,
+                        targetPath,
+                        "File is locked, in use, or access denied.",
+                        cancellationToken);
+
+                    if (decision == ScanFileDecisionAction.Skip)
+                    {
+                        Interlocked.Increment(ref processedFiles);
+                        return;
+                    }
+                }
             }
-            catch (Exception ex) when (IsSkippableAccessException(ex))
-            {
-                _logger.LogWarning(ex, "Skipping inaccessible file during scan {ScanId}: {Path}", scanJobId, path);
-                var completedFiles = Interlocked.Increment(ref processedFiles);
-                await MaybePublishManualProgressAsync(
-                    ScanStage.Telemetry,
-                    path,
-                    completedFiles,
-                    force: true,
-                    isSkipped: true,
-                    detailMessage: "File was skipped because it is locked, in use by another process, or access was denied.",
-                    loopToken);
-            }
-        });
+
+            _logger.LogWarning("Max retries exceeded for scan {ScanId}: {Path}, skipping.", scanJobId, targetPath);
+            Interlocked.Increment(ref processedFiles);
+            await MaybePublishManualProgressAsync(
+                ScanStage.Telemetry,
+                targetPath,
+                processedFiles,
+                force: true,
+                isSkipped: true,
+                detailMessage: "File was skipped after maximum retry attempts.",
+                cancellationToken);
+        }
 
         if (totalFiles == 0)
         {

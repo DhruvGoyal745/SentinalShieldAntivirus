@@ -25,7 +25,8 @@ public sealed class BehaviorMonitor : IBehaviorMonitor
         if (notification.EventType == FileEventType.Created
             && (file.Extension.Equals(".ps1", StringComparison.OrdinalIgnoreCase)
                 || file.Extension.Equals(".vbs", StringComparison.OrdinalIgnoreCase)
-                || file.Extension.Equals(".js", StringComparison.OrdinalIgnoreCase)))
+                || file.Extension.Equals(".js", StringComparison.OrdinalIgnoreCase))
+            && !IsBenignSystemScript(file))
         {
             detections.Add(Create("beh-scriptdrop", ThreatSeverity.Medium, 0.66m, "Script dropper behavior observed in realtime monitor."));
         }
@@ -43,4 +44,22 @@ public sealed class BehaviorMonitor : IBehaviorMonitor
             Confidence = confidence,
             Summary = summary
         };
+
+    private static bool IsBenignSystemScript(FileInfo file)
+    {
+        var name = file.Name;
+
+        if (name.StartsWith("__PSScriptPolicyTest_", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (name.StartsWith("tmp", StringComparison.OrdinalIgnoreCase)
+            && name.EndsWith(".tmp.ps1", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
 }

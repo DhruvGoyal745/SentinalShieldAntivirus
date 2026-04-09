@@ -125,6 +125,8 @@ public interface ISecurityOrchestrator
 
     Task<ScanControlResult> StopScanAsync(int scanId, CancellationToken cancellationToken = default);
 
+    Task<ScanFileDecisionResult> SubmitFileDecisionAsync(int scanId, ScanFileDecision decision, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<ThreatDetection>> SyncThreatsAsync(CancellationToken cancellationToken = default);
 
     Task<QuarantineResult> QuarantineThreatAsync(int threatId, CancellationToken cancellationToken = default);
@@ -155,6 +157,17 @@ public interface IScanCancellationRegistry
     bool IsStopRequested(int scanId);
 
     void Complete(int scanId);
+}
+
+public interface IScanFileDecisionRegistry
+{
+    Task<ScanFileDecisionAction> WaitForDecisionAsync(int scanId, string filePath, string reason, CancellationToken cancellationToken);
+
+    bool SubmitDecision(int scanId, string filePath, ScanFileDecisionAction action);
+
+    PendingScanFilePrompt? GetPendingPrompt(int scanId);
+
+    void Clear(int scanId);
 }
 
 public interface IFileEventBackgroundQueue

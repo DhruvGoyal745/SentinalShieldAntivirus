@@ -1,6 +1,7 @@
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\NuGet.Config
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\appsettings.Development.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\appsettings.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\appsettings.Service.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\SentinelShieldAntivirus.staticwebassets.runtime.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\SentinelShieldAntivirus.staticwebassets.endpoints.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\SentinelShieldAntivirus.exe
@@ -13,6 +14,7 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Bcl.Cryptography.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Data.SqlClient.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Identity.Client.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.Identity.Client.Extensions.Msal.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\Microsoft.IdentityModel.Abstractions.dll
@@ -27,6 +29,7 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\System.Memory.Data.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\System.Security.Cryptography.ProtectedData.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\System.ServiceProcess.ServiceController.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\cs\Microsoft.Data.SqlClient.resources.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\de\Microsoft.Data.SqlClient.resources.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\Release\net10.0\win-x64\es\Microsoft.Data.SqlClient.resources.dll
@@ -393,7 +396,7 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\scopedcss\Pages\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\scopedcss\bundle\SentinelShieldAntivirus.styles.css
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\scopedcss\projectbundle\SentinelShieldAntivirus.bundle.scp.css
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\61xsqa2czm-{0}-2zg73o3lpp-2zg73o3lpp.gz
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\4uyma38e7o-{0}-rqlmm8if19-rqlmm8if19.gz
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\dhnn8q1mt5-{0}-b1z0kin43n-b1z0kin43n.gz
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\8mbcuuzgzx-{0}-b1z0kin43n-b1z0kin43n.gz
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\staticwebassets.build.json
@@ -407,5 +410,5 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\SentinelShieldAntivirus.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\Antivirus.genruntimeconfig.cache
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\ref\SentinelShieldAntivirus.dll
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\ep931b85fo-{0}-4jzwn1dm9v-4jzwn1dm9v.gz
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\f0xi1pvjgd-{0}-1g1rflmj9x-1g1rflmj9x.gz
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\7uwyd8by1a-{0}-w0k2j8x6qv-w0k2j8x6qv.gz
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\f0xi1pvjgd-{0}-734d8bfgen-734d8bfgen.gz

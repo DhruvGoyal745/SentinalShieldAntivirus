@@ -15,6 +15,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
     private readonly IFileEventBackgroundQueue _fileEventBackgroundQueue;
     private readonly IProprietaryProtectionEngine _proprietaryProtectionEngine;
     private readonly IReadOnlyCollection<IOpenSourceScannerEngine> _scannerEngines;
+    private readonly ISentinelShieldControlApi _controlService;
     private readonly AntivirusPlatformOptions _options;
     private readonly ILogger<RealtimeProtectionService> _logger;
 
@@ -24,6 +25,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
         IFileEventBackgroundQueue fileEventBackgroundQueue,
         IProprietaryProtectionEngine proprietaryProtectionEngine,
         IEnumerable<IOpenSourceScannerEngine> scannerEngines,
+        ISentinelShieldControlApi controlService,
         IOptions<AntivirusPlatformOptions> options,
         ILogger<RealtimeProtectionService> logger)
     {
@@ -32,6 +34,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
         _fileEventBackgroundQueue = fileEventBackgroundQueue;
         _proprietaryProtectionEngine = proprietaryProtectionEngine;
         _scannerEngines = scannerEngines.ToArray();
+        _controlService = controlService;
         _options = options.Value;
         _logger = logger;
     }
@@ -54,6 +57,20 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
 
     public async Task ProcessQueuedFileEventAsync(QueuedFileEventWorkItem workItem, CancellationToken cancellationToken = default)
     {
+        if (_controlService.IsProtectionPaused)
+        {
+            await _repository.UpdateFileEventAsync(
+                workItem.FileEventId,
+                FileEventStatus.Skipped,
+                0,
+                "Real-time protection is paused. File event was recorded but not scanned.",
+                null,
+                null,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+            return;
+        }
+
         try
         {
             var path = workItem.Notification.FilePath;
@@ -126,7 +143,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
 
             var results = new List<FileScannerEngineResult>(primaryResult.EngineResults);
             var legacyMatches = 0;
-            if (_options.UseLegacyShadowMode && _options.UseOpenSourceScanners)
+            if (_options.UseLegacyShadowMode && _options.UseInHouseScanners)
             {
                 foreach (var scanner in _scannerEngines)
                 {

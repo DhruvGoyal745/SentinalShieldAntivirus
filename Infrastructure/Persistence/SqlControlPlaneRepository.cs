@@ -624,6 +624,52 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         return reviews;
     }
 
+    public async Task<FalsePositiveReview?> DecideFalsePositiveReviewAsync(
+        int reviewId,
+        FalsePositiveReviewStatus status,
+        string analyst,
+        string? notes,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            UPDATE dbo.FalsePositiveReviews
+            SET Status = @Status,
+                Analyst = @Analyst,
+                Notes = @Notes,
+                DecisionedAt = @DecisionedAt
+            OUTPUT INSERTED.Id, INSERTED.ThreatDetectionId, INSERTED.ArtifactHash, INSERTED.RuleId, INSERTED.Scope, INSERTED.Status, INSERTED.Analyst, INSERTED.Notes, INSERTED.SubmittedAt, INSERTED.DecisionedAt
+            WHERE Id = @Id;
+            """;
+
+        await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
+        await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Id", reviewId);
+        command.Parameters.AddWithValue("@Status", status.ToString());
+        command.Parameters.AddWithValue("@Analyst", analyst);
+        command.Parameters.AddWithValue("@Notes", notes ?? string.Empty);
+        command.Parameters.AddWithValue("@DecisionedAt", DateTimeOffset.UtcNow);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new FalsePositiveReview
+        {
+            Id = reader.GetInt32(0),
+            ThreatDetectionId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            ArtifactHash = reader.GetString(2),
+            RuleId = reader.GetString(3),
+            Scope = Enum.Parse<FalsePositiveScope>(reader.GetString(4)),
+            Status = Enum.Parse<FalsePositiveReviewStatus>(reader.GetString(5)),
+            Analyst = reader.GetString(6),
+            Notes = reader.GetString(7),
+            SubmittedAt = reader.GetDateTimeOffset(8),
+            DecisionedAt = reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9)
+        };
+    }
+
     public async Task<SandboxSubmission> CreateSandboxSubmissionAsync(SandboxSubmission submission, CancellationToken cancellationToken = default)
     {
         const string sql = """

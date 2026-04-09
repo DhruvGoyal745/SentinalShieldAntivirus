@@ -24,14 +24,16 @@
     <Compile Remove="Domain\**\*.cs" />
     <Compile Remove="Infrastructure\**\*.cs" />
     <Compile Remove="Data\Quarantine\**\*.cs" />
+    <Compile Remove="SentinelShield.Tray\**" />
+    <Compile Remove="SentinelShield.Installer\**" />
     <Content Remove="Data\Quarantine\**\*" />
+    <Content Remove="SentinelShield.Tray\**" />
+    <Content Remove="SentinelShield.Installer\**" />
     <None Include="Data\Quarantine\**\*" Exclude="Data\Quarantine\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Database\**\*.sql" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Rules\**\*" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Tools\**\*" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="NativeEngine\artifacts\**\*" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="artifacts\**" />
     <None Remove="artifacts\**" />
@@ -45,11 +47,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\Contracts\" />
-    <Folder Include="Infrastructure\Security\" />
+    <Compile Include="Infrastructure\Security\ScanFileDecisionRegistry.cs" />
   </ItemGroup>
 
-  <!-- Build the React frontend before publish -->
+  <ItemGroup>
+    <None Include="SentinelShield.Installer\SentinelShield.Installer.wixproj" />
+    <None Include="SentinelShield.Tray\SentinelShield.Tray.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
+  </ItemGroup>
+
+  <!-- Build the React frontend before build/publish -->
   <Target Name="BuildClientApp" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html')">
     <Exec Command="npm install" WorkingDirectory="ClientApp" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
@@ -58,6 +68,15 @@
   <Target Name="PublishClientApp" BeforeTargets="Publish">
     <Exec Command="npm install" WorkingDirectory="ClientApp" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
+
+  <!-- Auto-publish the exe after every successful build -->
+  <Target Name="AutoPublishExe" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <PublishOutputDir>$(MSBuildProjectDirectory)\bin\publish\win-x64</PublishOutputDir>
+    </PropertyGroup>
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c $(Configuration) -r win-x64 --self-contained --no-build -o &quot;$(PublishOutputDir)&quot;" />
+    <Message Importance="high" Text="Published exe to $(PublishOutputDir)\SentinelShieldAntivirus.exe" />
   </Target>
 
 </Project>

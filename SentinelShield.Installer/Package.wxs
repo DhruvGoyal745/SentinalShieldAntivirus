@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <?define ProductName = "Sentinel Shield Antivirus" ?>
+  <?define ProductVersion = "1.0.0" ?>
+  <?define Manufacturer = "Sentinel Shield" ?>
+  <?define UpgradeCode = "E4A7B3C1-9F2D-4E8A-B5C6-D7E8F9A0B1C2" ?>
+  <?define ServiceExe = "SentinelShieldAntivirus.exe" ?>
+  <?define TrayExe = "SentinelShieldTray.exe" ?>
+  <?define ServiceName = "SentinelShieldService" ?>
+  <?define ServiceDisplayName = "Sentinel Shield Antivirus Protection Service" ?>
+  <?define InstallFolder = "SentinelShield" ?>
+
+  <Package
+    Name="$(ProductName)"
+    Version="$(ProductVersion)"
+    Manufacturer="$(Manufacturer)"
+    UpgradeCode="$(UpgradeCode)"
+    Scope="perMachine"
+    InstallerVersion="500">
+
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of $(ProductName) is already installed."
+      Schedule="afterInstallValidate" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Directory structure -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="$(InstallFolder)">
+        <Directory Id="DatabaseFolder" Name="Database" />
+        <Directory Id="NativeEngineFolder" Name="NativeEngine" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="DATAFOLDER" Name="$(InstallFolder)">
+        <Directory Id="QuarantineFolder" Name="Quarantine" />
+        <Directory Id="LogsFolder" Name="Logs" />
+        <Directory Id="SignaturePacksFolder" Name="SignaturePacks" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ShortcutFolder" Name="$(ProductName)" />
+    </StandardDirectory>
+
+    <!-- Service executable component -->
+    <ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
+      <Component Id="ServiceExeComponent" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+        <File Id="ServiceExeFile" Source="!(bindpath.ServicePublish)\$(ServiceExe)" KeyPath="yes" />
+        <ServiceInstall
+          Id="InstallSentinelService"
+          Name="$(ServiceName)"
+          DisplayName="$(ServiceDisplayName)"
+          Description="Provides real-time antivirus protection, file scanning, and threat remediation."
+          Type="ownProcess"
+          Start="auto"
+          ErrorControl="normal"
+          Account="LocalSystem">
+          <ServiceConfig
+            DelayedAutoStart="yes"
+            OnInstall="yes"
+            OnReinstall="yes" />
+          <util:ServiceConfig
+            FirstFailureActionType="restart"
+            SecondFailureActionType="restart"
+            ThirdFailureActionType="restart"
+            RestartServiceDelayInSeconds="5"
+            ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <ServiceControl
+          Id="ControlSentinelService"
+          Name="$(ServiceName)"
+          Start="install"
+          Stop="both"
+          Remove="uninstall"
+          Wait="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Tray executable component -->
+    <ComponentGroup Id="TrayComponents" Directory="INSTALLFOLDER">
+      <Component Id="TrayExeComponent" Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
+        <File Id="TrayExeFile" Source="!(bindpath.TrayPublish)\$(TrayExe)" KeyPath="yes" />
+        <RegistryValue
+          Root="HKLM"
+          Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+          Name="SentinelShieldTray"
+          Type="string"
+          Value="[INSTALLFOLDER]$(TrayExe)" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Data folder components -->
+    <ComponentGroup Id="DataFolderComponents" Directory="DATAFOLDER">
+      <Component Id="QuarantineFolderComponent" Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012" Directory="QuarantineFolder">
+        <CreateFolder />
+      </Component>
+      <Component Id="LogsFolderComponent" Guid="D4E5F6A7-B8C9-0123-DEF1-234567890123" Directory="LogsFolder">
+        <CreateFolder />
+      </Component>
+      <Component Id="SignaturePacksFolderComponent" Guid="E5F6A7B8-C9D0-1234-EF12-345678901234" Directory="SignaturePacksFolder">
+        <CreateFolder />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Start Menu shortcut -->
+    <ComponentGroup Id="ShortcutComponents" Directory="ShortcutFolder">
+      <Component Id="DashboardShortcut" Guid="F6A7B8C9-D0E1-2345-F123-456789012345">
+        <Shortcut
+          Id="DashboardShortcutFile"
+          Name="Sentinel Shield Antivirus"
+          Target="[INSTALLFOLDER]$(TrayExe)"
+          WorkingDirectory="INSTALLFOLDER"
+          Description="Open Sentinel Shield Antivirus dashboard" />
+        <RemoveFolder Id="RemoveShortcutFolder" On="uninstall" />
+        <RegistryValue
+          Root="HKCU"
+          Key="SOFTWARE\SentinelShield"
+          Name="ShortcutInstalled"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Explorer context menu: Scan with Sentinel Shield -->
+    <ComponentGroup Id="ContextMenuComponents" Directory="INSTALLFOLDER">
+      <Component Id="ContextMenuFile" Guid="A7B8C9D0-E1F2-3456-0123-567890123456">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\*\shell\SentinelShieldScan">
+          <RegistryValue Type="string" Value="Scan with Sentinel Shield" />
+          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(ServiceExe),0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\*\shell\SentinelShieldScan\command">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(ServiceExe)&quot; --scan --target &quot;%1&quot;" />
+        </RegistryKey>
+      </Component>
+      <Component Id="ContextMenuFolder" Guid="B8C9D0E1-F2A3-4567-1234-678901234567">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\SentinelShieldScan">
+          <RegistryValue Type="string" Value="Scan with Sentinel Shield" />
+          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(ServiceExe),0" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\SentinelShieldScan\command">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(ServiceExe)&quot; --scan --target &quot;%1&quot;" />
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <!-- Feature tree -->
+    <Feature Id="MainFeature" Title="$(ProductName)" Level="1">
+      <ComponentGroupRef Id="ServiceComponents" />
+      <ComponentGroupRef Id="TrayComponents" />
+      <ComponentGroupRef Id="DataFolderComponents" />
+      <ComponentGroupRef Id="ShortcutComponents" />
+      <ComponentGroupRef Id="ContextMenuComponents" />
+    </Feature>
+
+  </Package>
+</Wix>

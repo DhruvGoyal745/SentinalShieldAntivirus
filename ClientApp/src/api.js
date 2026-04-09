@@ -1,17 +1,13 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
-const tenantStorageKey = "sentinel-tenant-key";
+
+let activeTenantKey = "sentinel-demo";
 
 function resolveTenantKey() {
-  return window.localStorage.getItem(tenantStorageKey) ?? "sentinel-demo";
+  return activeTenantKey;
 }
 
 export function setTenantKey(value) {
-  if (!value) {
-    window.localStorage.removeItem(tenantStorageKey);
-    return;
-  }
-
-  window.localStorage.setItem(tenantStorageKey, value);
+  activeTenantKey = value || "sentinel-demo";
 }
 
 async function request(path, options = {}) {
@@ -26,6 +22,7 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     let message = "Request failed";
+
     try {
       const body = await response.json();
       if (body.detail || body.error) {
@@ -65,7 +62,8 @@ async function download(path) {
 
   const blob = await response.blob();
   const contentDisposition = response.headers.get("Content-Disposition") ?? "";
-  const match = contentDisposition.match(/filename="?([^"]+)"?/i);
+  const match = contentDisposition.match(/filename="?([^\"]+)"?/i);
+
   return {
     blob,
     fileName: match?.[1] ?? "scan-report.xls"
@@ -93,12 +91,18 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload)
     }),
+  decideReview: (id, payload) =>
+    request(`/api/governance/reviews/${id}/decision`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }),
   getDashboard: () => request("/api/dashboard"),
   getScans: () => request("/api/scans"),
   getScanProgress: (scanId) => request(`/api/scans/${scanId}/progress`),
   getThreats: () => request("/api/threats"),
   getFileEvents: () => request("/api/fileevents"),
   getHealth: () => request("/api/health/status"),
+  getEngineStatus: () => request("/api/engine/status"),
   registerAgent: (payload) =>
     request("/api/agent/register", {
       method: "POST",
@@ -122,6 +126,11 @@ export const api = {
   stopScan: (scanId) =>
     request(`/api/scans/${scanId}/stop`, {
       method: "POST"
+    }),
+  submitFileDecision: (scanId, filePath, action) =>
+    request(`/api/scans/${scanId}/file-decision`, {
+      method: "POST",
+      body: JSON.stringify({ filePath, action })
     }),
   quarantineThreat: (id) =>
     request(`/api/threats/${id}/quarantine`, {

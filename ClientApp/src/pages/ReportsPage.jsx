@@ -1,85 +1,93 @@
-import { formatDate, formatPercent } from "../ui/presentation";
+import { Download } from "lucide-react";
+import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
+import Timestamp from "../components/Timestamp";
+import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { useDashboardStore } from "../state/useDashboardStore";
 
-export default function ReportsPage({ scanExports, complianceReports, handleCaptureCompliance, handleExportAllScans, scans, selectedScanId, setSelectedScanId }) {
-  const filteredScanExports = selectedScanId
+export default function ReportsPage({
+  scanExports,
+  onCaptureCompliance,
+  onExportAllScans,
+  onExportScan,
+  scans,
+  loading,
+  error,
+  onRefresh,
+  lastUpdated
+}) {
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
+  const filteredExports = selectedScanId
     ? scanExports.filter((scanExport) => scanExport.scanJobId === selectedScanId)
     : scanExports;
 
-  const filteredComplianceReports = complianceReports;
-
   return (
     <div className="page-stack">
-      <section className="panel page-panel">
-        <div className="panel-heading panel-heading-inline">
-          <div>
-            <h2>Reporting</h2>
-            <p>Exports and compliance snapshots are separated so reporting work stays clean and audit-friendly.</p>
-          </div>
-          <div className="action-row">
-            <button className="ghost-button compact" type="button" onClick={handleCaptureCompliance}>
-              Capture compliance snapshot
+      <PageHeader
+        eyebrow="Exports"
+        title="Scan Reports & Exports"
+        description="Manage scan report exports and preserve scan context while generating analyst-ready outputs."
+        lastUpdated={lastUpdated}
+        actions={
+          <div className="header-inline-actions">
+            <ScanSelector scans={scans} label="Scan context" id="reports-scan-selector" />
+            <button className="button button-primary" type="button" onClick={onExportAllScans}>
+              <Download size={16} />
+              Export All Scans
             </button>
-            <button className="primary-button compact" type="button" onClick={handleExportAllScans}>
-              Export all scans to Excel
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => onExportScan(selectedScanId)}
+              disabled={!selectedScanId}
+            >
+              Export Selected Scan
+            </button>
+            <button className="button button-secondary" type="button" onClick={onCaptureCompliance}>
+              Capture Snapshot
             </button>
           </div>
-        </div>
-      </section>
+        }
+      />
 
-      <div className="toolbar">
-        <ScanSelector scans={scans} selectedScanId={selectedScanId} onChange={setSelectedScanId} />
-      </div>
+      {error ? <ErrorState message={error} onRetry={onRefresh} /> : null}
 
-      <section className="panel page-panel">
-        <div className="panel-heading">
-          <h2>Recent Excel exports</h2>
-          <p>Track every scan report that has been generated for this tenant.</p>
+      {loading ? (
+        <TableSkeleton rows={7} columns={6} />
+      ) : filteredExports.length === 0 ? (
+        <EmptyState title="No exports" description="No scan exports have been generated for the current scan context yet." />
+      ) : (
+        <div className="table-shell">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Scan ID</th>
+                <th>File Name</th>
+                <th>Format</th>
+                <th>Exported By</th>
+                <th>Vulnerability Count</th>
+                <th>Exported</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredExports.map((scanExport) => (
+                <tr key={scanExport.id}>
+                  <td className="font-mono">{scanExport.id}</td>
+                  <td className="font-mono">
+                    {scanExport.scanJobId ? `SCAN-${String(scanExport.scanJobId).padStart(5, "0")}` : "All scans"}
+                  </td>
+                  <td>{scanExport.fileName}</td>
+                  <td><span className={`pill ${scanExport.format?.toLowerCase() === "excel" || scanExport.format?.toLowerCase() === "xls" ? "pill-healthy" : "pill-muted"}`}>{scanExport.format}</span></td>
+                  <td>{scanExport.exportedBy}</td>
+                  <td>{scanExport.vulnerabilityCount}</td>
+                  <td><Timestamp value={scanExport.exportedAt} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="history-list">
-          {filteredScanExports.map((scanExport) => (
-            <article key={scanExport.id} className="history-card compact-card">
-              <div className="history-meta">
-                <span>Export #{scanExport.id}</span>
-                <span>Scan ID: {scanExport.scanJobId ?? "All scans"}</span>
-                <span>Vulnerabilities: {scanExport.vulnerabilityCount}</span>
-                <span>By: {scanExport.exportedBy}</span>
-              </div>
-              <p>{scanExport.fileName} generated at {formatDate(scanExport.exportedAt)}.</p>
-            </article>
-          ))}
-          {filteredScanExports.length === 0 ? <p className="empty-state">No scan reports have been exported yet.</p> : null}
-        </div>
-      </section>
-
-      <section className="panel page-panel">
-        <div className="panel-heading">
-          <h2>Compliance snapshots</h2>
-          <p>Point-in-time compliance and posture evidence captured for reporting workflows.</p>
-        </div>
-
-        <div className="history-list">
-          {filteredComplianceReports.map((report) => (
-            <article key={`${report.id}-${report.reportDate}`} className="history-card compact-card">
-              <div className="history-meta">
-                <span>Report #{report.id}</span>
-                <span>Date: {formatDate(report.reportDate)}</span>
-                <span>Type: {report.reportType}</span>
-                <span>Coverage: {formatPercent(report.agentCoveragePercent)}</span>
-                <span>Baseline: {formatPercent(report.baselineScanCompletionPercent)}</span>
-                <span>Self-protection: {formatPercent(report.selfProtectionCoveragePercent)}</span>
-              </div>
-              <p>
-                Signature currency {formatPercent(report.signatureCurrencyPercent)}. Open critical incidents:{" "}
-                {report.openCriticalIncidentCount}. Audit findings: {report.auditFindingCount}. Quarantined threats:{" "}
-                {report.quarantinedThreatCount}.
-              </p>
-            </article>
-          ))}
-          {filteredComplianceReports.length === 0 ? <p className="empty-state">No compliance snapshots have been captured yet.</p> : null}
-        </div>
-      </section>
+      )}
     </div>
   );
 }

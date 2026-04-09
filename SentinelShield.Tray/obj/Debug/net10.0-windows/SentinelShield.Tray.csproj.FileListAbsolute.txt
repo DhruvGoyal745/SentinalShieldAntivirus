@@ -1,0 +1,15 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\bin\Debug\net10.0-windows\SentinelShieldTray.exe
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\bin\Debug\net10.0-windows\SentinelShieldTray.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\bin\Debug\net10.0-windows\SentinelShieldTray.runtimeconfig.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\bin\Debug\net10.0-windows\SentinelShieldTray.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\bin\Debug\net10.0-windows\SentinelShieldTray.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.AssemblyInfoInputs.cache
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.AssemblyInfo.cs
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.csproj.CoreCompileInputs.cache
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.sourcelink.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShieldTray.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\refint\SentinelShieldTray.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShieldTray.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\SentinelShield.Tray.genruntimeconfig.cache
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\SentinelShield.Tray\obj\Debug\net10.0-windows\ref\SentinelShieldTray.dll

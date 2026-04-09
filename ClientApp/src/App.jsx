@@ -1,8 +1,9 @@
-import { startTransition, useEffect, useEffectEvent, useState } from "react";
+import { startTransition, useEffect, useEffectEvent, useRef, useState } from "react";
+import { RefreshCcw } from "lucide-react";
 import { api, setTenantKey } from "./api";
-import Ribbon from "./components/Ribbon";
-import SkippedFileModal from "./components/SkippedFileModal";
+import AppSidebar from "./components/AppSidebar";
 import AttentionModal from "./components/AttentionModal";
+import SkippedFileModal from "./components/SkippedFileModal";
 import HomePage from "./pages/HomePage";
 import IncidentsPage from "./pages/IncidentsPage";
 import DetectionsPage from "./pages/DetectionsPage";
@@ -10,15 +11,10 @@ import TelemetryPage from "./pages/TelemetryPage";
 import FleetPage from "./pages/FleetPage";
 import GovernancePage from "./pages/GovernancePage";
 import ReportsPage from "./pages/ReportsPage";
-import { liveScanStatuses, pageDefinitions, scanPipelineSteps, scanStageOrder } from "./ui/constants";
 import { buildAgentPayload, buildHeartbeatPayload } from "./ui/agentPayloads";
-import {
-  deriveScanProgress,
-  getInitialPage,
-  getLatestScanProgress,
-  getSkippedEventKey,
-  mergeScanWithProgress
-} from "./ui/presentation";
+import { liveScanStatuses, pageDefinitions, scanPipelineSteps, scanStageOrder } from "./ui/constants";
+import { deriveScanProgress, getInitialPage, getLatestScanProgress, getSkippedEventKey, mergeScanWithProgress } from "./ui/presentation";
+import { useDashboardStore } from "./state/useDashboardStore";
 
 export default function App() {
   const [controlPlane, setControlPlane] = useState(null);
@@ -28,15 +24,15 @@ export default function App() {
   const [scanExports, setScanExports] = useState([]);
   const [fileEvents, setFileEvents] = useState([]);
   const [health, setHealth] = useState(null);
+  const [engineStatus, setEngineStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [stoppingScanId, setStoppingScanId] = useState(null);
+  const [pendingThreatActionId, setPendingThreatActionId] = useState(null);
+  const [pendingReviewId, setPendingReviewId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [detectionQuery, setDetectionQuery] = useState("");
-  const [telemetryQuery, setTelemetryQuery] = useState("");
   const [analysisClock, setAnalysisClock] = useState(() => Date.now());
-  const [focusedScanId, setFocusedScanId] = useState(null);
   const [scanProgressEvents, setScanProgressEvents] = useState([]);
   const [handledSkippedEventKeys, setHandledSkippedEventKeys] = useState([]);
   const [handledAttentionScanIds, setHandledAttentionScanIds] = useState([]);
@@ -45,24 +41,31 @@ export default function App() {
   const [attentionPrompt, setAttentionPrompt] = useState(null);
   const [retryingSkippedFile, setRetryingSkippedFile] = useState(false);
   const [currentPage, setCurrentPage] = useState(getInitialPage);
-  const [selectedTenant, setSelectedTenant] = useState(window.localStorage.getItem("sentinel-tenant-key") ?? "sentinel-demo");
-  const [incidentsScanId, setIncidentsScanId] = useState(null);
-  const [detectionsScanId, setDetectionsScanId] = useState(null);
-  const [telemetryScanId, setTelemetryScanId] = useState(null);
-  const [fleetScanId, setFleetScanId] = useState(null);
-  const [governanceScanId, setGovernanceScanId] = useState(null);
-  const [reportsScanId, setReportsScanId] = useState(null);
+  const [selectedTenant, setSelectedTenant] = useState("sentinel-demo");
   const [scanRequest, setScanRequest] = useState({
     mode: "Quick",
     targetPath: "",
-    requestedBy: "enterprise-operator",
+    requestedBy: "soc-analyst",
     runHeuristics: true
   });
+
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
+  const setSelectedScanId = useDashboardStore((state) => state.setSelectedScanId);
+  const lastUpdatedByPage = useDashboardStore((state) => state.lastUpdatedByPage);
+  const setLastUpdated = useDashboardStore((state) => state.setLastUpdated);
+  const resetSessionState = useDashboardStore((state) => state.resetSessionState);
+
+  const handledSkippedKeysRef = useRef(handledSkippedEventKeys);
+  const handledAttentionIdsRef = useRef(handledAttentionScanIds);
 
   async function syncAgentLifecycle(currentControlPlane = null) {
     await api.registerAgent(buildAgentPayload());
     await api.heartbeat(buildHeartbeatPayload(currentControlPlane));
   }
+
+  const stampAllPages = useEffectEvent((timestamp) => {
+    pageDefinitions.forEach((page) => setLastUpdated(page.key, timestamp));
+  });
 
   const loadData = useEffectEvent(async ({ syncLifecycle = false, preserveMessage = false } = {}) => {
     setLoading(true);
@@ -73,15 +76,27 @@ export default function App() {
         await syncAgentLifecycle(controlPlane);
       }
 
-      const [controlPlaneResult, tenantsResult, threatsResult, scansResult, scanExportsResult, fileEventsResult, healthResult] = await Promise.all([
+      const [
+        controlPlaneResult,
+        tenantsResult,
+        threatsResult,
+        scansResult,
+        scanExportsResult,
+        fileEventsResult,
+        healthResult,
+        engineStatusResult
+      ] = await Promise.all([
         api.getControlPlaneSummary(),
         api.getTenants(),
         api.getThreats(),
         api.getScans(),
         api.getScanExports(),
         api.getFileEvents(),
-        api.getHealth()
+        api.getHealth(),
+        api.getEngineStatus().catch(() => null)
       ]);
+
+      const timestamp = new Date().toISOString();
 
       startTransition(() => {
         setControlPlane(controlPlaneResult);
@@ -91,9 +106,14 @@ export default function App() {
         setScanExports(scanExportsResult);
         setFileEvents(fileEventsResult);
         setHealth(healthResult);
+        setEngineStatus(engineStatusResult);
+        if (selectedScanId && !scansResult.some((scan) => scan.id === selectedScanId)) {
+          setSelectedScanId(null);
+        }
         if (!preserveMessage) {
           setMessage("");
         }
+        stampAllPages(timestamp);
       });
     } catch (loadError) {
       setError(loadError.message);
@@ -110,7 +130,7 @@ export default function App() {
 
   useEffect(() => {
     setTenantKey(selectedTenant);
-    setFocusedScanId(null);
+    resetSessionState();
     setScanProgressEvents([]);
     setHandledSkippedEventKeys([]);
     setHandledAttentionScanIds([]);
@@ -120,16 +140,15 @@ export default function App() {
     loadData({ syncLifecycle: true });
   }, [selectedTenant]);
 
-  const trackedScan = focusedScanId ? scans.find((scan) => scan.id === focusedScanId) ?? null : null;
+  const trackedScan = selectedScanId ? scans.find((scan) => scan.id === selectedScanId) ?? null : null;
   const activeScanBase = trackedScan ?? scans.find((scan) => liveScanStatuses.has(scan.status)) ?? scans[0] ?? null;
   const latestScanProgress = getLatestScanProgress(scanProgressEvents);
   const activeScan = mergeScanWithProgress(activeScanBase, latestScanProgress);
   const hasLiveScan = activeScan ? liveScanStatuses.has(activeScan.status) : false;
-  const hasRunningScan = activeScan?.status === "Running";
   const analysisProgress = deriveScanProgress(activeScan, analysisClock);
   const effectiveStage = activeScan?.stage === "Cancelled"
-    ? latestScanProgress?.stage ?? "Queued"
-    : activeScan?.stage ?? "Queued";
+    ? latestScanProgress?.stage ?? "Observe"
+    : activeScan?.stage ?? "Observe";
   const activeStageIndex = scanStageOrder.get(effectiveStage) ?? 0;
 
   const analysisSteps = scanPipelineSteps.map((step, index) => {
@@ -160,8 +179,7 @@ export default function App() {
   });
 
   const threatsForActiveScan = activeScan?.id
-    ? threats.filter((threat) =>
-        threat.scanJobId === activeScan.id)
+    ? threats.filter((threat) => threat.scanJobId === activeScan.id)
     : [];
 
   useEffect(() => {
@@ -188,18 +206,18 @@ export default function App() {
     }
 
     loadProgress();
-    const intervalId = window.setInterval(loadProgress, hasLiveScan ? 2000 : 10000);
+    const intervalId = window.setInterval(loadProgress, hasLiveScan || currentPage === "telemetry" ? 5000 : 10000);
 
     return () => {
       ignore = true;
       window.clearInterval(intervalId);
     };
-  }, [selectedTenant, activeScanBase?.id, hasLiveScan]);
+  }, [selectedTenant, activeScanBase?.id, hasLiveScan, currentPage]);
 
   useEffect(() => {
     const nextSkippedEvent = [...scanProgressEvents]
       .reverse()
-      .find((progressEvent) => progressEvent.isSkipped && !handledSkippedEventKeys.includes(getSkippedEventKey(progressEvent)));
+      .find((progressEvent) => progressEvent.isSkipped && !handledSkippedKeysRef.current.includes(getSkippedEventKey(progressEvent)));
 
     if (nextSkippedEvent) {
       setSkipPrompt(nextSkippedEvent);
@@ -211,11 +229,7 @@ export default function App() {
       return;
     }
 
-    if (handledAttentionScanIds.includes(activeScan.id)) {
-      return;
-    }
-
-    if (dismissedAttentionScanId === activeScan.id) {
+    if (handledAttentionIdsRef.current.includes(activeScan.id) || dismissedAttentionScanId === activeScan.id) {
       return;
     }
 
@@ -228,19 +242,19 @@ export default function App() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       loadData({ syncLifecycle: false, preserveMessage: true });
-    }, hasLiveScan ? 2000 : 10000);
+    }, hasLiveScan || currentPage === "telemetry" ? 5000 : 15000);
 
     return () => window.clearInterval(intervalId);
-  }, [selectedTenant, hasLiveScan]);
+  }, [selectedTenant, hasLiveScan, currentPage]);
 
   useEffect(() => {
-    if (!activeScan || !hasRunningScan) {
+    if (!activeScan || (activeScan.status !== "Running" && activeScan.status !== "Pending")) {
       return undefined;
     }
 
     const intervalId = window.setInterval(() => setAnalysisClock(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
-  }, [activeScan?.id, hasRunningScan]);
+  }, [activeScan?.id, activeScan?.status]);
 
   async function handleScanSubmit(event) {
     event.preventDefault();
@@ -250,10 +264,10 @@ export default function App() {
 
     try {
       const createdScan = await api.startScan(scanRequest);
-      setFocusedScanId(createdScan.id);
+      setSelectedScanId(createdScan.id);
       setAnalysisClock(Date.now());
       await loadData({ syncLifecycle: false, preserveMessage: true });
-      setMessage(`Enterprise scan #${createdScan.id} is live. Watch the analysis bar on the home page for realtime progress.`);
+      setMessage(`Enterprise scan #${createdScan.id} is live and now pinned as the active scan context.`);
     } catch (submitError) {
       setError(submitError.message);
     } finally {
@@ -283,7 +297,10 @@ export default function App() {
     }
 
     const key = getSkippedEventKey(skipPrompt);
-    setHandledSkippedEventKeys((current) => (current.includes(key) ? current : [...current, key]));
+    if (!handledSkippedKeysRef.current.includes(key)) {
+      handledSkippedKeysRef.current = [...handledSkippedKeysRef.current, key];
+    }
+    setHandledSkippedEventKeys(handledSkippedKeysRef.current);
     setSkipPrompt(null);
   }
 
@@ -293,13 +310,16 @@ export default function App() {
       return;
     }
 
+    if (!handledAttentionIdsRef.current.includes(scanId)) {
+      handledAttentionIdsRef.current = [...handledAttentionIdsRef.current, scanId];
+    }
     setDismissedAttentionScanId(scanId);
-    setHandledAttentionScanIds((current) => (current.includes(scanId) ? current : [...current, scanId]));
+    setHandledAttentionScanIds(handledAttentionIdsRef.current);
     setAttentionPrompt(null);
   }
 
   async function handleRetrySkippedFile() {
-    if (!skipPrompt?.currentPath) {
+    if (!skipPrompt?.currentPath || !skipPrompt?.scanJobId) {
       dismissSkippedPrompt();
       return;
     }
@@ -309,15 +329,8 @@ export default function App() {
     setMessage("");
 
     try {
-      const createdScan = await api.startScan({
-        mode: "Custom",
-        targetPath: skipPrompt.currentPath,
-        requestedBy: activeScan?.requestedBy ?? scanRequest.requestedBy ?? "enterprise-operator",
-        runHeuristics: true
-      });
-      setFocusedScanId(createdScan.id);
-      setAnalysisClock(Date.now());
-      setMessage(`Retry scan #${createdScan.id} started for skipped file ${skipPrompt.currentPath}.`);
+      await api.submitFileDecision(skipPrompt.scanJobId, skipPrompt.currentPath, "Retry");
+      setMessage(`Retry submitted for ${skipPrompt.currentPath} in scan #${skipPrompt.scanJobId}.`);
       dismissSkippedPrompt();
       await loadData({ syncLifecycle: false, preserveMessage: true });
     } catch (retryError) {
@@ -327,9 +340,33 @@ export default function App() {
     }
   }
 
-  async function handleQuarantine(id) {
+  async function handleSkipFile() {
+    if (!skipPrompt?.currentPath || !skipPrompt?.scanJobId) {
+      dismissSkippedPrompt();
+      return;
+    }
+
     setError("");
     setMessage("");
+
+    try {
+      await api.submitFileDecision(skipPrompt.scanJobId, skipPrompt.currentPath, "Skip");
+      setMessage(`Skipped ${skipPrompt.currentPath} in scan #${skipPrompt.scanJobId}. Scan continues.`);
+      dismissSkippedPrompt();
+      await loadData({ syncLifecycle: false, preserveMessage: true });
+    } catch (skipError) {
+      setError(skipError.message);
+      dismissSkippedPrompt();
+    }
+  }
+
+  async function handleQuarantine(id) {
+    setPendingThreatActionId(id);
+    setError("");
+    setMessage("");
+    setThreats((current) =>
+      current.map((threat) => threat.id === id ? { ...threat, isQuarantined: true } : threat)
+    );
 
     try {
       const result = await api.quarantineThreat(id);
@@ -337,10 +374,14 @@ export default function App() {
       await loadData({ syncLifecycle: false, preserveMessage: true });
     } catch (quarantineError) {
       setError(quarantineError.message);
+      await loadData({ syncLifecycle: false, preserveMessage: true });
+    } finally {
+      setPendingThreatActionId(null);
     }
   }
 
   async function handleReview(threat) {
+    setPendingThreatActionId(threat.id);
     setError("");
     setMessage("");
 
@@ -350,13 +391,38 @@ export default function App() {
         artifactHash: "pending-artifact-hash",
         ruleId: threat.name,
         scope: "TenantPolicy",
-        analyst: "analyst-console",
-        notes: `Submitted from enterprise dashboard for ${threat.resource ?? threat.name}.`
+        analyst: "soc-analyst",
+        notes: `Submitted from Sentinel Shield for ${threat.resource ?? threat.name}.`
       });
       setMessage("False-positive review submitted into governance workflow.");
       await loadData({ syncLifecycle: false, preserveMessage: true });
     } catch (reviewError) {
       setError(reviewError.message);
+    } finally {
+      setPendingThreatActionId(null);
+    }
+  }
+
+  async function handleDecideReview(id, status) {
+    setPendingReviewId(id);
+    setError("");
+    setMessage("");
+
+    try {
+      const result = await api.decideReview(id, {
+        status,
+        analyst: "soc-analyst",
+        notes: `Decision recorded from Sentinel Shield dashboard: ${status}.`
+      });
+      setControlPlane((current) => current ? {
+        ...current,
+        falsePositiveReviews: current.falsePositiveReviews.map((review) => review.id === id ? result : review)
+      } : current);
+      setMessage(`Review #${id} marked as ${status.toLowerCase()}.`);
+    } catch (decisionError) {
+      setError(decisionError.message);
+    } finally {
+      setPendingReviewId(null);
     }
   }
 
@@ -393,7 +459,7 @@ export default function App() {
     try {
       const file = await api.exportAllScans();
       triggerDownload(file);
-      setMessage(`Exported Excel report ${file.fileName}.`);
+      setMessage(`Exported report ${file.fileName}.`);
       await loadData({ syncLifecycle: false, preserveMessage: true });
     } catch (exportError) {
       setError(exportError.message);
@@ -401,13 +467,17 @@ export default function App() {
   }
 
   async function handleExportScan(scanId) {
+    if (!scanId) {
+      return;
+    }
+
     setError("");
     setMessage("");
 
     try {
       const file = await api.exportScan(scanId);
       triggerDownload(file);
-      setMessage(`Exported Excel report for scan #${scanId}.`);
+      setMessage(`Exported report for scan #${scanId}.`);
       await loadData({ syncLifecycle: false, preserveMessage: true });
     } catch (exportError) {
       setError(exportError.message);
@@ -426,13 +496,10 @@ export default function App() {
   }
 
   const incidents = controlPlane?.incidents ?? [];
-  const complianceReports = controlPlane?.complianceReports ?? [];
   const paritySnapshots = controlPlane?.paritySnapshots ?? [];
   const sandboxSubmissions = controlPlane?.sandboxSubmissions ?? [];
   const reviews = controlPlane?.falsePositiveReviews ?? [];
   const fleet = controlPlane?.fleet ?? null;
-  const openIncidentCount = fleet?.openIncidentCount ?? incidents.filter((incident) => incident.status !== "Resolved").length;
-  const quarantinedThreatCount = threats.filter((threat) => threat.isQuarantined).length;
   const tenantOptions = Array.from(
     new Map(
       [
@@ -445,137 +512,179 @@ export default function App() {
     ).values()
   );
 
-  function handleRibbonNavigation(pageKey) {
+  function handleNavigation(pageKey) {
     window.location.hash = pageKey;
     setCurrentPage(pageKey);
   }
 
   function handleFocusScan(scanId) {
-    setFocusedScanId(scanId);
+    setSelectedScanId(scanId);
     setAnalysisClock(Date.now());
-    handleRibbonNavigation("home");
+    handleNavigation("home");
   }
 
   function handleReviewAttention() {
     const scanId = attentionPrompt?.scan?.id;
+    if (scanId) {
+      setSelectedScanId(scanId);
+    }
     dismissAttentionPrompt(scanId);
-    handleRibbonNavigation("detections");
+    handleNavigation("detections");
   }
 
   return (
-    <div className="app-shell">
-      <div className="ambient ambient-left" />
-      <div className="ambient ambient-right" />
-
-      <Ribbon
+    <div className="soc-shell">
+      <AppSidebar
         pageDefinitions={pageDefinitions}
         currentPage={currentPage}
-        onNavigate={handleRibbonNavigation}
-        health={health}
-        fleet={fleet}
-        openIncidentCount={openIncidentCount}
-        tenantOptions={tenantOptions}
-        selectedTenant={selectedTenant}
-        setSelectedTenant={setSelectedTenant}
-        onRefresh={() => loadData({ syncLifecycle: true, preserveMessage: true })}
-        loading={loading}
+        onNavigate={handleNavigation}
+        engineStatus={engineStatus}
       />
 
-      {error ? <div className="banner error">{error}</div> : null}
-      {message ? <div className="banner success">{message}</div> : null}
+      <div className="workspace-shell">
+        <div className="workspace-toolbar">
+          <label className="field tenant-field">
+            <span>Tenant</span>
+            <select value={selectedTenant} onChange={(event) => setSelectedTenant(event.target.value)}>
+              {tenantOptions.map((tenant) => (
+                <option key={tenant.tenantKey} value={tenant.tenantKey}>
+                  {tenant.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      <SkippedFileModal
-        skipPrompt={skipPrompt}
-        onDismiss={dismissSkippedPrompt}
-        onRetry={handleRetrySkippedFile}
-        retryingSkippedFile={retryingSkippedFile}
-      />
-      <AttentionModal
-        scan={attentionPrompt?.scan}
-        vulnerabilities={attentionPrompt?.vulnerabilities}
-        onDismiss={() => dismissAttentionPrompt()}
-        onReview={handleReviewAttention}
-      />
+          <button
+            className="button button-secondary icon-button"
+            type="button"
+            aria-label="Refresh dashboard"
+            onClick={() => loadData({ syncLifecycle: true, preserveMessage: true })}
+          >
+            <RefreshCcw size={16} />
+          </button>
+        </div>
 
-      <main className="page-shell">
-        {currentPage === "home" ? (
-          <HomePage
-            scanRequest={scanRequest}
-            setScanRequest={setScanRequest}
-            submitting={submitting}
-            handleScanSubmit={handleScanSubmit}
-            handleStopScan={handleStopScan}
-            stoppingScanId={stoppingScanId}
-            activeScan={activeScan}
-            analysisProgress={analysisProgress}
-            analysisSteps={analysisSteps}
-            incidentsCount={openIncidentCount}
-            threatCount={threats.length}
-            quarantinedThreatCount={quarantinedThreatCount}
-            fleet={fleet}
-            health={health}
-            onNavigate={handleRibbonNavigation}
-          />
-        ) : null}
+        {message ? <div className="flash-banner flash-success">{message}</div> : null}
 
-        {currentPage === "incidents" ? (
-          <IncidentsPage incidents={incidents} handleResolveIncident={handleResolveIncident} scans={scans} selectedScanId={incidentsScanId} setSelectedScanId={setIncidentsScanId} />
-        ) : null}
+        <SkippedFileModal
+          skipPrompt={skipPrompt}
+          onDismiss={dismissSkippedPrompt}
+          onRetry={handleRetrySkippedFile}
+          onSkip={handleSkipFile}
+          retryingSkippedFile={retryingSkippedFile}
+        />
+        <AttentionModal
+          scan={attentionPrompt?.scan}
+          vulnerabilities={attentionPrompt?.vulnerabilities}
+          onDismiss={() => dismissAttentionPrompt()}
+          onReview={handleReviewAttention}
+        />
 
-        {currentPage === "detections" ? (
-          <DetectionsPage
-            threats={threats}
-            query={detectionQuery}
-            setQuery={setDetectionQuery}
-            handleQuarantine={handleQuarantine}
-            handleReview={handleReview}
-            scans={scans}
-            selectedScanId={detectionsScanId}
-            setSelectedScanId={setDetectionsScanId}
-          />
-        ) : null}
+        <main className="content-shell">
+          {currentPage === "home" ? (
+            <HomePage
+              scanRequest={scanRequest}
+              setScanRequest={setScanRequest}
+              submitting={submitting}
+              onSubmit={handleScanSubmit}
+              activeScan={activeScan}
+              analysisProgress={analysisProgress}
+              analysisSteps={analysisSteps}
+              handleStopScan={handleStopScan}
+              stoppingScanId={stoppingScanId}
+              scans={scans}
+              threats={threats}
+              fileEvents={fileEvents}
+              health={health}
+              fleet={fleet}
+              engineStatus={engineStatus}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              onFocusScan={handleFocusScan}
+              loading={loading}
+              error={error}
+              lastUpdated={lastUpdatedByPage.home}
+            />
+          ) : null}
 
-        {currentPage === "telemetry" ? (
-          <TelemetryPage
-            fileEvents={fileEvents}
-            scans={scans}
-            telemetryQuery={telemetryQuery}
-            setTelemetryQuery={setTelemetryQuery}
-            onFocusScan={handleFocusScan}
-            onExportScan={handleExportScan}
-            onStopScan={handleStopScan}
-            stoppingScanId={stoppingScanId}
-            analysisClock={analysisClock}
-            selectedScanId={telemetryScanId}
-            setSelectedScanId={setTelemetryScanId}
-          />
-        ) : null}
+          {currentPage === "incidents" ? (
+            <IncidentsPage
+              incidents={incidents}
+              scans={scans}
+              onResolveIncident={handleResolveIncident}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.incidents}
+            />
+          ) : null}
 
-        {currentPage === "fleet" ? <FleetPage controlPlane={controlPlane} health={health} scans={scans} selectedScanId={fleetScanId} setSelectedScanId={setFleetScanId} /> : null}
+          {currentPage === "detections" ? (
+            <DetectionsPage
+              threats={threats}
+              scans={scans}
+              onQuarantine={handleQuarantine}
+              onReview={handleReview}
+              pendingThreatActionId={pendingThreatActionId}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.detections}
+            />
+          ) : null}
 
-        {currentPage === "governance" ? (
-          <GovernancePage
-            paritySnapshots={paritySnapshots}
-            sandboxSubmissions={sandboxSubmissions}
-            reviews={reviews}
-            scans={scans}
-            selectedScanId={governanceScanId}
-            setSelectedScanId={setGovernanceScanId}
-          />
-        ) : null}
+          {currentPage === "telemetry" ? (
+            <TelemetryPage
+              fileEvents={fileEvents}
+              scans={scans}
+              scanProgressEvents={scanProgressEvents}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.telemetry}
+            />
+          ) : null}
 
-        {currentPage === "reports" ? (
-          <ReportsPage
-            scanExports={scanExports}
-            complianceReports={complianceReports}
-            handleCaptureCompliance={handleCaptureCompliance}
-            handleExportAllScans={handleExportAllScans}
-            scans={scans}
-            selectedScanId={reportsScanId}
-            setSelectedScanId={setReportsScanId}
-          />
-        ) : null}
-      </main>
+          {currentPage === "fleet" ? (
+            <FleetPage
+              controlPlane={controlPlane}
+              health={health}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.fleet}
+            />
+          ) : null}
+
+          {currentPage === "governance" ? (
+            <GovernancePage
+              paritySnapshots={paritySnapshots}
+              sandboxSubmissions={sandboxSubmissions}
+              reviews={reviews}
+              scans={scans}
+              onDecideReview={handleDecideReview}
+              pendingReviewId={pendingReviewId}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.governance}
+            />
+          ) : null}
+
+          {currentPage === "reports" ? (
+            <ReportsPage
+              scanExports={scanExports}
+              onCaptureCompliance={handleCaptureCompliance}
+              onExportAllScans={handleExportAllScans}
+              onExportScan={handleExportScan}
+              scans={scans}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.reports}
+            />
+          ) : null}
+        </main>
+      </div>
     </div>
   );
 }

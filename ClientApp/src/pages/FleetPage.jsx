@@ -1,123 +1,111 @@
-import { describeHealthStatus, formatDate, formatPercent } from "../ui/presentation";
-import ScanSelector from "../components/ScanSelector";
+import PageHeader from "../components/PageHeader";
+import Timestamp from "../components/Timestamp";
+import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { complianceTone, formatPercent } from "../ui/presentation";
 
-export default function FleetPage({ controlPlane, health, scans, selectedScanId, setSelectedScanId }) {
+export default function FleetPage({ controlPlane, health, loading, error, onRefresh, lastUpdated }) {
   const fleet = controlPlane?.fleet;
   const devices = controlPlane?.devices ?? [];
   const packs = controlPlane?.signaturePacks ?? [];
-
-  const filteredDevices = devices;
+  const currentPack = packs[0] ?? null;
 
   return (
     <div className="page-stack">
-      <section className="panel page-panel">
-        <div className="panel-heading">
-          <h2>Fleet posture</h2>
-          <p>Tenant posture, rollout state, and endpoint health are grouped here instead of spreading across the whole product.</p>
-        </div>
+      <PageHeader
+        eyebrow="Device Posture"
+        title="Fleet Posture"
+        badge={`${devices.length} Devices`}
+        description="Monitor endpoint coverage, compliance, and signature deployment posture across the tenant."
+        lastUpdated={lastUpdated}
+      />
 
-        <div className="toolbar">
-          <ScanSelector scans={scans} selectedScanId={selectedScanId} onChange={setSelectedScanId} />
-        </div>
+      {error ? <ErrorState message={error} onRetry={onRefresh} /> : null}
 
-        <section className="metrics-grid metrics-grid-enterprise">
-          <article className="metric-card">
-            <span>Fleet devices</span>
-            <strong>{fleet?.deviceCount ?? 0}</strong>
-            <small>{fleet?.activeDeviceCount ?? 0} active endpoints reporting heartbeat telemetry</small>
-          </article>
-          <article className="metric-card">
-            <span>Agent coverage</span>
-            <strong>{formatPercent(fleet?.agentCoveragePercent)}</strong>
-            <small>Enrollment and reporting coverage across this tenant</small>
-          </article>
-          <article className="metric-card">
-            <span>Policy compliance</span>
-            <strong>{formatPercent(fleet?.policyCompliancePercent)}</strong>
-            <small>Policies aligned with the current tenant baseline</small>
-          </article>
-          <article className="metric-card">
-            <span>Self-protection</span>
-            <strong>{formatPercent(fleet?.selfProtectionCoveragePercent)}</strong>
-            <small>Process, service, file, and signed-update controls healthy</small>
-          </article>
-          <article className="metric-card">
-            <span>Current pack</span>
-            <strong>{fleet?.currentPackVersion ?? "Unavailable"}</strong>
-            <small>Legacy shadow mode {fleet?.legacyShadowModeEnabled ? "enabled" : "disabled"}</small>
-          </article>
-          <article className="metric-card">
-            <span>Realtime engine</span>
-            <strong>{health?.realTimeProtectionEnabled ? "On" : "Off"}</strong>
-            <small>{describeHealthStatus(health)}</small>
-          </article>
-        </section>
+      <section className="stats-grid fleet-stats-grid">
+        <article className="metric-card">
+          <span>Total Devices</span>
+          <strong>{fleet?.deviceCount ?? 0}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Agent Coverage</span>
+          <strong>{formatPercent(fleet?.agentCoveragePercent)}</strong>
+          <div className="mini-progress">
+            <div style={{ width: `${fleet?.agentCoveragePercent ?? 0}%` }} />
+          </div>
+        </article>
+        <article className="metric-card">
+          <span>Policy Compliance</span>
+          <strong className={`text-${complianceTone(fleet?.policyCompliancePercent)}`}>{formatPercent(fleet?.policyCompliancePercent)}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Self-Protection</span>
+          <strong>{health?.engineServiceEnabled ? "Enabled" : "Disabled"}</strong>
+          <small>{formatPercent(fleet?.selfProtectionCoveragePercent)} coverage</small>
+        </article>
       </section>
 
-      <section className="panel page-panel">
-        <div className="panel-heading">
-          <h2>Registered endpoints</h2>
-          <p>Device inventory, rollout rings, and self-protection posture.</p>
+      <section className="fleet-layout">
+        <div className="panel">
+          <div className="section-head">
+            <h2>Device Health</h2>
+          </div>
+          {loading ? (
+            <TableSkeleton rows={7} columns={7} />
+          ) : devices.length === 0 ? (
+            <EmptyState title="No devices" description="No enrolled devices are currently registered for this tenant." />
+          ) : (
+            <div className="table-shell">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Device ID</th>
+                    <th>Antivirus Enabled</th>
+                    <th>Real-Time Protection</th>
+                    <th>Signature Version</th>
+                    <th>Last Updated</th>
+                    <th>Quick Scan Age</th>
+                    <th>Full Scan Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {devices.map((device) => (
+                    <tr key={device.deviceId}>
+                      <td className="font-mono">{device.deviceId}</td>
+                      <td>{health?.antivirusEnabled ? "✓" : "✗"}</td>
+                      <td>{health?.realTimeProtectionEnabled ? "✓" : "✗"}</td>
+                      <td className="font-mono">{device.signaturePackVersion}</td>
+                      <td><Timestamp value={device.lastSeenAt ?? device.createdAt} /></td>
+                      <td className={(health?.quickScanAgeDays ?? 0) > 7 ? "text-critical" : ""}>{health?.quickScanAgeDays ?? "n/a"} days</td>
+                      <td className={(health?.fullScanAgeDays ?? 0) > 30 ? "text-critical" : ""}>{health?.fullScanAgeDays ?? "n/a"} days</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        <div className="history-list">
-          {filteredDevices.map((device) => (
-            <article key={device.deviceId} className="history-card compact-card">
-              <div className="history-header">
-                <div>
-                  <span className="history-mode">{device.operatingSystem}</span>
-                  <h3>{device.deviceName}</h3>
-                </div>
-                <span className={`pill ${device.selfProtection.watchdogHealthy ? "low" : "high"}`}>
-                  {device.enrollmentStatus}
-                </span>
-              </div>
-              <div className="history-meta">
-                <span>Agent: {device.agentVersion}</span>
-                <span>Engine: {device.engineVersion}</span>
-                <span>Pack: {device.signaturePackVersion}</span>
-                <span>Policy: {device.policyVersion}</span>
-                <span>Ring: {device.rolloutRing}</span>
-                <span>Last seen: {formatDate(device.lastSeenAt)}</span>
-              </div>
-              <p>
-                Baseline scan {device.baselineScanCompleted ? "completed" : "pending"}.
-                Self-protection: {device.selfProtection.processProtectionEnabled ? " process" : ""}
-                {device.selfProtection.fileProtectionEnabled ? " file" : ""}
-                {device.selfProtection.serviceProtectionEnabled ? " service" : ""}.
-              </p>
-            </article>
-          ))}
-          {filteredDevices.length === 0 ? <p className="empty-state">No devices have registered for this tenant yet.</p> : null}
-        </div>
-      </section>
-
-      <section className="panel page-panel">
-        <div className="panel-heading">
-          <h2>Pack rollout</h2>
-          <p>Release rings, staged pack delivery, and current signature distribution state.</p>
-        </div>
-
-        <div className="history-list">
-          {packs.map((pack) => (
-            <article key={`${pack.id}-${pack.version}`} className="history-card compact-card">
-              <div className="history-header">
-                <div>
-                  <span className="history-mode">{pack.channel}</span>
-                  <h3>{pack.version}</h3>
-                </div>
-                <span className={`pill ${pack.status === "Released" ? "low" : "medium"}`}>{pack.status}</span>
-              </div>
-              <div className="history-meta">
-                <span>Ring: {pack.rolloutRing}</span>
-                <span>Signatures: {pack.signatureCount}</span>
-                <span>Min agent: {pack.minAgentVersion}</span>
-                <span>Released: {formatDate(pack.releasedAt)}</span>
-              </div>
-            </article>
-          ))}
-          {packs.length === 0 ? <p className="empty-state">No signature pack records are available yet.</p> : null}
-        </div>
+        <aside className="panel deployment-panel">
+          <div className="section-head">
+            <h2>Signature Pack Deployment</h2>
+          </div>
+          <div className="deployment-detail">
+            <span>Current version</span>
+            <strong className="font-mono">{currentPack?.version ?? fleet?.currentPackVersion ?? "Unavailable"}</strong>
+          </div>
+          <div className="deployment-detail">
+            <span>Channel</span>
+            <strong><span className="pill pill-muted">{currentPack?.channel ?? "Stable"}</span></strong>
+          </div>
+          <div className="stepper">
+            <div className="stepper-line" />
+            <div className="stepper-node active">Canary</div>
+            <div className="stepper-node active">GA</div>
+          </div>
+          <p className="deployment-note">
+            {fleet?.legacyShadowModeEnabled ? "Legacy shadow mode remains enabled during rollout validation." : "Legacy shadow mode is disabled for this tenant."}
+          </p>
+        </aside>
       </section>
     </div>
   );

@@ -1,3 +1,6 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\bin\Debug\net10.0\Antivirus.Domain.deps.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\bin\Debug\net10.0\Antivirus.Domain.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\bin\Debug\net10.0\Antivirus.Domain.pdb
@@ -5,11 +8,14 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\An
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.AssemblyInfoInputs.cache
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.AssemblyInfo.cs
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.csproj.CoreCompileInputs.cache
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.sourcelink.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\refint\Antivirus.Domain.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\ref\Antivirus.Domain.dll
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.deps.json
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.dll
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-incidents\Antivirus.Domain.pdb
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\obj\Debug\net10.0\Antivirus.Domain.sourcelink.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-di\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-di\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-di\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.pdb

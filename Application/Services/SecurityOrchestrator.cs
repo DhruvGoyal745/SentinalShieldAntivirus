@@ -13,6 +13,7 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
     private readonly IProprietaryProtectionEngine _proprietaryProtectionEngine;
     private readonly IScanBackgroundQueue _scanBackgroundQueue;
     private readonly IScanCancellationRegistry _scanCancellationRegistry;
+    private readonly IScanFileDecisionRegistry _fileDecisionRegistry;
     private readonly AntivirusPlatformOptions _options;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<SecurityOrchestrator> _logger;
@@ -22,6 +23,7 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
         IProprietaryProtectionEngine proprietaryProtectionEngine,
         IScanBackgroundQueue scanBackgroundQueue,
         IScanCancellationRegistry scanCancellationRegistry,
+        IScanFileDecisionRegistry fileDecisionRegistry,
         IOptions<AntivirusPlatformOptions> options,
         IWebHostEnvironment environment,
         ILogger<SecurityOrchestrator> logger)
@@ -30,6 +32,7 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
         _proprietaryProtectionEngine = proprietaryProtectionEngine;
         _scanBackgroundQueue = scanBackgroundQueue;
         _scanCancellationRegistry = scanCancellationRegistry;
+        _fileDecisionRegistry = fileDecisionRegistry;
         _options = options.Value;
         _environment = environment;
         _logger = logger;
@@ -37,6 +40,14 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
 
     public async Task<ScanJob> QueueScanAsync(ScanRequest request, CancellationToken cancellationToken = default)
     {
+        if (request.Mode == ScanMode.Custom && !string.IsNullOrWhiteSpace(request.TargetPath))
+        {
+            if (!File.Exists(request.TargetPath) && !Directory.Exists(request.TargetPath))
+            {
+                throw new InvalidOperationException($"Scan target '{request.TargetPath}' no longer exists.");
+            }
+        }
+
         var normalizedRequest = new ScanRequest
         {
             Mode = request.Mode,
@@ -118,6 +129,22 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
                 .ToArray();
 
             await _repository.UpsertThreatsAsync(workItem.ScanId, persistedThreats, cancellationToken);
+
+            await _repository.UpdateScanStatusAsync(
+                workItem.ScanId,
+                ScanStatus.Completed,
+                ScanStage.Completed,
+                100,
+                persistedThreats.Length,
+                null,
+                workItem.Request.TargetPath,
+                persistedThreats.Count(t => t.Severity is ThreatSeverity.High or ThreatSeverity.Critical),
+                persistedThreats.Length > 0
+                    ? $"Scan completed. {persistedThreats.Length} threat(s) detected."
+                    : "Scan completed. No threats detected.",
+                startedAt,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
         }
         catch (OperationCanceledException) when (_scanCancellationRegistry.IsStopRequested(workItem.ScanId) || cancellationToken.IsCancellationRequested)
         {
@@ -185,6 +212,35 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
     public async Task<IReadOnlyCollection<ThreatDetection>> SyncThreatsAsync(CancellationToken cancellationToken = default)
     {
         return await _repository.GetThreatsAsync(activeOnly: false, cancellationToken);
+    }
+
+    public async Task<ScanFileDecisionResult> SubmitFileDecisionAsync(int scanId, ScanFileDecision decision, CancellationToken cancellationToken = default)
+    {
+        var scan = await _repository.GetScanByIdAsync(scanId, cancellationToken);
+        if (scan is null)
+        {
+            return new ScanFileDecisionResult { Success = false, Message = "Scan not found." };
+        }
+
+        var submitted = _fileDecisionRegistry.SubmitDecision(scanId, decision.FilePath, decision.Action);
+        if (!submitted)
+        {
+            return new ScanFileDecisionResult
+            {
+                Success = false,
+                Message = "No pending file decision found for this scan. The scan may have already moved past this file."
+            };
+        }
+
+        _logger.LogInformation(
+            "File decision '{Action}' submitted for scan #{ScanId}, file {FilePath}.",
+            decision.Action, scanId, decision.FilePath);
+
+        return new ScanFileDecisionResult
+        {
+            Success = true,
+            Message = $"Decision '{decision.Action}' applied for {Path.GetFileName(decision.FilePath)}."
+        };
     }
 
     public async Task<QuarantineResult> QuarantineThreatAsync(int threatId, CancellationToken cancellationToken = default)

@@ -1,25 +1,7 @@
 export const scanModeOptions = [
-  {
-    value: "Quick",
-    label: "Quick scan",
-    eyebrow: "Rapid sweep",
-    description: "Checks hot zones like downloads, temp files, startup paths, and active user surfaces.",
-    eta: "Fastest response"
-  },
-  {
-    value: "Full",
-    label: "Full scan",
-    eyebrow: "Deep coverage",
-    description: "Covers the broader monitored estate and is best for full reassurance on a customer endpoint.",
-    eta: "Highest confidence"
-  },
-  {
-    value: "Custom",
-    label: "Custom path",
-    eyebrow: "Focused review",
-    description: "Targets one suspicious folder or mounted path when a customer needs evidence around a single area.",
-    eta: "Flexible scope"
-  }
+  { value: "Quick", label: "Quick" },
+  { value: "Full", label: "Full" },
+  { value: "Custom", label: "Custom" }
 ];
 
 export const pageDefinitions = [
@@ -35,15 +17,19 @@ export const pageDefinitions = [
 export const liveScanStatuses = new Set(["Pending", "Running"]);
 
 export const scanPipelineSteps = [
-  { key: "Queued", label: "Queued" },
   { key: "Observe", label: "Observe" },
-  { key: "Normalize", label: "Normalize" },
-  { key: "StaticAnalysis", label: "Static analysis" },
-  { key: "HeuristicAnalysis", label: "Heuristics" },
-  { key: "ReputationLookup", label: "Reputation" },
+  { key: "StaticAnalysis", label: "Static Analysis" },
+  { key: "HeuristicAnalysis", label: "Heuristic Analysis" },
+  { key: "ReputationLookup", label: "Reputation Lookup" },
   { key: "Response", label: "Response" },
   { key: "Telemetry", label: "Telemetry" },
   { key: "Completed", label: "Completed" }
 ];
 
 export const scanStageOrder = new Map(scanPipelineSteps.map((step, index) => [step.key, index]));
+
+export const governanceTabs = [
+  { key: "legacy-parity", label: "Legacy Parity" },
+  { key: "sandbox-queue", label: "Sandbox Queue" },
+  { key: "false-positive-reviews", label: "False Positive Reviews" }
+];
