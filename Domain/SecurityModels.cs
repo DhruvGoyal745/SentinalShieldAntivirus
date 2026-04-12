@@ -438,6 +438,8 @@ public sealed class FileSecurityEvent
 {
     public int Id { get; init; }
 
+    public int? ScanJobId { get; init; }
+
     public string FilePath { get; init; } = string.Empty;
 
     public string? PreviousPath { get; init; }

@@ -5,6 +5,7 @@
 #define AppVersion "1.0.0"
 #define AppPublisher "Sentinel Shield"
 #define AppExeName "SentinelShieldAntivirus.exe"
+#define DesktopExeName "SentinelShieldDesktop.exe"
 #define TrayExeName "SentinelShieldTray.exe"
 #define ServiceName "SentinelShieldService"
 #define AppUrl "http://127.0.0.1:5100"
@@ -25,7 +26,7 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
-UninstallDisplayIcon={app}\{#AppExeName}
+UninstallDisplayIcon={app}\{#DesktopExeName}
 MinVersion=10.0
 
 [Languages]
@@ -38,6 +39,7 @@ Name: "contextmenu"; Description: "Add 'Scan with Sentinel Shield' to right-clic
 [Files]
 ; Service files (published output — single-file exe + supporting files)
 Source: "..\..\artifacts\publish\service\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\artifacts\publish\desktop\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Tray app (single-file exe)
 Source: "..\..\artifacts\publish\tray\SentinelShieldTray.exe"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -47,9 +49,9 @@ Name: "{commonappdata}\SentinelShield\Logs"
 Name: "{commonappdata}\SentinelShield\SignaturePacks"
 
 [Icons]
-Name: "{group}\Sentinel Shield Antivirus"; Filename: "{app}\{#TrayExeName}"
+Name: "{group}\Sentinel Shield Antivirus"; Filename: "{app}\{#DesktopExeName}"
 Name: "{group}\Uninstall Sentinel Shield"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\Sentinel Shield Antivirus"; Filename: "{app}\{#TrayExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\Sentinel Shield Antivirus"; Filename: "{app}\{#DesktopExeName}"; Tasks: desktopicon
 
 [Registry]
 ; Tray auto-start on user login
@@ -57,17 +59,18 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 ; Explorer context menu — files
 Root: HKLM; Subkey: "SOFTWARE\Classes\*\shell\SentinelShieldScan"; ValueType: string; ValueData: "Scan with Sentinel Shield"; Tasks: contextmenu; Flags: uninsdeletekey
-Root: HKLM; Subkey: "SOFTWARE\Classes\*\shell\SentinelShieldScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#AppExeName}"",0"; Tasks: contextmenu
-Root: HKLM; Subkey: "SOFTWARE\Classes\*\shell\SentinelShieldScan\command"; ValueType: string; ValueData: """{app}\{#AppExeName}"" --scan --target ""%1"""; Tasks: contextmenu
+Root: HKLM; Subkey: "SOFTWARE\Classes\*\shell\SentinelShieldScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#DesktopExeName}"",0"; Tasks: contextmenu
+Root: HKLM; Subkey: "SOFTWARE\Classes\*\shell\SentinelShieldScan\command"; ValueType: string; ValueData: """{app}\{#DesktopExeName}"" --scan-target ""%1"""; Tasks: contextmenu
 
 ; Explorer context menu — folders
 Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\SentinelShieldScan"; ValueType: string; ValueData: "Scan with Sentinel Shield"; Tasks: contextmenu; Flags: uninsdeletekey
-Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\SentinelShieldScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#AppExeName}"",0"; Tasks: contextmenu
-Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\SentinelShieldScan\command"; ValueType: string; ValueData: """{app}\{#AppExeName}"" --scan --target ""%1"""; Tasks: contextmenu
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\SentinelShieldScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#DesktopExeName}"",0"; Tasks: contextmenu
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\SentinelShieldScan\command"; ValueType: string; ValueData: """{app}\{#DesktopExeName}"" --scan-target ""%1"""; Tasks: contextmenu
 
 [Run]
 ; Grant SQL Server access to the SYSTEM account (required for Windows service)
-Filename: "sqlcmd.exe"; Parameters: "-S .\SQLEXPRESS -E -Q ""IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'NT AUTHORITY\SYSTEM') CREATE LOGIN [NT AUTHORITY\SYSTEM] FROM WINDOWS; ALTER SERVER ROLE sysadmin ADD MEMBER [NT AUTHORITY\SYSTEM];"""; Flags: runhidden waituntilterminated
+; Uses full path to sqlcmd if available via SQL Express or SQL Server
+Filename: "cmd.exe"; Parameters: "/C sqlcmd -S .\SQLEXPRESS -E -Q ""IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'NT AUTHORITY\SYSTEM') CREATE LOGIN [NT AUTHORITY\SYSTEM] FROM WINDOWS; ALTER SERVER ROLE sysadmin ADD MEMBER [NT AUTHORITY\SYSTEM];"" 2>nul || sqlcmd -S (localdb)\MSSQLLocalDB -E -Q ""IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'NT AUTHORITY\SYSTEM') CREATE LOGIN [NT AUTHORITY\SYSTEM] FROM WINDOWS;"" 2>nul || echo No SQL Server found — the service will auto-detect on first run."; Flags: runhidden waituntilterminated
 
 ; Install and start the Windows service
 Filename: "sc.exe"; Parameters: "create {#ServiceName} binPath= ""{app}\{#AppExeName}"" DisplayName= ""{#AppName} Protection Service"" start= delayed-auto"; Flags: runhidden waituntilterminated
@@ -88,6 +91,7 @@ Filename: "sc.exe"; Parameters: "delete {#ServiceName}"; Flags: runhidden waitun
 
 ; Kill the tray app
 Filename: "taskkill.exe"; Parameters: "/F /IM {#TrayExeName}"; Flags: runhidden
+Filename: "taskkill.exe"; Parameters: "/F /IM {#DesktopExeName}"; Flags: runhidden
 
 ; Remove firewall rule
 Filename: "netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Sentinel Shield Antivirus"""; Flags: runhidden waituntilterminated
@@ -98,17 +102,64 @@ Type: filesandordirs; Name: "{commonappdata}\SentinelShield\SignaturePacks"
 ; Quarantine is intentionally NOT deleted — user data preservation
 
 [Messages]
-WelcomeLabel2=This will install {#AppName} on your computer.%n%nThe installer will:%n- Install the antivirus protection service%n- Add a system tray application%n- Configure real-time file monitoring%n- Add right-click scan integration%n%nSQL Server Express is required and should already be installed.
+WelcomeLabel2=This will install {#AppName} on your computer.%n%nThe installer will:%n- Install the antivirus protection service%n- Add a native desktop dashboard%n- Add a system tray application%n- Configure real-time file monitoring%n- Add right-click scan integration%n%nPrerequisites (auto-detected on first run):%n- SQL Server Express, LocalDB, or any SQL Server instance%n- Microsoft Edge WebView2 Runtime
 
 [Code]
 var
   ResultCode: Integer;
+
+function IsWebView2Installed(): Boolean;
+var
+  VersionValue: String;
+begin
+  Result :=
+    RegQueryStringValue(HKLM32, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', VersionValue) and
+    (VersionValue <> '');
+end;
+
+function IsSqlServerAvailable(): Boolean;
+var
+  ExitCode: Integer;
+begin
+  Result := Exec('cmd.exe', '/C sqlcmd -S .\SQLEXPRESS -E -Q "SELECT 1" >nul 2>nul', '', SW_HIDE, ewWaitUntilTerminated, ExitCode) and (ExitCode = 0);
+  if not Result then
+    Result := Exec('cmd.exe', '/C sqlcmd -S (localdb)\MSSQLLocalDB -E -Q "SELECT 1" >nul 2>nul', '', SW_HIDE, ewWaitUntilTerminated, ExitCode) and (ExitCode = 0);
+  if not Result then
+    Result := Exec('cmd.exe', '/C sqlcmd -S . -E -Q "SELECT 1" >nul 2>nul', '', SW_HIDE, ewWaitUntilTerminated, ExitCode) and (ExitCode = 0);
+end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Exec('sc.exe', 'stop {#ServiceName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('sc.exe', 'delete {#ServiceName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('taskkill.exe', '/F /IM {#TrayExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('taskkill.exe', '/F /IM {#DesktopExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Sleep(2000);
+
+  if not IsWebView2Installed() then
+  begin
+    Result :=
+      'Microsoft Edge WebView2 Runtime is required for the Sentinel Shield desktop dashboard.' + #13#10 + #13#10 +
+      'Install the runtime, then run this installer again.' + #13#10 +
+      'Download: https://go.microsoft.com/fwlink/p/?LinkId=2124703';
+    exit;
+  end;
+
+  if not IsSqlServerAvailable() then
+  begin
+    if MsgBox(
+      'No SQL Server instance was detected on this machine.' + #13#10 + #13#10 +
+      'Sentinel Shield requires SQL Server Express (free) or SQL Server LocalDB.' + #13#10 + #13#10 +
+      'You can install SQL Server Express from:' + #13#10 +
+      'https://go.microsoft.com/fwlink/?linkid=866658' + #13#10 + #13#10 +
+      'Do you want to continue the installation anyway?' + #13#10 +
+      '(The service will fail to start until SQL Server is available.)',
+      mbConfirmation, MB_YESNO) = IDNO then
+    begin
+      Result := 'Installation cancelled. Please install SQL Server Express first.';
+      exit;
+    end;
+  end;
+
   Result := '';
 end;

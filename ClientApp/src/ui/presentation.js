@@ -213,6 +213,12 @@ export function getInitialPage() {
   return pageDefinitions.some((page) => page.key === pageKey) ? pageKey : "home";
 }
 
+export function getInitialScanId() {
+  const value = new URLSearchParams(window.location.search).get("scanId");
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function getGovernanceTabFromHash() {
   const hash = window.location.hash.replace(/^#/, "").trim().toLowerCase();
   const [, tab = "legacy-parity"] = hash.split("/");

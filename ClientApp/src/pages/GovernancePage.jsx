@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
 import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { useDashboardStore } from "../state/useDashboardStore";
 import { governanceTabs } from "../ui/constants";
 import { getGovernanceTabFromHash, formatPercent, reviewStatusTone, sandboxVerdictTone } from "../ui/presentation";
 
@@ -19,6 +20,7 @@ export default function GovernancePage({
   lastUpdated
 }) {
   const [activeTab, setActiveTab] = useState(getGovernanceTabFromHash);
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
 
   useEffect(() => {
     const onHashChange = () => setActiveTab(getGovernanceTabFromHash());
@@ -30,6 +32,21 @@ export default function GovernancePage({
     window.location.hash = `governance/${tabKey}`;
     setActiveTab(tabKey);
   }
+
+  const filteredParitySnapshots = useMemo(() => {
+    if (!selectedScanId) return paritySnapshots;
+    return paritySnapshots.filter((snapshot) => snapshot.scanJobId === selectedScanId);
+  }, [paritySnapshots, selectedScanId]);
+
+  const filteredSandboxSubmissions = useMemo(() => {
+    if (!selectedScanId) return sandboxSubmissions;
+    return sandboxSubmissions.filter((submission) => submission.scanJobId === selectedScanId);
+  }, [sandboxSubmissions, selectedScanId]);
+
+  const filteredReviews = useMemo(() => {
+    if (!selectedScanId) return reviews;
+    return reviews.filter((review) => review.scanJobId === selectedScanId);
+  }, [reviews, selectedScanId]);
 
   const showParity = activeTab === "legacy-parity";
   const showSandbox = activeTab === "sandbox-queue";
@@ -65,8 +82,8 @@ export default function GovernancePage({
       {loading ? (
         <TableSkeleton rows={6} columns={5} />
       ) : showParity ? (
-        paritySnapshots.length === 0 ? (
-          <EmptyState title="No parity snapshots" description="No legacy parity comparisons have been recorded yet." />
+        filteredParitySnapshots.length === 0 ? (
+          <EmptyState title="No parity snapshots" description="No legacy parity comparisons matched the selected scan context." />
         ) : (
           <div className="table-shell">
             <table className="data-table">
@@ -78,7 +95,7 @@ export default function GovernancePage({
                 </tr>
               </thead>
               <tbody>
-                {paritySnapshots.map((snapshot) => {
+                {filteredParitySnapshots.map((snapshot) => {
                   const divergence = Math.round(100 - Number(snapshot.detectionRecallPercent ?? 0));
                   return (
                     <tr key={snapshot.id}>
@@ -93,8 +110,8 @@ export default function GovernancePage({
           </div>
         )
       ) : showSandbox ? (
-        sandboxSubmissions.length === 0 ? (
-          <EmptyState title="No sandbox submissions" description="Sandbox queue activity will appear here when files are escalated." />
+        filteredSandboxSubmissions.length === 0 ? (
+          <EmptyState title="No sandbox submissions" description="No sandbox submissions matched the selected scan context." />
         ) : (
           <div className="table-shell">
             <table className="data-table">
@@ -108,7 +125,7 @@ export default function GovernancePage({
                 </tr>
               </thead>
               <tbody>
-                {sandboxSubmissions.map((submission) => (
+                {filteredSandboxSubmissions.map((submission) => (
                   <tr key={submission.id}>
                     <td className="font-mono">{submission.correlationId}</td>
                     <td className="path-cell font-mono" title={submission.fileName}>{submission.fileName}</td>
@@ -121,8 +138,8 @@ export default function GovernancePage({
             </table>
           </div>
         )
-      ) : reviews.length === 0 ? (
-        <EmptyState title="No review submissions" description="Analyst-submitted false positive reviews will appear here." />
+      ) : filteredReviews.length === 0 ? (
+        <EmptyState title="No review submissions" description="No false positive reviews matched the selected scan context." />
       ) : (
         <div className="table-shell">
           <table className="data-table">
@@ -136,7 +153,7 @@ export default function GovernancePage({
               </tr>
             </thead>
             <tbody>
-              {reviews.map((review) => (
+              {filteredReviews.map((review) => (
                 <tr key={review.id}>
                   <td className="font-mono">{review.id}</td>
                   <td><span className={`pill pill-${reviewStatusTone(review.status)}`}>{review.status}</span></td>

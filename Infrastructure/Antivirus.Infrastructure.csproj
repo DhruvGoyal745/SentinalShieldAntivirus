@@ -17,7 +17,9 @@
 
   <ItemGroup>
     <Compile Include="GlobalUsings.cs" />
+    <Compile Include="Logging\**\*.cs" />
     <Compile Include="Persistence\**\*.cs" />
+    <Compile Include="Runtime\**\*.cs" />
     <Compile Include="Security\**\*.cs" />
   </ItemGroup>
 

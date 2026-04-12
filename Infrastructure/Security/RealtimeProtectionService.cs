@@ -41,7 +41,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
 
     public async Task RegisterFileEventAsync(FileWatchNotification notification, CancellationToken cancellationToken = default)
     {
-        var fileEventId = await _repository.CreateFileEventAsync(notification, cancellationToken);
+        var fileEventId = await _repository.CreateFileEventAsync(notification, scanJobId: null, cancellationToken);
 
         await _fileEventBackgroundQueue.QueueAsync(
             new QueuedFileEventWorkItem
@@ -59,15 +59,12 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
     {
         if (_controlService.IsProtectionPaused)
         {
-            await _repository.UpdateFileEventAsync(
-                workItem.FileEventId,
-                FileEventStatus.Skipped,
-                0,
-                "Real-time protection is paused. File event was recorded but not scanned.",
-                null,
-                null,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+            {
+                Status = FileEventStatus.Skipped,
+                Notes = "Real-time protection is paused. File event was recorded but not scanned.",
+                ProcessedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
             return;
         }
 
@@ -77,56 +74,55 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
 
             if (workItem.Notification.EventType == FileEventType.Deleted)
             {
-                await _repository.UpdateFileEventAsync(
-                    workItem.FileEventId,
-                    FileEventStatus.Skipped,
-                    0,
-                    "File was deleted before open-source analysis could run.",
-                    null,
-                    null,
-                    DateTimeOffset.UtcNow,
-                    cancellationToken);
+                await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+                {
+                    Status = FileEventStatus.Skipped,
+                    Notes = "File was deleted before open-source analysis could run.",
+                    ProcessedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
                 return;
             }
 
             if (!File.Exists(path))
             {
-                await _repository.UpdateFileEventAsync(
-                    workItem.FileEventId,
-                    FileEventStatus.Skipped,
-                    0,
-                    "File no longer exists.",
-                    null,
-                    null,
-                    DateTimeOffset.UtcNow,
-                    cancellationToken);
+                await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+                {
+                    Status = FileEventStatus.Skipped,
+                    Notes = "File no longer exists.",
+                    ProcessedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
                 return;
             }
 
             var fileInfo = new FileInfo(path);
-            if ((fileInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+            if (!fileInfo.Exists)
             {
-                await _repository.UpdateFileEventAsync(
-                    workItem.FileEventId,
-                    FileEventStatus.Skipped,
-                    0,
-                    "Directories are observed for telemetry but are not scanned.",
-                    null,
-                    null,
-                    DateTimeOffset.UtcNow,
-                    cancellationToken);
+                await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+                {
+                    Status = FileEventStatus.Skipped,
+                    Notes = "File was removed before scanning could begin.",
+                    ProcessedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
                 return;
             }
 
-            await _repository.UpdateFileEventAsync(
-                workItem.FileEventId,
-                FileEventStatus.Processing,
-                0,
-                "Running proprietary engine analysis with legacy parity capture.",
-                null,
-                fileInfo.Length,
-                null,
-                cancellationToken);
+            if ((fileInfo.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+            {
+                await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+                {
+                    Status = FileEventStatus.Skipped,
+                    Notes = "Directories are observed for telemetry but are not scanned.",
+                    ProcessedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
+                return;
+            }
+
+            await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+            {
+                Status = FileEventStatus.Processing,
+                Notes = "Running proprietary engine analysis with legacy parity capture.",
+                FileSizeBytes = fileInfo.Length
+            }, cancellationToken);
 
             string? hashSha256 = null;
             if (fileInfo.Length <= _options.MaxFileScanBytes)
@@ -209,41 +205,35 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
             var finalStatus = ResolveStatus(primaryResult.Verdict);
             var notes = BuildNotes(results, fileInfo.Length, primaryResult.Verdict, _options.UseLegacyShadowMode);
 
-            await _repository.UpdateFileEventAsync(
-                workItem.FileEventId,
-                finalStatus,
-                threatDetections.Length,
-                notes,
-                hashSha256,
-                fileInfo.Length,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+            {
+                Status = finalStatus,
+                ThreatCount = threatDetections.Length,
+                Notes = notes,
+                HashSha256 = hashSha256,
+                FileSizeBytes = fileInfo.Length,
+                ProcessedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
         }
         catch (Exception ex) when (IsSkippableAccessException(ex))
         {
             _logger.LogWarning(ex, "Skipping realtime file event {FileEventId} because the file could not be accessed.", workItem.FileEventId);
-            await _repository.UpdateFileEventAsync(
-                workItem.FileEventId,
-                FileEventStatus.Skipped,
-                0,
-                "File was skipped because it was locked, in use, or access was denied.",
-                null,
-                null,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+            {
+                Status = FileEventStatus.Skipped,
+                Notes = "File was skipped because it was locked, in use, or access was denied.",
+                ProcessedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Realtime processing failed for file event {FileEventId}.", workItem.FileEventId);
-            await _repository.UpdateFileEventAsync(
-                workItem.FileEventId,
-                FileEventStatus.Error,
-                0,
-                ex.Message,
-                null,
-                null,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
+            {
+                Status = FileEventStatus.Error,
+                Notes = ex.Message,
+                ProcessedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
         }
     }
 

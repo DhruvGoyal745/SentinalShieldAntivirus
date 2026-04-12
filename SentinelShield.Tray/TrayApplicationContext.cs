@@ -1,10 +1,7 @@
-using System.Diagnostics;
-
 namespace SentinelShield.Tray;
 
 public sealed class TrayApplicationContext : ApplicationContext
 {
-    private const string DashboardUrl = "http://127.0.0.1:5100";
     private const int StatusPollIntervalMs = 5000;
 
     private readonly NotifyIcon _notifyIcon;
@@ -18,10 +15,11 @@ public sealed class TrayApplicationContext : ApplicationContext
 
     private bool _lastKnownOnline;
     private int _lastThreatCount;
+    private bool _dashboardOpenedOnce;
 
     public TrayApplicationContext()
     {
-        _serviceClient = new ServiceApiClient(DashboardUrl);
+        _serviceClient = new ServiceApiClient();
 
         _notifyIcon = new NotifyIcon
         {
@@ -49,13 +47,15 @@ public sealed class TrayApplicationContext : ApplicationContext
             if (status is not null)
             {
                 await PollStatusAsync();
+                _dashboardOpenedOnce = true;
                 OnOpenDashboard(this, EventArgs.Empty);
                 return;
             }
             await Task.Delay(2000);
         }
 
-        // Service didn't respond — still poll normally, user can open manually
+        // Service didn't respond within 12s — the timer will keep polling.
+        // When the first successful poll arrives, PollStatusAsync will auto-open the dashboard.
         await PollStatusAsync();
     }
 
@@ -125,6 +125,14 @@ public sealed class TrayApplicationContext : ApplicationContext
         _scanItem.Enabled = true;
         _protectionItem.Enabled = true;
         _updateItem.Enabled = true;
+
+        // Auto-open dashboard on first successful connection if initial startup attempts failed
+        if (!_lastKnownOnline && !_dashboardOpenedOnce)
+        {
+            _dashboardOpenedOnce = true;
+            OnOpenDashboard(this, EventArgs.Empty);
+        }
+
         _lastKnownOnline = true;
 
         if (status.ActiveThreatCount > 0)
@@ -170,14 +178,7 @@ public sealed class TrayApplicationContext : ApplicationContext
 
     private void OnOpenDashboard(object? sender, EventArgs e)
     {
-        try
-        {
-            Process.Start(new ProcessStartInfo(DashboardUrl) { UseShellExecute = true });
-        }
-        catch
-        {
-            // Browser not available
-        }
+        DesktopLauncher.OpenDashboard();
     }
 
     private async void OnQuickScan(object? sender, EventArgs e)

@@ -1,13 +1,21 @@
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
 import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { useDashboardStore } from "../state/useDashboardStore";
 import { formatConfidence, incidentStatusTone, severityTone } from "../ui/presentation";
 
 export default function IncidentsPage({ incidents, scans, onResolveIncident, loading, error, onRefresh, lastUpdated }) {
   const [expandedIncidentId, setExpandedIncidentId] = useState(null);
-  const openCount = incidents.filter((incident) => incident.status !== "Resolved").length;
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
+
+  const filteredIncidents = useMemo(() => {
+    if (!selectedScanId) return incidents;
+    return incidents.filter((incident) => incident.scanJobId === selectedScanId);
+  }, [incidents, selectedScanId]);
+
+  const openCount = filteredIncidents.filter((incident) => incident.status !== "Resolved").length;
 
   return (
     <div className="page-stack">
@@ -24,8 +32,8 @@ export default function IncidentsPage({ incidents, scans, onResolveIncident, loa
 
       {loading ? (
         <TableSkeleton rows={8} columns={7} />
-      ) : incidents.length === 0 ? (
-        <EmptyState title="No incidents" description="No open or historical incidents are available for the selected tenant." />
+      ) : filteredIncidents.length === 0 ? (
+        <EmptyState title="No incidents" description="No open or historical incidents are available for the selected scan context." />
       ) : (
         <div className="table-shell">
           <table className="data-table incidents-table">
@@ -41,7 +49,7 @@ export default function IncidentsPage({ incidents, scans, onResolveIncident, loa
               </tr>
             </thead>
             <tbody>
-              {incidents.map((incident) => {
+              {filteredIncidents.map((incident) => {
                 const expanded = expandedIncidentId === incident.id;
                 return (
                   <Fragment key={incident.id}>

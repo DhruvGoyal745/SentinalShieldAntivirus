@@ -1,6 +1,6 @@
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-6BIVshRG.css
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-BZlBHFsq.js
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\index.html
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\wwwroot\assets\index-_G1MZ-dB.js
 wwwroot\assets\index-6BIVshRG.css
-wwwroot\assets\index-BZlBHFsq.js
+wwwroot\assets\index-_G1MZ-dB.js
 wwwroot\index.html

@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
 import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
+import { useDashboardStore } from "../state/useDashboardStore";
 import { fileEventTone, formatFileSize } from "../ui/presentation";
 
 const iconByEvent = {
@@ -24,18 +25,24 @@ export default function TelemetryPage({
 }) {
   const [query, setQuery] = useState("");
   const [expandedEventIds, setExpandedEventIds] = useState([]);
+  const selectedScanId = useDashboardStore((state) => state.selectedScanId);
   const deferredQuery = useDeferredValue(query);
+
+  const scanFilteredFileEvents = useMemo(() => {
+    if (!selectedScanId) return fileEvents;
+    return fileEvents.filter((event) => event.scanJobId === selectedScanId);
+  }, [fileEvents, selectedScanId]);
 
   const filteredFileEvents = useMemo(() => {
     const needle = deferredQuery.trim().toLowerCase();
     return !needle
-      ? fileEvents
-      : fileEvents.filter((event) =>
+      ? scanFilteredFileEvents
+      : scanFilteredFileEvents.filter((event) =>
           [event.filePath, event.notes, event.eventType, event.status, event.hashSha256]
             .filter(Boolean)
             .some((value) => value.toLowerCase().includes(needle))
         );
-  }, [deferredQuery, fileEvents]);
+  }, [deferredQuery, scanFilteredFileEvents]);
 
   return (
     <div className="page-stack">

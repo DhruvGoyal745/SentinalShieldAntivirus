@@ -111,16 +111,17 @@ public sealed class SqlSecurityRepository : ISecurityRepository
         return scans;
     }
 
-    public async Task<int> CreateFileEventAsync(FileWatchNotification notification, CancellationToken cancellationToken = default)
+    public async Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default)
     {
         const string sql = """
-            INSERT INTO FileSecurityEvents (FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, ProcessedAt)
+            INSERT INTO FileSecurityEvents (ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, ProcessedAt)
             OUTPUT INSERTED.Id
-            VALUES (@FilePath, @PreviousPath, @EventType, @Status, NULL, NULL, 0, NULL, @ObservedAt, NULL);
+            VALUES (@ScanJobId, @FilePath, @PreviousPath, @EventType, @Status, NULL, NULL, 0, NULL, @ObservedAt, NULL);
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ScanJobId", scanJobId.HasValue ? scanJobId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@FilePath", notification.FilePath);
         command.Parameters.AddWithValue("@PreviousPath", (object?)notification.PreviousPath ?? DBNull.Value);
         command.Parameters.AddWithValue("@EventType", notification.EventType.ToString());
@@ -132,12 +133,7 @@ public sealed class SqlSecurityRepository : ISecurityRepository
 
     public async Task UpdateFileEventAsync(
         int fileEventId,
-        FileEventStatus status,
-        int threatCount,
-        string? notes,
-        string? hashSha256,
-        long? fileSizeBytes,
-        DateTimeOffset? processedAt,
+        FileEventUpdate update,
         CancellationToken cancellationToken = default)
     {
         const string sql = """
@@ -154,12 +150,12 @@ public sealed class SqlSecurityRepository : ISecurityRepository
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Id", fileEventId);
-        command.Parameters.AddWithValue("@Status", status.ToString());
-        command.Parameters.AddWithValue("@ThreatCount", threatCount);
-        command.Parameters.AddWithValue("@Notes", (object?)notes ?? DBNull.Value);
-        command.Parameters.AddWithValue("@HashSha256", (object?)hashSha256 ?? DBNull.Value);
-        command.Parameters.AddWithValue("@FileSizeBytes", fileSizeBytes.HasValue ? fileSizeBytes.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@ProcessedAt", processedAt.HasValue ? processedAt.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@Status", update.Status.ToString());
+        command.Parameters.AddWithValue("@ThreatCount", update.ThreatCount);
+        command.Parameters.AddWithValue("@Notes", (object?)update.Notes ?? DBNull.Value);
+        command.Parameters.AddWithValue("@HashSha256", (object?)update.HashSha256 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@FileSizeBytes", update.FileSizeBytes.HasValue ? update.FileSizeBytes.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@ProcessedAt", update.ProcessedAt.HasValue ? update.ProcessedAt.Value : DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -216,7 +212,7 @@ public sealed class SqlSecurityRepository : ISecurityRepository
     public async Task<IReadOnlyCollection<FileSecurityEvent>> GetRecentFileEventsAsync(int take, CancellationToken cancellationToken = default)
     {
         const string eventsSql = """
-            SELECT TOP (@Take) Id, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, CreatedAt, ProcessedAt
+            SELECT TOP (@Take) Id, ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, CreatedAt, ProcessedAt
             FROM FileSecurityEvents
             ORDER BY ObservedAt DESC, Id DESC;
             """;
@@ -234,17 +230,18 @@ public sealed class SqlSecurityRepository : ISecurityRepository
                 events.Add(new FileSecurityEvent
                 {
                     Id = reader.GetInt32(0),
-                    FilePath = reader.GetString(1),
-                    PreviousPath = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    EventType = Enum.Parse<FileEventType>(reader.GetString(3)),
-                    Status = Enum.Parse<FileEventStatus>(reader.GetString(4)),
-                    HashSha256 = reader.IsDBNull(5) ? null : reader.GetString(5),
-                    FileSizeBytes = reader.IsDBNull(6) ? null : reader.GetInt64(6),
-                    ThreatCount = reader.GetInt32(7),
-                    Notes = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    ObservedAt = reader.GetDateTimeOffset(9),
-                    CreatedAt = reader.GetDateTimeOffset(10),
-                    ProcessedAt = reader.IsDBNull(11) ? null : reader.GetFieldValue<DateTimeOffset>(11)
+                    ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    FilePath = reader.GetString(2),
+                    PreviousPath = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    EventType = Enum.Parse<FileEventType>(reader.GetString(4)),
+                    Status = Enum.Parse<FileEventStatus>(reader.GetString(5)),
+                    HashSha256 = reader.IsDBNull(6) ? null : reader.GetString(6),
+                    FileSizeBytes = reader.IsDBNull(7) ? null : reader.GetInt64(7),
+                    ThreatCount = reader.GetInt32(8),
+                    Notes = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    ObservedAt = reader.GetDateTimeOffset(10),
+                    CreatedAt = reader.GetDateTimeOffset(11),
+                    ProcessedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
                 });
             }
         }
@@ -296,6 +293,7 @@ public sealed class SqlSecurityRepository : ISecurityRepository
             .Select(fileEvent => new FileSecurityEvent
             {
                 Id = fileEvent.Id,
+                ScanJobId = fileEvent.ScanJobId,
                 FilePath = fileEvent.FilePath,
                 PreviousPath = fileEvent.PreviousPath,
                 EventType = fileEvent.EventType,
@@ -316,16 +314,7 @@ public sealed class SqlSecurityRepository : ISecurityRepository
 
     public async Task UpdateScanStatusAsync(
         int scanId,
-        ScanStatus status,
-        ScanStage stage,
-        int percentComplete,
-        int filesScanned,
-        int? totalFiles,
-        string? currentTarget,
-        int threatCount,
-        string? notes,
-        DateTimeOffset? startedAt,
-        DateTimeOffset? completedAt,
+        ScanStatusUpdate update,
         CancellationToken cancellationToken = default)
     {
         const string sql = """
@@ -346,16 +335,16 @@ public sealed class SqlSecurityRepository : ISecurityRepository
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@Id", scanId);
-        command.Parameters.AddWithValue("@Status", status.ToString());
-        command.Parameters.AddWithValue("@Stage", stage.ToString());
-        command.Parameters.AddWithValue("@PercentComplete", percentComplete);
-        command.Parameters.AddWithValue("@FilesScanned", filesScanned);
-        command.Parameters.AddWithValue("@TotalFiles", totalFiles.HasValue ? totalFiles.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@CurrentTarget", (object?)currentTarget ?? DBNull.Value);
-        command.Parameters.AddWithValue("@ThreatCount", threatCount);
-        command.Parameters.AddWithValue("@Notes", (object?)notes ?? DBNull.Value);
-        command.Parameters.AddWithValue("@StartedAt", startedAt.HasValue ? startedAt.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@CompletedAt", completedAt.HasValue ? completedAt.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@Status", update.Status.ToString());
+        command.Parameters.AddWithValue("@Stage", update.Stage.ToString());
+        command.Parameters.AddWithValue("@PercentComplete", update.PercentComplete);
+        command.Parameters.AddWithValue("@FilesScanned", update.FilesScanned);
+        command.Parameters.AddWithValue("@TotalFiles", update.TotalFiles.HasValue ? update.TotalFiles.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@CurrentTarget", (object?)update.CurrentTarget ?? DBNull.Value);
+        command.Parameters.AddWithValue("@ThreatCount", update.ThreatCount);
+        command.Parameters.AddWithValue("@Notes", (object?)update.Notes ?? DBNull.Value);
+        command.Parameters.AddWithValue("@StartedAt", update.StartedAt.HasValue ? update.StartedAt.Value : DBNull.Value);
+        command.Parameters.AddWithValue("@CompletedAt", update.CompletedAt.HasValue ? update.CompletedAt.Value : DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

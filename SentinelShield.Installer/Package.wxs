@@ -7,6 +7,7 @@
   <?define Manufacturer = "Sentinel Shield" ?>
   <?define UpgradeCode = "E4A7B3C1-9F2D-4E8A-B5C6-D7E8F9A0B1C2" ?>
   <?define ServiceExe = "SentinelShieldAntivirus.exe" ?>
+  <?define DesktopExe = "SentinelShieldDesktop.exe" ?>
   <?define TrayExe = "SentinelShieldTray.exe" ?>
   <?define ServiceName = "SentinelShieldService" ?>
   <?define ServiceDisplayName = "Sentinel Shield Antivirus Protection Service" ?>
@@ -80,6 +81,13 @@
       </Component>
     </ComponentGroup>
 
+    <!-- Desktop executable component -->
+    <ComponentGroup Id="DesktopComponents" Directory="INSTALLFOLDER">
+      <Component Id="DesktopExeComponent" Guid="F7C8D9E0-A1B2-3456-C789-0123456789AB">
+        <File Id="DesktopExeFile" Source="!(bindpath.DesktopPublish)\$(DesktopExe)" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
     <!-- Tray executable component -->
     <ComponentGroup Id="TrayComponents" Directory="INSTALLFOLDER">
       <Component Id="TrayExeComponent" Guid="B2C3D4E5-F6A7-8901-BCDE-F12345678901">
@@ -112,7 +120,7 @@
         <Shortcut
           Id="DashboardShortcutFile"
           Name="Sentinel Shield Antivirus"
-          Target="[INSTALLFOLDER]$(TrayExe)"
+          Target="[INSTALLFOLDER]$(DesktopExe)"
           WorkingDirectory="INSTALLFOLDER"
           Description="Open Sentinel Shield Antivirus dashboard" />
         <RemoveFolder Id="RemoveShortcutFolder" On="uninstall" />
@@ -131,19 +139,19 @@
       <Component Id="ContextMenuFile" Guid="A7B8C9D0-E1F2-3456-0123-567890123456">
         <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\*\shell\SentinelShieldScan">
           <RegistryValue Type="string" Value="Scan with Sentinel Shield" />
-          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(ServiceExe),0" />
+          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(DesktopExe),0" />
         </RegistryKey>
         <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\*\shell\SentinelShieldScan\command">
-          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(ServiceExe)&quot; --scan --target &quot;%1&quot;" />
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(DesktopExe)&quot; --scan-target &quot;%1&quot;" />
         </RegistryKey>
       </Component>
       <Component Id="ContextMenuFolder" Guid="B8C9D0E1-F2A3-4567-1234-678901234567">
         <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\SentinelShieldScan">
           <RegistryValue Type="string" Value="Scan with Sentinel Shield" />
-          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(ServiceExe),0" />
+          <RegistryValue Name="Icon" Type="string" Value="[INSTALLFOLDER]$(DesktopExe),0" />
         </RegistryKey>
         <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\SentinelShieldScan\command">
-          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(ServiceExe)&quot; --scan --target &quot;%1&quot;" />
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]$(DesktopExe)&quot; --scan-target &quot;%1&quot;" />
         </RegistryKey>
       </Component>
     </ComponentGroup>
@@ -151,6 +159,7 @@
     <!-- Feature tree -->
     <Feature Id="MainFeature" Title="$(ProductName)" Level="1">
       <ComponentGroupRef Id="ServiceComponents" />
+      <ComponentGroupRef Id="DesktopComponents" />
       <ComponentGroupRef Id="TrayComponents" />
       <ComponentGroupRef Id="DataFolderComponents" />
       <ComponentGroupRef Id="ShortcutComponents" />

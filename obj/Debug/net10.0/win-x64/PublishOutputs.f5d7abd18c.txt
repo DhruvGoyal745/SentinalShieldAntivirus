@@ -3,9 +3,4 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\appsett
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\appsettings.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\appsettings.Service.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\SentinelShieldAntivirus.pdb
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\Database\schema.sql
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\Database\shared-schema.sql
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\Antivirus.Application.pdb
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\Antivirus.Domain.pdb
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\Antivirus.Infrastructure.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\bin\publish\win-x64\SentinelShieldAntivirus.exe

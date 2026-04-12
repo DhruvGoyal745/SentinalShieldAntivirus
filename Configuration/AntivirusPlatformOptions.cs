@@ -4,7 +4,11 @@ public sealed class AntivirusPlatformOptions
 {
     public const string SectionName = "AntivirusPlatform";
 
+    public string DataRoot { get; set; } = "Data";
+
     public string QuarantineRoot { get; set; } = "Data\\Quarantine";
+
+    public string LogsRoot { get; set; } = "Data\\Logs";
 
     public int MaxHeuristicFiles { get; set; } = 1500;
 
@@ -27,6 +31,8 @@ public sealed class AntivirusPlatformOptions
     public int ProgressPersistEveryFiles { get; set; } = 25;
 
     public int ProgressPersistMinIntervalMs { get; set; } = 750;
+
+    public int FileDecisionTimeoutSeconds { get; set; } = 300;
 
     public bool UseInHouseScanners { get; set; } = true;
 

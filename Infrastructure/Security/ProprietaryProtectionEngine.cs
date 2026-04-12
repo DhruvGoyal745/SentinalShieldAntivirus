@@ -99,6 +99,8 @@ public sealed class ProprietaryProtectionEngine : IProprietaryProtectionEngine
             Verdict = statusSnapshot.FindingsCount > 0 ? PipelineVerdict.Malicious : PipelineVerdict.Clean,
             EngineResults = engineResults,
             Threats = threats,
+            FilesScanned = statusSnapshot.FilesScanned,
+            TotalFiles = statusSnapshot.TotalFiles ?? statusSnapshot.FilesScanned,
             DetectionEvents = detections.Select(detection => new DetectionEventRecord
             {
                 RuleId = detection.RuleId,
@@ -152,19 +154,19 @@ public sealed class ProprietaryProtectionEngine : IProprietaryProtectionEngine
             ? ScanStatus.Completed
             : ScanStatus.Running;
 
-        await _securityRepository.UpdateScanStatusAsync(
-            scanJobId,
-            status,
-            progressEvent.Stage,
-            progressEvent.PercentComplete,
-            progressEvent.FilesScanned,
-            progressEvent.TotalFiles,
-            progressEvent.CurrentPath,
-            progressEvent.FindingsCount,
-            BuildProgressNote(progressEvent),
-            progressEvent.StartedAt,
-            progressEvent.CompletedAt,
-            cancellationToken);
+        await _securityRepository.UpdateScanStatusAsync(scanJobId, new ScanStatusUpdate
+        {
+            Status = status,
+            Stage = progressEvent.Stage,
+            PercentComplete = progressEvent.PercentComplete,
+            FilesScanned = progressEvent.FilesScanned,
+            TotalFiles = progressEvent.TotalFiles,
+            CurrentTarget = progressEvent.CurrentPath,
+            ThreatCount = progressEvent.FindingsCount,
+            Notes = BuildProgressNote(progressEvent),
+            StartedAt = progressEvent.StartedAt,
+            CompletedAt = progressEvent.CompletedAt
+        }, cancellationToken);
 
         if (progressEvent.CompletedAt.HasValue)
         {

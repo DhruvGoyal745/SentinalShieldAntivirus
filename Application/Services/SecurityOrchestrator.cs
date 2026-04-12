@@ -57,19 +57,12 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
         };
 
         var scanId = await _repository.CreateScanAsync(normalizedRequest, cancellationToken);
-        await _repository.UpdateScanStatusAsync(
-            scanId,
-            ScanStatus.Pending,
-            ScanStage.Queued,
-            0,
-            0,
-            null,
-            null,
-            0,
-            "Scan queued and waiting for background execution.",
-            null,
-            null,
-            cancellationToken);
+        await _repository.UpdateScanStatusAsync(scanId, new ScanStatusUpdate
+        {
+            Status = ScanStatus.Pending,
+            Stage = ScanStage.Queued,
+            Notes = "Scan queued and waiting for background execution."
+        }, cancellationToken);
 
         await _scanBackgroundQueue.QueueAsync(
             new QueuedScanWorkItem
@@ -92,19 +85,15 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
         }
 
         var startedAt = DateTimeOffset.UtcNow;
-        await _repository.UpdateScanStatusAsync(
-            workItem.ScanId,
-            ScanStatus.Running,
-            ScanStage.Observe,
-            2,
-            0,
-            null,
-            workItem.Request.TargetPath,
-            0,
-            "Running clean-room static, behavior, and reputation analysis.",
-                startedAt,
-                null,
-                cancellationToken);
+        await _repository.UpdateScanStatusAsync(workItem.ScanId, new ScanStatusUpdate
+        {
+            Status = ScanStatus.Running,
+            Stage = ScanStage.Observe,
+            PercentComplete = 2,
+            CurrentTarget = workItem.Request.TargetPath,
+            Notes = "Running clean-room static, behavior, and reputation analysis.",
+            StartedAt = startedAt
+        }, cancellationToken);
 
         try
         {
@@ -130,21 +119,21 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
 
             await _repository.UpsertThreatsAsync(workItem.ScanId, persistedThreats, cancellationToken);
 
-            await _repository.UpdateScanStatusAsync(
-                workItem.ScanId,
-                ScanStatus.Completed,
-                ScanStage.Completed,
-                100,
-                persistedThreats.Length,
-                null,
-                workItem.Request.TargetPath,
-                persistedThreats.Count(t => t.Severity is ThreatSeverity.High or ThreatSeverity.Critical),
-                persistedThreats.Length > 0
-                    ? $"Scan completed. {persistedThreats.Length} threat(s) detected."
-                    : "Scan completed. No threats detected.",
-                startedAt,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateScanStatusAsync(workItem.ScanId, new ScanStatusUpdate
+            {
+                Status = ScanStatus.Completed,
+                Stage = ScanStage.Completed,
+                PercentComplete = 100,
+                FilesScanned = proprietaryResult.FilesScanned,
+                TotalFiles = proprietaryResult.TotalFiles,
+                CurrentTarget = workItem.Request.TargetPath,
+                ThreatCount = persistedThreats.Count(t => t.Severity is ThreatSeverity.High or ThreatSeverity.Critical),
+                Notes = persistedThreats.Length > 0
+                    ? $"Scan completed. {proprietaryResult.FilesScanned} file(s) scanned, {persistedThreats.Length} threat(s) detected."
+                    : $"Scan completed. {proprietaryResult.FilesScanned} file(s) scanned. No threats detected.",
+                StartedAt = startedAt,
+                CompletedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
         }
         catch (OperationCanceledException) when (_scanCancellationRegistry.IsStopRequested(workItem.ScanId) || cancellationToken.IsCancellationRequested)
         {
@@ -153,19 +142,16 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
         catch (Exception ex)
         {
             _logger.LogError(ex, "Scan execution failed for mode {Mode}.", workItem.Request.Mode);
-            await _repository.UpdateScanStatusAsync(
-                workItem.ScanId,
-                ScanStatus.Failed,
-                ScanStage.Failed,
-                100,
-                0,
-                null,
-                workItem.Request.TargetPath,
-                0,
-                ex.Message,
-                startedAt,
-                DateTimeOffset.UtcNow,
-                cancellationToken);
+            await _repository.UpdateScanStatusAsync(workItem.ScanId, new ScanStatusUpdate
+            {
+                Status = ScanStatus.Failed,
+                Stage = ScanStage.Failed,
+                PercentComplete = 100,
+                CurrentTarget = workItem.Request.TargetPath,
+                Notes = ex.Message,
+                StartedAt = startedAt,
+                CompletedAt = DateTimeOffset.UtcNow
+            }, cancellationToken);
         }
     }
 
@@ -319,18 +305,18 @@ public sealed class SecurityOrchestrator : ISecurityOrchestrator
     private async Task MarkScanCancelledAsync(int scanId, string message, CancellationToken cancellationToken)
     {
         var existingScan = await _repository.GetScanByIdAsync(scanId, cancellationToken);
-        await _repository.UpdateScanStatusAsync(
-            scanId,
-            ScanStatus.Cancelled,
-            ScanStage.Cancelled,
-            existingScan?.PercentComplete ?? 0,
-            existingScan?.FilesScanned ?? 0,
-            existingScan?.TotalFiles,
-            existingScan?.CurrentTarget ?? existingScan?.TargetPath,
-            existingScan?.ThreatCount ?? 0,
-            message,
-            existingScan?.StartedAt ?? existingScan?.CreatedAt,
-            DateTimeOffset.UtcNow,
-            cancellationToken);
+        await _repository.UpdateScanStatusAsync(scanId, new ScanStatusUpdate
+        {
+            Status = ScanStatus.Cancelled,
+            Stage = ScanStage.Cancelled,
+            PercentComplete = existingScan?.PercentComplete ?? 0,
+            FilesScanned = existingScan?.FilesScanned ?? 0,
+            TotalFiles = existingScan?.TotalFiles,
+            CurrentTarget = existingScan?.CurrentTarget ?? existingScan?.TargetPath,
+            ThreatCount = existingScan?.ThreatCount ?? 0,
+            Notes = message,
+            StartedAt = existingScan?.StartedAt ?? existingScan?.CreatedAt,
+            CompletedAt = DateTimeOffset.UtcNow
+        }, cancellationToken);
     }
 }

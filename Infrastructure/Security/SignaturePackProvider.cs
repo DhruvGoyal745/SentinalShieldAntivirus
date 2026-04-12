@@ -1,6 +1,7 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Configuration;
 using Antivirus.Domain;
+using Antivirus.Infrastructure.Runtime;
 using Microsoft.Extensions.Options;
 
 namespace Antivirus.Infrastructure.Security;
@@ -50,7 +51,7 @@ public sealed class SignaturePackProvider : ISignaturePackProvider
             return;
         }
 
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _options.SignaturePackRoot));
+        var root = SentinelRuntimePaths.ResolveSignaturePackRoot(_options);
         Directory.CreateDirectory(root);
         var path = Path.Combine(root, $"{pack.Manifest.Version}.sspack.json");
         File.WriteAllBytes(path, pack.SerializedBytes);

@@ -13,7 +13,14 @@ import GovernancePage from "./pages/GovernancePage";
 import ReportsPage from "./pages/ReportsPage";
 import { buildAgentPayload, buildHeartbeatPayload } from "./ui/agentPayloads";
 import { liveScanStatuses, pageDefinitions, scanPipelineSteps, scanStageOrder } from "./ui/constants";
-import { deriveScanProgress, getInitialPage, getLatestScanProgress, getSkippedEventKey, mergeScanWithProgress } from "./ui/presentation";
+import {
+  deriveScanProgress,
+  getInitialPage,
+  getInitialScanId,
+  getLatestScanProgress,
+  getSkippedEventKey,
+  mergeScanWithProgress
+} from "./ui/presentation";
 import { useDashboardStore } from "./state/useDashboardStore";
 
 export default function App() {
@@ -131,6 +138,7 @@ export default function App() {
   useEffect(() => {
     setTenantKey(selectedTenant);
     resetSessionState();
+    setSelectedScanId(getInitialScanId());
     setScanProgressEvents([]);
     setHandledSkippedEventKeys([]);
     setHandledAttentionScanIds([]);

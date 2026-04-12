@@ -5,8 +5,9 @@
 
 .DESCRIPTION
     1. Publishes the service (ASP.NET Core) as self-contained single-file exe
-    2. Publishes the tray app (WinForms) as self-contained single-file exe
-    3. Compiles the Inno Setup installer into SentinelShieldSetup.exe
+    2. Publishes the desktop dashboard shell (WPF + WebView2) as self-contained single-file exe
+    3. Publishes the tray app (WinForms) as self-contained single-file exe
+    4. Compiles the Inno Setup installer into SentinelShieldSetup.exe
 
 .PARAMETER Configuration
     Build configuration. Default: Release
@@ -34,9 +35,11 @@ $AntivirusDir = Split-Path $ScriptsDir -Parent
 $RepoRoot = Split-Path $AntivirusDir -Parent
 $ArtifactsDir = Join-Path $RepoRoot "artifacts"
 $ServicePublishDir = Join-Path $ArtifactsDir "publish\service"
+$DesktopPublishDir = Join-Path $ArtifactsDir "publish\desktop"
 $TrayPublishDir = Join-Path $ArtifactsDir "publish\tray"
 $InstallerOutputDir = Join-Path $ArtifactsDir "installer"
 $AntivirusProject = Join-Path $AntivirusDir "Antivirus.csproj"
+$DesktopProject = Join-Path $AntivirusDir "SentinelShield.Desktop\SentinelShield.Desktop.csproj"
 $TrayProject = Join-Path $AntivirusDir "SentinelShield.Tray\SentinelShield.Tray.csproj"
 $InnoScript = Join-Path $AntivirusDir "SentinelShield.Installer\SentinelShieldSetup.iss"
 
@@ -90,16 +93,17 @@ Write-Host "[OK] Inno Setup found: $iscc" -ForegroundColor Green
 if (-not $SkipPublish) {
     # Step 1: Clean artifacts
     Write-Host ""
-    Write-Host "[1/4] Cleaning artifacts..." -ForegroundColor Yellow
+    Write-Host "[1/5] Cleaning artifacts..." -ForegroundColor Yellow
     if (Test-Path $ArtifactsDir) {
         Remove-Item $ArtifactsDir -Recurse -Force
     }
     New-Item -ItemType Directory -Path $ServicePublishDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $DesktopPublishDir -Force | Out-Null
     New-Item -ItemType Directory -Path $TrayPublishDir -Force | Out-Null
     New-Item -ItemType Directory -Path $InstallerOutputDir -Force | Out-Null
 
     # Step 2: Build the React frontend
-    Write-Host "[2/4] Building React frontend..." -ForegroundColor Yellow
+    Write-Host "[2/5] Building React frontend..." -ForegroundColor Yellow
     $clientAppDir = Join-Path $RepoRoot "Antivirus\ClientApp"
     if (Test-Path $clientAppDir) {
         Push-Location $clientAppDir
@@ -110,7 +114,7 @@ if (-not $SkipPublish) {
     }
 
     # Step 3: Publish the service
-    Write-Host "[3/4] Publishing service (self-contained, single-file)..." -ForegroundColor Yellow
+    Write-Host "[3/5] Publishing service (self-contained, single-file)..." -ForegroundColor Yellow
     dotnet publish $AntivirusProject `
         -c $Configuration `
         -r win-x64 `
@@ -128,8 +132,27 @@ if (-not $SkipPublish) {
     $serviceSize = [math]::Round((Get-Item $serviceExe).Length / 1MB, 1)
     Write-Host "  Service published: $serviceSize MB" -ForegroundColor Green
 
-    # Step 4: Publish the tray app
-    Write-Host "[4/4] Publishing tray app (self-contained, single-file)..." -ForegroundColor Yellow
+    # Step 4: Publish the desktop shell
+    Write-Host "[4/5] Publishing desktop shell (self-contained, single-file)..." -ForegroundColor Yellow
+    dotnet publish $DesktopProject `
+        -c $Configuration `
+        -r win-x64 `
+        --self-contained `
+        -o $DesktopPublishDir `
+        /p:PublishSingleFile=true `
+        /p:IncludeNativeLibrariesForSelfExtract=true `
+        /p:EnableCompressionInSingleFile=true
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Desktop publish failed." -ForegroundColor Red
+        exit 1
+    }
+    $desktopExe = Join-Path $DesktopPublishDir "SentinelShieldDesktop.exe"
+    $desktopSize = [math]::Round((Get-Item $desktopExe).Length / 1MB, 1)
+    Write-Host "  Desktop published: $desktopSize MB" -ForegroundColor Green
+
+    # Step 5: Publish the tray app
+    Write-Host "[5/5] Publishing tray app (self-contained, single-file)..." -ForegroundColor Yellow
     dotnet publish $TrayProject `
         -c $Configuration `
         -r win-x64 `

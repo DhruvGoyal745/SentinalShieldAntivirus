@@ -22,16 +22,11 @@ public interface ISecurityRepository
 
     Task<IReadOnlyCollection<ScanJob>> GetRecoverableScansAsync(CancellationToken cancellationToken = default);
 
-    Task<int> CreateFileEventAsync(FileWatchNotification notification, CancellationToken cancellationToken = default);
+    Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default);
 
     Task UpdateFileEventAsync(
         int fileEventId,
-        FileEventStatus status,
-        int threatCount,
-        string? notes,
-        string? hashSha256,
-        long? fileSizeBytes,
-        DateTimeOffset? processedAt,
+        FileEventUpdate update,
         CancellationToken cancellationToken = default);
 
     Task SaveFileEngineResultsAsync(
@@ -43,16 +38,7 @@ public interface ISecurityRepository
 
     Task UpdateScanStatusAsync(
         int scanId,
-        ScanStatus status,
-        ScanStage stage,
-        int percentComplete,
-        int filesScanned,
-        int? totalFiles,
-        string? currentTarget,
-        int threatCount,
-        string? notes,
-        DateTimeOffset? startedAt,
-        DateTimeOffset? completedAt,
+        ScanStatusUpdate update,
         CancellationToken cancellationToken = default);
 
     Task AppendScanProgressAsync(ScanProgressEvent progressEvent, CancellationToken cancellationToken = default);

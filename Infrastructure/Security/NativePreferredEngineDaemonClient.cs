@@ -3,6 +3,7 @@ using System.Text.Json;
 using Antivirus.Application.Contracts;
 using Antivirus.Configuration;
 using Antivirus.Domain;
+using Antivirus.Infrastructure.Runtime;
 using Microsoft.Extensions.Options;
 
 namespace Antivirus.Infrastructure.Security;
@@ -398,8 +399,7 @@ public sealed class NativePreferredEngineDaemonClient : IEngineDaemonClient
         var pack = _currentPack ?? throw new InvalidOperationException("No signature pack is loaded.");
         return Path.GetFullPath(
             Path.Combine(
-                AppContext.BaseDirectory,
-                _options.SignaturePackRoot,
+                SentinelRuntimePaths.ResolveSignaturePackRoot(_options),
                 $"{pack.Manifest.Version}.sspack.json"));
     }
 
@@ -413,7 +413,7 @@ public sealed class NativePreferredEngineDaemonClient : IEngineDaemonClient
     {
         var target = request.Mode == ScanMode.Custom && !string.IsNullOrWhiteSpace(request.TargetPath)
             ? request.TargetPath
-            : string.Join(Path.PathSeparator, _options.WatchRoots);
+            : string.Join(Path.PathSeparator, SentinelRuntimePaths.ResolveWatchRoots(_options.WatchRoots));
 
         return $"--scan --scan-id {scanJobId} --mode {QuoteArg(request.Mode.ToString())} --requested-by {QuoteArg(request.RequestedBy)} --target {QuoteArg(target ?? string.Empty)} --pack {QuoteArg(packPath)}";
     }

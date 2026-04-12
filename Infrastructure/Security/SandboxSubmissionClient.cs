@@ -17,6 +17,7 @@ public sealed class SandboxSubmissionClient : ISandboxSubmissionClient
     }
 
     public async Task<SandboxSubmission?> SubmitIfNeededAsync(
+        int? scanJobId,
         string deviceId,
         FileInfo file,
         string hashSha256,
@@ -39,6 +40,7 @@ public sealed class SandboxSubmissionClient : ISandboxSubmissionClient
 
         var submission = new SandboxSubmission
         {
+            ScanJobId = scanJobId,
             DeviceId = deviceId,
             ArtifactHash = hashSha256,
             FileName = file.Name,

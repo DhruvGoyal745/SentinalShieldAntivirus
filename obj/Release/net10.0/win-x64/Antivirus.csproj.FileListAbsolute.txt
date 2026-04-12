@@ -410,5 +410,5 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\SentinelShieldAntivirus.pdb
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\Antivirus.genruntimeconfig.cache
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\ref\SentinelShieldAntivirus.dll
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\7uwyd8by1a-{0}-w0k2j8x6qv-w0k2j8x6qv.gz
-C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\f0xi1pvjgd-{0}-734d8bfgen-734d8bfgen.gz
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\fcvt0qqryg-{0}-yz8pnqiyc7-yz8pnqiyc7.gz
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\obj\Release\net10.0\win-x64\compressed\f0xi1pvjgd-{0}-1t0n5615sy-1t0n5615sy.gz

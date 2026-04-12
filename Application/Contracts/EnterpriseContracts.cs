@@ -120,6 +120,7 @@ public interface ISignaturePackProvider
 public interface ISandboxSubmissionClient
 {
     Task<SandboxSubmission?> SubmitIfNeededAsync(
+        int? scanJobId,
         string deviceId,
         FileInfo file,
         string hashSha256,

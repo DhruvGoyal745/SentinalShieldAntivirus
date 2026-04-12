@@ -420,3 +420,28 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ScanReportExports_Expo
 BEGIN
     CREATE INDEX IX_ScanReportExports_ExportedAt ON dbo.ScanReportExports(ExportedAt DESC);
 END;
+
+IF COL_LENGTH('dbo.SecurityIncidents', 'ScanJobId') IS NULL
+BEGIN
+    ALTER TABLE dbo.SecurityIncidents ADD ScanJobId INT NULL;
+END;
+
+IF COL_LENGTH('dbo.FileSecurityEvents', 'ScanJobId') IS NULL
+BEGIN
+    ALTER TABLE dbo.FileSecurityEvents ADD ScanJobId INT NULL;
+END;
+
+IF COL_LENGTH('dbo.LegacyParitySnapshots', 'ScanJobId') IS NULL
+BEGIN
+    ALTER TABLE dbo.LegacyParitySnapshots ADD ScanJobId INT NULL;
+END;
+
+IF COL_LENGTH('dbo.SandboxSubmissions', 'ScanJobId') IS NULL
+BEGIN
+    ALTER TABLE dbo.SandboxSubmissions ADD ScanJobId INT NULL;
+END;
+
+IF COL_LENGTH('dbo.FalsePositiveReviews', 'ScanJobId') IS NULL
+BEGIN
+    ALTER TABLE dbo.FalsePositiveReviews ADD ScanJobId INT NULL;
+END;

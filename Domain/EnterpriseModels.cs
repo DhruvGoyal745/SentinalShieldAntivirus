@@ -273,6 +273,8 @@ public sealed class FalsePositiveReview
 {
     public int Id { get; init; }
 
+    public int? ScanJobId { get; init; }
+
     public int? ThreatDetectionId { get; init; }
 
     public string ArtifactHash { get; init; } = string.Empty;
@@ -295,6 +297,8 @@ public sealed class FalsePositiveReview
 public sealed class SandboxSubmission
 {
     public int Id { get; init; }
+
+    public int? ScanJobId { get; init; }
 
     public string DeviceId { get; init; } = string.Empty;
 
@@ -325,6 +329,8 @@ public sealed class LegacyParitySnapshot
 {
     public int Id { get; init; }
 
+    public int? ScanJobId { get; init; }
+
     public string DeviceId { get; init; } = string.Empty;
 
     public OperatingSystemPlatform OperatingSystem { get; init; }
@@ -347,6 +353,8 @@ public sealed class LegacyParitySnapshot
 public sealed class SecurityIncident
 {
     public int Id { get; init; }
+
+    public int? ScanJobId { get; init; }
 
     public string DeviceId { get; init; } = string.Empty;
 
@@ -487,6 +495,10 @@ public sealed class PipelineScanResult
     public IReadOnlyCollection<ThreatDetection> Threats { get; init; } = Array.Empty<ThreatDetection>();
 
     public IReadOnlyCollection<DetectionEventRecord> DetectionEvents { get; init; } = Array.Empty<DetectionEventRecord>();
+
+    public int FilesScanned { get; init; }
+
+    public int TotalFiles { get; init; }
 
     public bool Quarantined { get; init; }
 

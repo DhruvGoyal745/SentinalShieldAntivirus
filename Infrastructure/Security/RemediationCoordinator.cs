@@ -1,5 +1,6 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Configuration;
+using Antivirus.Infrastructure.Runtime;
 using Microsoft.Extensions.Options;
 
 namespace Antivirus.Infrastructure.Security;
@@ -22,7 +23,7 @@ public sealed class RemediationCoordinator : IRemediationCoordinator
             return Task.FromResult((false, (string?)null));
         }
 
-        var quarantineDirectory = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, _options.QuarantineRoot));
+        var quarantineDirectory = SentinelRuntimePaths.ResolveQuarantineRoot(_options);
         Directory.CreateDirectory(quarantineDirectory);
         var destination = Path.Combine(quarantineDirectory, $"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}_{file.Name}");
         file.MoveTo(destination, overwrite: true);

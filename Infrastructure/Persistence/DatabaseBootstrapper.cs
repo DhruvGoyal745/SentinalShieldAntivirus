@@ -1,5 +1,6 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Configuration;
+using Antivirus.Infrastructure.Runtime;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
@@ -35,12 +36,28 @@ public sealed class DatabaseBootstrapper : IDatabaseBootstrapper
             throw new InvalidOperationException("The PlatformDb connection string must define an Initial Catalog.");
         }
 
-        await EnsureDatabaseExistsAsync(platformBuilder.InitialCatalog, cancellationToken);
-        await EnsureSharedSchemaAsync(cancellationToken);
-        await _tenantRegistry.EnsureTenantAsync(_options.DefaultTenantKey, cancellationToken);
+        const int maxRetries = 5;
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await EnsureDatabaseExistsAsync(platformBuilder.InitialCatalog, cancellationToken);
+                await EnsureSharedSchemaAsync(cancellationToken);
+                await _tenantRegistry.EnsureTenantAsync(_options.DefaultTenantKey, cancellationToken);
+                break;
+            }
+            catch (SqlException ex) when (attempt < maxRetries)
+            {
+                var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+                _logger.LogWarning(ex, "Database bootstrap attempt {Attempt}/{MaxRetries} failed. Retrying in {Delay}s...", attempt, maxRetries, delay.TotalSeconds);
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
 
-        var quarantinePath = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, _options.QuarantineRoot));
+        var quarantinePath = SentinelRuntimePaths.ResolveQuarantineRoot(_options);
         Directory.CreateDirectory(quarantinePath);
+        Directory.CreateDirectory(SentinelRuntimePaths.ResolveSignaturePackRoot(_options));
+        Directory.CreateDirectory(SentinelRuntimePaths.ResolveLogsRoot(_options));
         _logger.LogInformation("Database and quarantine storage are ready.");
     }
 

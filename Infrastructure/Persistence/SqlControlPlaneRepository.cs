@@ -158,30 +158,43 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
 
         var selfProtectionJson = JsonSerializer.Serialize(request.SelfProtection, JsonOptions);
         await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
+        await using var transaction = connection.BeginTransaction();
 
-        await using (var updateCommand = new SqlCommand(updateSql, connection))
+        try
         {
-            updateCommand.Parameters.AddWithValue("@DeviceId", request.DeviceId);
-            updateCommand.Parameters.AddWithValue("@AgentVersion", request.AgentVersion);
-            updateCommand.Parameters.AddWithValue("@EngineVersion", request.EngineVersion);
-            updateCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
-            updateCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
-            updateCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
-            updateCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
-            updateCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
-            await updateCommand.ExecuteNonQueryAsync(cancellationToken);
-        }
+            await using (var updateCommand = new SqlCommand(updateSql, connection, transaction))
+            {
+                updateCommand.Parameters.AddWithValue("@DeviceId", request.DeviceId);
+                updateCommand.Parameters.AddWithValue("@AgentVersion", request.AgentVersion);
+                updateCommand.Parameters.AddWithValue("@EngineVersion", request.EngineVersion);
+                updateCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
+                updateCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
+                updateCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
+                updateCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
+                updateCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
+                await updateCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
 
-        await using var insertCommand = new SqlCommand(insertSql, connection);
-        insertCommand.Parameters.AddWithValue("@DeviceId", request.DeviceId);
-        insertCommand.Parameters.AddWithValue("@AgentVersion", request.AgentVersion);
-        insertCommand.Parameters.AddWithValue("@EngineVersion", request.EngineVersion);
-        insertCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
-        insertCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
-        insertCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
-        insertCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
-        insertCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
-        await insertCommand.ExecuteNonQueryAsync(cancellationToken);
+            await using (var insertCommand = new SqlCommand(insertSql, connection, transaction))
+            {
+                insertCommand.Parameters.AddWithValue("@DeviceId", request.DeviceId);
+                insertCommand.Parameters.AddWithValue("@AgentVersion", request.AgentVersion);
+                insertCommand.Parameters.AddWithValue("@EngineVersion", request.EngineVersion);
+                insertCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
+                insertCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
+                insertCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
+                insertCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
+                insertCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
+                await insertCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task<DevicePolicyBundle> GetActivePolicyAsync(CancellationToken cancellationToken = default)
@@ -345,14 +358,15 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             INSERT INTO dbo.SecurityIncidents
-            (DeviceId, Title, Severity, Status, Source, PrimaryArtifact, RuleId, Confidence, Summary, UpdatedAt)
-            OUTPUT INSERTED.Id, INSERTED.DeviceId, INSERTED.Title, INSERTED.Severity, INSERTED.Status, INSERTED.Source, INSERTED.PrimaryArtifact, INSERTED.RuleId, INSERTED.Confidence, INSERTED.Summary, INSERTED.CreatedAt, INSERTED.UpdatedAt
+            (ScanJobId, DeviceId, Title, Severity, Status, Source, PrimaryArtifact, RuleId, Confidence, Summary, UpdatedAt)
+            OUTPUT INSERTED.Id, INSERTED.ScanJobId, INSERTED.DeviceId, INSERTED.Title, INSERTED.Severity, INSERTED.Status, INSERTED.Source, INSERTED.PrimaryArtifact, INSERTED.RuleId, INSERTED.Confidence, INSERTED.Summary, INSERTED.CreatedAt, INSERTED.UpdatedAt
             VALUES
-            (@DeviceId, @Title, @Severity, @Status, @Source, @PrimaryArtifact, @RuleId, @Confidence, @Summary, @UpdatedAt);
+            (@ScanJobId, @DeviceId, @Title, @Severity, @Status, @Source, @PrimaryArtifact, @RuleId, @Confidence, @Summary, @UpdatedAt);
             """;
 
         await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ScanJobId", incident.ScanJobId.HasValue ? incident.ScanJobId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@DeviceId", incident.DeviceId);
         command.Parameters.AddWithValue("@Title", incident.Title);
         command.Parameters.AddWithValue("@Severity", incident.Severity.ToString());
@@ -369,17 +383,18 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         return new SecurityIncident
         {
             Id = reader.GetInt32(0),
-            DeviceId = reader.GetString(1),
-            Title = reader.GetString(2),
-            Severity = Enum.Parse<ThreatSeverity>(reader.GetString(3)),
-            Status = Enum.Parse<IncidentStatus>(reader.GetString(4)),
-            Source = reader.GetString(5),
-            PrimaryArtifact = reader.GetString(6),
-            RuleId = reader.GetString(7),
-            Confidence = reader.GetDecimal(8),
-            Summary = reader.GetString(9),
-            CreatedAt = reader.GetDateTimeOffset(10),
-            UpdatedAt = reader.IsDBNull(11) ? null : reader.GetFieldValue<DateTimeOffset>(11)
+            ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            DeviceId = reader.GetString(2),
+            Title = reader.GetString(3),
+            Severity = Enum.Parse<ThreatSeverity>(reader.GetString(4)),
+            Status = Enum.Parse<IncidentStatus>(reader.GetString(5)),
+            Source = reader.GetString(6),
+            PrimaryArtifact = reader.GetString(7),
+            RuleId = reader.GetString(8),
+            Confidence = reader.GetDecimal(9),
+            Summary = reader.GetString(10),
+            CreatedAt = reader.GetDateTimeOffset(11),
+            UpdatedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
         };
     }
 
@@ -420,9 +435,8 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     public async Task<IReadOnlyCollection<SecurityIncident>> GetIncidentsAsync(CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT Id, DeviceId, Title, Severity, Status, Source, PrimaryArtifact, RuleId, Confidence, Summary, CreatedAt, UpdatedAt
+            SELECT Id, ScanJobId, DeviceId, Title, Severity, Status, Source, PrimaryArtifact, RuleId, Confidence, Summary, CreatedAt, UpdatedAt
             FROM dbo.SecurityIncidents
-            WHERE Severity IN (N'High', N'Critical')
             ORDER BY CreatedAt DESC;
             """;
 
@@ -435,17 +449,18 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             incidents.Add(new SecurityIncident
             {
                 Id = reader.GetInt32(0),
-                DeviceId = reader.GetString(1),
-                Title = reader.GetString(2),
-                Severity = Enum.Parse<ThreatSeverity>(reader.GetString(3)),
-                Status = Enum.Parse<IncidentStatus>(reader.GetString(4)),
-                Source = reader.GetString(5),
-                PrimaryArtifact = reader.GetString(6),
-                RuleId = reader.GetString(7),
-                Confidence = reader.GetDecimal(8),
-                Summary = reader.GetString(9),
-                CreatedAt = reader.GetDateTimeOffset(10),
-                UpdatedAt = reader.IsDBNull(11) ? null : reader.GetFieldValue<DateTimeOffset>(11)
+                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                DeviceId = reader.GetString(2),
+                Title = reader.GetString(3),
+                Severity = Enum.Parse<ThreatSeverity>(reader.GetString(4)),
+                Status = Enum.Parse<IncidentStatus>(reader.GetString(5)),
+                Source = reader.GetString(6),
+                PrimaryArtifact = reader.GetString(7),
+                RuleId = reader.GetString(8),
+                Confidence = reader.GetDecimal(9),
+                Summary = reader.GetString(10),
+                CreatedAt = reader.GetDateTimeOffset(11),
+                UpdatedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
             });
         }
 
@@ -557,14 +572,15 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             INSERT INTO dbo.FalsePositiveReviews
-            (ThreatDetectionId, ArtifactHash, RuleId, Scope, Status, Analyst, Notes, SubmittedAt, DecisionedAt)
-            OUTPUT INSERTED.Id, INSERTED.ThreatDetectionId, INSERTED.ArtifactHash, INSERTED.RuleId, INSERTED.Scope, INSERTED.Status, INSERTED.Analyst, INSERTED.Notes, INSERTED.SubmittedAt, INSERTED.DecisionedAt
+            (ScanJobId, ThreatDetectionId, ArtifactHash, RuleId, Scope, Status, Analyst, Notes, SubmittedAt, DecisionedAt)
+            OUTPUT INSERTED.Id, INSERTED.ScanJobId, INSERTED.ThreatDetectionId, INSERTED.ArtifactHash, INSERTED.RuleId, INSERTED.Scope, INSERTED.Status, INSERTED.Analyst, INSERTED.Notes, INSERTED.SubmittedAt, INSERTED.DecisionedAt
             VALUES
-            (@ThreatDetectionId, @ArtifactHash, @RuleId, @Scope, @Status, @Analyst, @Notes, @SubmittedAt, @DecisionedAt);
+            (@ScanJobId, @ThreatDetectionId, @ArtifactHash, @RuleId, @Scope, @Status, @Analyst, @Notes, @SubmittedAt, @DecisionedAt);
             """;
 
         await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ScanJobId", review.ScanJobId.HasValue ? review.ScanJobId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@ThreatDetectionId", review.ThreatDetectionId.HasValue ? review.ThreatDetectionId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@ArtifactHash", review.ArtifactHash);
         command.Parameters.AddWithValue("@RuleId", review.RuleId);
@@ -580,22 +596,23 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         return new FalsePositiveReview
         {
             Id = reader.GetInt32(0),
-            ThreatDetectionId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-            ArtifactHash = reader.GetString(2),
-            RuleId = reader.GetString(3),
-            Scope = Enum.Parse<FalsePositiveScope>(reader.GetString(4)),
-            Status = Enum.Parse<FalsePositiveReviewStatus>(reader.GetString(5)),
-            Analyst = reader.GetString(6),
-            Notes = reader.GetString(7),
-            SubmittedAt = reader.GetDateTimeOffset(8),
-            DecisionedAt = reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9)
+            ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            ThreatDetectionId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+            ArtifactHash = reader.GetString(3),
+            RuleId = reader.GetString(4),
+            Scope = Enum.Parse<FalsePositiveScope>(reader.GetString(5)),
+            Status = Enum.Parse<FalsePositiveReviewStatus>(reader.GetString(6)),
+            Analyst = reader.GetString(7),
+            Notes = reader.GetString(8),
+            SubmittedAt = reader.GetDateTimeOffset(9),
+            DecisionedAt = reader.IsDBNull(10) ? null : reader.GetFieldValue<DateTimeOffset>(10)
         };
     }
 
     public async Task<IReadOnlyCollection<FalsePositiveReview>> GetFalsePositiveReviewsAsync(CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT Id, ThreatDetectionId, ArtifactHash, RuleId, Scope, Status, Analyst, Notes, SubmittedAt, DecisionedAt
+            SELECT Id, ScanJobId, ThreatDetectionId, ArtifactHash, RuleId, Scope, Status, Analyst, Notes, SubmittedAt, DecisionedAt
             FROM dbo.FalsePositiveReviews
             ORDER BY SubmittedAt DESC;
             """;
@@ -609,15 +626,16 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             reviews.Add(new FalsePositiveReview
             {
                 Id = reader.GetInt32(0),
-                ThreatDetectionId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                ArtifactHash = reader.GetString(2),
-                RuleId = reader.GetString(3),
-                Scope = Enum.Parse<FalsePositiveScope>(reader.GetString(4)),
-                Status = Enum.Parse<FalsePositiveReviewStatus>(reader.GetString(5)),
-                Analyst = reader.GetString(6),
-                Notes = reader.GetString(7),
-                SubmittedAt = reader.GetDateTimeOffset(8),
-                DecisionedAt = reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9)
+                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                ThreatDetectionId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                ArtifactHash = reader.GetString(3),
+                RuleId = reader.GetString(4),
+                Scope = Enum.Parse<FalsePositiveScope>(reader.GetString(5)),
+                Status = Enum.Parse<FalsePositiveReviewStatus>(reader.GetString(6)),
+                Analyst = reader.GetString(7),
+                Notes = reader.GetString(8),
+                SubmittedAt = reader.GetDateTimeOffset(9),
+                DecisionedAt = reader.IsDBNull(10) ? null : reader.GetFieldValue<DateTimeOffset>(10)
             });
         }
 
@@ -674,14 +692,15 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             INSERT INTO dbo.SandboxSubmissions
-            (DeviceId, ArtifactHash, FileName, Status, CorrelationId, Verdict, BehaviorSummary, IndicatorsJson, FamilyName, TagsJson, CreatedAt, UpdatedAt)
-            OUTPUT INSERTED.Id, INSERTED.DeviceId, INSERTED.ArtifactHash, INSERTED.FileName, INSERTED.Status, INSERTED.CorrelationId, INSERTED.Verdict, INSERTED.BehaviorSummary, INSERTED.IndicatorsJson, INSERTED.FamilyName, INSERTED.TagsJson, INSERTED.CreatedAt, INSERTED.UpdatedAt
+            (ScanJobId, DeviceId, ArtifactHash, FileName, Status, CorrelationId, Verdict, BehaviorSummary, IndicatorsJson, FamilyName, TagsJson, CreatedAt, UpdatedAt)
+            OUTPUT INSERTED.Id, INSERTED.ScanJobId, INSERTED.DeviceId, INSERTED.ArtifactHash, INSERTED.FileName, INSERTED.Status, INSERTED.CorrelationId, INSERTED.Verdict, INSERTED.BehaviorSummary, INSERTED.IndicatorsJson, INSERTED.FamilyName, INSERTED.TagsJson, INSERTED.CreatedAt, INSERTED.UpdatedAt
             VALUES
-            (@DeviceId, @ArtifactHash, @FileName, @Status, @CorrelationId, @Verdict, @BehaviorSummary, @IndicatorsJson, @FamilyName, @TagsJson, @CreatedAt, @UpdatedAt);
+            (@ScanJobId, @DeviceId, @ArtifactHash, @FileName, @Status, @CorrelationId, @Verdict, @BehaviorSummary, @IndicatorsJson, @FamilyName, @TagsJson, @CreatedAt, @UpdatedAt);
             """;
 
         await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ScanJobId", submission.ScanJobId.HasValue ? submission.ScanJobId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@DeviceId", submission.DeviceId);
         command.Parameters.AddWithValue("@ArtifactHash", submission.ArtifactHash);
         command.Parameters.AddWithValue("@FileName", submission.FileName);
@@ -700,25 +719,26 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         return new SandboxSubmission
         {
             Id = reader.GetInt32(0),
-            DeviceId = reader.GetString(1),
-            ArtifactHash = reader.GetString(2),
-            FileName = reader.GetString(3),
-            Status = Enum.Parse<SandboxSubmissionStatus>(reader.GetString(4)),
-            CorrelationId = reader.GetString(5),
-            Verdict = Enum.Parse<SandboxVerdict>(reader.GetString(6)),
-            BehaviorSummary = reader.GetString(7),
-            IndicatorsJson = reader.GetString(8),
-            FamilyName = reader.GetString(9),
-            TagsJson = reader.GetString(10),
-            CreatedAt = reader.GetDateTimeOffset(11),
-            UpdatedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
+            ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+            DeviceId = reader.GetString(2),
+            ArtifactHash = reader.GetString(3),
+            FileName = reader.GetString(4),
+            Status = Enum.Parse<SandboxSubmissionStatus>(reader.GetString(5)),
+            CorrelationId = reader.GetString(6),
+            Verdict = Enum.Parse<SandboxVerdict>(reader.GetString(7)),
+            BehaviorSummary = reader.GetString(8),
+            IndicatorsJson = reader.GetString(9),
+            FamilyName = reader.GetString(10),
+            TagsJson = reader.GetString(11),
+            CreatedAt = reader.GetDateTimeOffset(12),
+            UpdatedAt = reader.IsDBNull(13) ? null : reader.GetFieldValue<DateTimeOffset>(13)
         };
     }
 
     public async Task<IReadOnlyCollection<SandboxSubmission>> GetSandboxSubmissionsAsync(CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT Id, DeviceId, ArtifactHash, FileName, Status, CorrelationId, Verdict, BehaviorSummary, IndicatorsJson, FamilyName, TagsJson, CreatedAt, UpdatedAt
+            SELECT Id, ScanJobId, DeviceId, ArtifactHash, FileName, Status, CorrelationId, Verdict, BehaviorSummary, IndicatorsJson, FamilyName, TagsJson, CreatedAt, UpdatedAt
             FROM dbo.SandboxSubmissions
             ORDER BY CreatedAt DESC;
             """;
@@ -732,18 +752,19 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             submissions.Add(new SandboxSubmission
             {
                 Id = reader.GetInt32(0),
-                DeviceId = reader.GetString(1),
-                ArtifactHash = reader.GetString(2),
-                FileName = reader.GetString(3),
-                Status = Enum.Parse<SandboxSubmissionStatus>(reader.GetString(4)),
-                CorrelationId = reader.GetString(5),
-                Verdict = Enum.Parse<SandboxVerdict>(reader.GetString(6)),
-                BehaviorSummary = reader.GetString(7),
-                IndicatorsJson = reader.GetString(8),
-                FamilyName = reader.GetString(9),
-                TagsJson = reader.GetString(10),
-                CreatedAt = reader.GetDateTimeOffset(11),
-                UpdatedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
+                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                DeviceId = reader.GetString(2),
+                ArtifactHash = reader.GetString(3),
+                FileName = reader.GetString(4),
+                Status = Enum.Parse<SandboxSubmissionStatus>(reader.GetString(5)),
+                CorrelationId = reader.GetString(6),
+                Verdict = Enum.Parse<SandboxVerdict>(reader.GetString(7)),
+                BehaviorSummary = reader.GetString(8),
+                IndicatorsJson = reader.GetString(9),
+                FamilyName = reader.GetString(10),
+                TagsJson = reader.GetString(11),
+                CreatedAt = reader.GetDateTimeOffset(12),
+                UpdatedAt = reader.IsDBNull(13) ? null : reader.GetFieldValue<DateTimeOffset>(13)
             });
         }
 
@@ -754,13 +775,14 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             INSERT INTO dbo.LegacyParitySnapshots
-            (DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt)
+            (ScanJobId, DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt)
             VALUES
-            (@DeviceId, @OperatingSystem, @MalwareFamily, @DetectionRecallPercent, @FalsePositiveRatePercent, @VerdictLatencyMilliseconds, @RemediationSuccessPercent, @CrashTamperRatePercent, @CreatedAt);
+            (@ScanJobId, @DeviceId, @OperatingSystem, @MalwareFamily, @DetectionRecallPercent, @FalsePositiveRatePercent, @VerdictLatencyMilliseconds, @RemediationSuccessPercent, @CrashTamperRatePercent, @CreatedAt);
             """;
 
         await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
         await using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ScanJobId", snapshot.ScanJobId.HasValue ? snapshot.ScanJobId.Value : DBNull.Value);
         command.Parameters.AddWithValue("@DeviceId", snapshot.DeviceId);
         command.Parameters.AddWithValue("@OperatingSystem", snapshot.OperatingSystem.ToString());
         command.Parameters.AddWithValue("@MalwareFamily", snapshot.MalwareFamily);
@@ -776,7 +798,7 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     public async Task<IReadOnlyCollection<LegacyParitySnapshot>> GetLegacyParitySnapshotsAsync(CancellationToken cancellationToken = default)
     {
         const string sql = """
-            SELECT Id, DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt
+            SELECT Id, ScanJobId, DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt
             FROM dbo.LegacyParitySnapshots
             ORDER BY CreatedAt DESC;
             """;
@@ -790,15 +812,16 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             snapshots.Add(new LegacyParitySnapshot
             {
                 Id = reader.GetInt32(0),
-                DeviceId = reader.GetString(1),
-                OperatingSystem = Enum.Parse<OperatingSystemPlatform>(reader.GetString(2)),
-                MalwareFamily = reader.GetString(3),
-                DetectionRecallPercent = reader.GetDecimal(4),
-                FalsePositiveRatePercent = reader.GetDecimal(5),
-                VerdictLatencyMilliseconds = reader.GetDecimal(6),
-                RemediationSuccessPercent = reader.GetDecimal(7),
-                CrashTamperRatePercent = reader.GetDecimal(8),
-                CreatedAt = reader.GetDateTimeOffset(9)
+                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                DeviceId = reader.GetString(2),
+                OperatingSystem = Enum.Parse<OperatingSystemPlatform>(reader.GetString(3)),
+                MalwareFamily = reader.GetString(4),
+                DetectionRecallPercent = reader.GetDecimal(5),
+                FalsePositiveRatePercent = reader.GetDecimal(6),
+                VerdictLatencyMilliseconds = reader.GetDecimal(7),
+                RemediationSuccessPercent = reader.GetDecimal(8),
+                CrashTamperRatePercent = reader.GetDecimal(9),
+                CreatedAt = reader.GetDateTimeOffset(10)
             });
         }
 

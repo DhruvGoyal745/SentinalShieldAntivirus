@@ -19,3 +19,15 @@ C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-di\
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.deps.json
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.dll
 C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-runtime-di\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-setup-fix\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-setup-fix\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-setup-fix\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-localhost-service\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-localhost-service\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-localhost-service\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-typeload-fix\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-typeload-fix\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-typeload-fix\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-missingmethod-fix\Antivirus.Domain.deps.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-missingmethod-fix\Antivirus.Domain.dll
+C:\Users\dhruvgoyal\source\repos\Antivirus\Antivirus\Domain\artifacts\verify-missingmethod-fix\Antivirus.Domain.pdb

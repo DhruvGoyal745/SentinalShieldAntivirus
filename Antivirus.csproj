@@ -24,9 +24,11 @@
     <Compile Remove="Domain\**\*.cs" />
     <Compile Remove="Infrastructure\**\*.cs" />
     <Compile Remove="Data\Quarantine\**\*.cs" />
+    <Compile Remove="SentinelShield.Desktop\**" />
     <Compile Remove="SentinelShield.Tray\**" />
     <Compile Remove="SentinelShield.Installer\**" />
     <Content Remove="Data\Quarantine\**\*" />
+    <Content Remove="SentinelShield.Desktop\**" />
     <Content Remove="SentinelShield.Tray\**" />
     <Content Remove="SentinelShield.Installer\**" />
     <None Include="Data\Quarantine\**\*" Exclude="Data\Quarantine\**\*.cs" />
@@ -47,11 +49,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Domain\ValueObjects.cs" />
     <Compile Include="Infrastructure\Security\ScanFileDecisionRegistry.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="SentinelShield.Installer\SentinelShield.Installer.wixproj" />
+    <None Include="SentinelShield.Desktop\SentinelShield.Desktop.csproj" />
     <None Include="SentinelShield.Tray\SentinelShield.Tray.csproj" />
   </ItemGroup>
 

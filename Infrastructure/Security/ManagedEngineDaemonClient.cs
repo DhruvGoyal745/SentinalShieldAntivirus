@@ -5,6 +5,7 @@ using System.Text;
 using Antivirus.Application.Contracts;
 using Antivirus.Configuration;
 using Antivirus.Domain;
+using Antivirus.Infrastructure.Runtime;
 using Microsoft.Extensions.Options;
 
 namespace Antivirus.Infrastructure.Security;
@@ -17,6 +18,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
     private readonly ISandboxSubmissionClient _sandboxSubmissionClient;
     private readonly IRemediationCoordinator _remediationCoordinator;
     private readonly IControlPlaneRepository _controlPlaneRepository;
+    private readonly ISecurityRepository _securityRepository;
     private readonly IScanFileDecisionRegistry _fileDecisionRegistry;
     private readonly AntivirusPlatformOptions _options;
     private readonly ILogger<ManagedEngineDaemonClient> _logger;
@@ -32,6 +34,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         ISandboxSubmissionClient sandboxSubmissionClient,
         IRemediationCoordinator remediationCoordinator,
         IControlPlaneRepository controlPlaneRepository,
+        ISecurityRepository securityRepository,
         IScanFileDecisionRegistry fileDecisionRegistry,
         IOptions<AntivirusPlatformOptions> options,
         ILogger<ManagedEngineDaemonClient> logger)
@@ -42,6 +45,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         _sandboxSubmissionClient = sandboxSubmissionClient;
         _remediationCoordinator = remediationCoordinator;
         _controlPlaneRepository = controlPlaneRepository;
+        _securityRepository = securityRepository;
         _fileDecisionRegistry = fileDecisionRegistry;
         _options = options.Value;
         _logger = logger;
@@ -109,13 +113,20 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                 cancellationToken);
         }
 
-        foreach (var path in targets)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await ScanSingleTargetWithDecisionAsync(path);
-        }
+        var decisionGate = new SemaphoreSlim(1, 1);
 
-        async Task ScanSingleTargetWithDecisionAsync(string targetPath)
+        var parallelOptions = new ParallelOptions
+        {
+            CancellationToken = cancellationToken,
+            MaxDegreeOfParallelism = Math.Max(1, _options.MaxParallelScanWorkers)
+        };
+
+        await Parallel.ForEachAsync(targets, parallelOptions, async (path, loopToken) =>
+        {
+            await ScanSingleTargetWithDecisionAsync(path, loopToken);
+        });
+
+        async Task ScanSingleTargetWithDecisionAsync(string targetPath, CancellationToken loopToken)
         {
             const int maxRetries = 3;
             for (var attempt = 0; attempt <= maxRetries; attempt++)
@@ -125,26 +136,34 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                     var file = new FileInfo(targetPath);
                     if (!file.Exists)
                     {
-                        _logger.LogDebug("File no longer exists, publishing WaitingForInput for scan {ScanId}: {Path}", scanJobId, targetPath);
-                        await MaybePublishManualProgressAsync(
-                            ScanStage.WaitingForInput,
-                            targetPath,
-                            processedFiles,
-                            force: true,
-                            isSkipped: true,
-                            detailMessage: "The file no longer exists. Choose Retry if the file may reappear, or Skip to continue the scan.",
-                            cancellationToken);
-
-                        var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
-                            scanJobId,
-                            targetPath,
-                            "The file no longer exists on disk.",
-                            cancellationToken);
-
-                        if (decision == ScanFileDecisionAction.Skip)
+                        await decisionGate.WaitAsync(loopToken);
+                        try
                         {
-                            Interlocked.Increment(ref processedFiles);
-                            return;
+                            _logger.LogDebug("File no longer exists, publishing WaitingForInput for scan {ScanId}: {Path}", scanJobId, targetPath);
+                            await MaybePublishManualProgressAsync(
+                                ScanStage.WaitingForInput,
+                                targetPath,
+                                processedFiles,
+                                force: true,
+                                isSkipped: true,
+                                detailMessage: "The file no longer exists. Choose Retry if the file may reappear, or Skip to continue the scan.",
+                                cancellationToken);
+
+                            var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
+                                scanJobId,
+                                targetPath,
+                                "The file no longer exists on disk.",
+                                cancellationToken);
+
+                            if (decision == ScanFileDecisionAction.Skip)
+                            {
+                                Interlocked.Increment(ref processedFiles);
+                                return;
+                            }
+                        }
+                        finally
+                        {
+                            decisionGate.Release();
                         }
 
                         continue;
@@ -152,6 +171,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
 
                     var result = await ScanArtifactInternalAsync(
                         null,
+                        scanJobId,
                         new FileArtifact
                         {
                             FullPath = file.FullName,
@@ -162,8 +182,8 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                         },
                         request.RequestedBy,
                         pack,
-                        persistOperationalArtifacts: false,
-                        cancellationToken);
+                        persistOperationalArtifacts: true,
+                        loopToken);
 
                     foreach (var detection in result.Detections)
                     {
@@ -171,31 +191,39 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                     }
 
                     var completedFiles = Interlocked.Increment(ref processedFiles);
-                    await MaybePublishManualProgressAsync(result.Stage, targetPath, completedFiles, force: false, isSkipped: false, detailMessage: null, cancellationToken);
+                    await MaybePublishManualProgressAsync(result.Stage, targetPath, completedFiles, force: false, isSkipped: false, detailMessage: null, loopToken);
                     return;
                 }
                 catch (Exception ex) when (IsSkippableAccessException(ex))
                 {
-                    _logger.LogWarning(ex, "File inaccessible during scan {ScanId}: {Path} (attempt {Attempt})", scanJobId, targetPath, attempt + 1);
-                    await MaybePublishManualProgressAsync(
-                        ScanStage.WaitingForInput,
-                        targetPath,
-                        processedFiles,
-                        force: true,
-                        isSkipped: true,
-                        detailMessage: "File is locked, in use by another process, or access was denied. Choose Retry or Skip to continue.",
-                        cancellationToken);
-
-                    var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
-                        scanJobId,
-                        targetPath,
-                        "File is locked, in use, or access denied.",
-                        cancellationToken);
-
-                    if (decision == ScanFileDecisionAction.Skip)
+                    await decisionGate.WaitAsync(loopToken);
+                    try
                     {
-                        Interlocked.Increment(ref processedFiles);
-                        return;
+                        _logger.LogWarning(ex, "File inaccessible during scan {ScanId}: {Path} (attempt {Attempt})", scanJobId, targetPath, attempt + 1);
+                        await MaybePublishManualProgressAsync(
+                            ScanStage.WaitingForInput,
+                            targetPath,
+                            processedFiles,
+                            force: true,
+                            isSkipped: true,
+                            detailMessage: "File is locked, in use by another process, or access was denied. Choose Retry or Skip to continue.",
+                            cancellationToken);
+
+                        var decision = await _fileDecisionRegistry.WaitForDecisionAsync(
+                            scanJobId,
+                            targetPath,
+                            "File is locked, in use, or access denied.",
+                            cancellationToken);
+
+                        if (decision == ScanFileDecisionAction.Skip)
+                        {
+                            Interlocked.Increment(ref processedFiles);
+                            return;
+                        }
+                    }
+                    finally
+                    {
+                        decisionGate.Release();
                     }
                 }
             }
@@ -386,7 +414,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         CancellationToken cancellationToken = default)
     {
         var pack = _currentPack ?? throw new InvalidOperationException("No signature pack is loaded.");
-        var scanResult = await ScanArtifactInternalAsync(fileEventId, artifact, requestedBy, pack, persistOperationalArtifacts: true, cancellationToken);
+        var scanResult = await ScanArtifactInternalAsync(fileEventId, null, artifact, requestedBy, pack, persistOperationalArtifacts: true, cancellationToken);
         return (scanResult.PipelineResult, new RealtimeSubmissionResult
         {
             FileEventId = fileEventId,
@@ -438,6 +466,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
 
     private async Task<ManagedScanArtifactResult> ScanArtifactInternalAsync(
         int? fileEventId,
+        int? scanJobId,
         FileArtifact artifact,
         string requestedBy,
         ProprietarySignaturePack pack,
@@ -455,6 +484,19 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                     Verdict = PipelineVerdict.Clean
                 },
                 Array.Empty<EngineDetection>());
+        }
+
+        if (scanJobId.HasValue)
+        {
+            await _securityRepository.CreateFileEventAsync(
+                new FileWatchNotification
+                {
+                    FilePath = artifact.FullPath,
+                    EventType = artifact.EventType,
+                    ObservedAt = artifact.ObservedAt
+                },
+                scanJobId,
+                cancellationToken);
         }
 
         var hash = artifact.HashSha256;
@@ -490,6 +532,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         var verdict = ResolveVerdict(allDetections);
         var sandboxSubmission = persistOperationalArtifacts && !string.IsNullOrWhiteSpace(hash)
             ? await _sandboxSubmissionClient.SubmitIfNeededAsync(
+                scanJobId,
                 ResolveDeviceId(),
                 file,
                 hash!,
@@ -528,6 +571,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
                 .First();
             await _controlPlaneRepository.CreateIncidentAsync(new SecurityIncident
             {
+                ScanJobId = scanJobId,
                 DeviceId = ResolveDeviceId(),
                 Title = strongest.Summary,
                 Severity = strongest.Severity,
@@ -626,12 +670,9 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
             yield break;
         }
 
-        foreach (var root in _options.WatchRoots)
+        foreach (var root in SentinelRuntimePaths.ResolveWatchRoots(_options.WatchRoots))
         {
-            yield return root
-                .Replace("%USERPROFILE%", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), StringComparison.OrdinalIgnoreCase)
-                .Replace("%TEMP%", Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)
-                .Replace("%APPDATA%", Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), StringComparison.OrdinalIgnoreCase);
+            yield return root;
         }
     }
 
