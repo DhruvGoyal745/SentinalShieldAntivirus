@@ -379,3 +379,32 @@ export function formatConfidence(confidence) {
   const numeric = Number(confidence ?? 0);
   return `${Math.round(numeric > 1 ? numeric : numeric * 100)}%`;
 }
+
+export function formatEntropy(score) {
+  const numeric = Number(score ?? 0);
+  return numeric.toFixed(2);
+}
+
+export function getRetentionDaysRemaining(expiresAt) {
+  if (!expiresAt) return null;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return days;
+}
+
+export function isRansomwareDetection(threat) {
+  return threat?.name?.includes("ransomware-mass") ||
+    threat?.description?.toLowerCase().includes("mass file-write ransomware");
+}
+
+export function ransomwareActionTone(action) {
+  switch (action) {
+    case "Kill":
+      return "critical";
+    case "Suspend":
+      return "warning";
+    case "Alert":
+    default:
+      return "active";
+  }
+}

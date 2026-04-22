@@ -6,5 +6,10 @@ export default defineConfig({
   build: {
     outDir: "../wwwroot",
     emptyOutDir: true
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test-setup.js"
   }
 });

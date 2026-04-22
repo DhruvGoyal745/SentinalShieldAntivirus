@@ -1,10 +1,12 @@
 using Antivirus.Application.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class FileEventsController : ControllerBase
 {
     private readonly IRealtimeProtectionService _realtimeProtectionService;

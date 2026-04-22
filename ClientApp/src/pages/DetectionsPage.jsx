@@ -3,7 +3,7 @@ import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
 import { CardGridSkeleton, EmptyState, ErrorState } from "../components/States";
 import { useDashboardStore } from "../state/useDashboardStore";
-import { parseEvidenceSha, severityTone } from "../ui/presentation";
+import { parseEvidenceSha, severityTone, isRansomwareDetection } from "../ui/presentation";
 
 export default function DetectionsPage({
   threats,
@@ -39,10 +39,9 @@ export default function DetectionsPage({
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Threat Review"
-        title="Threat Detections"
+        eyebrow="Protection"
+        title="Threats Found"
         badge={`${filteredThreats.length} Active`}
-        description="Review detections, inspect evidence, and trigger response actions without losing scan context."
         lastUpdated={lastUpdated}
         actions={
           <div className="header-inline-actions">
@@ -52,7 +51,7 @@ export default function DetectionsPage({
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search threat, path, engine, or source"
+                placeholder="Search by threat name or file"
               />
             </label>
           </div>
@@ -64,7 +63,7 @@ export default function DetectionsPage({
       {loading ? (
         <CardGridSkeleton cards={6} />
       ) : filteredThreats.length === 0 ? (
-        <EmptyState title="No detections" description="No detections matched the current scan context or search filter." />
+        <EmptyState title="No threats found" description="No threats to show. Your system looks clean!" />
       ) : (
         <div className="card-grid">
           {filteredThreats.map((threat) => {
@@ -73,7 +72,7 @@ export default function DetectionsPage({
             const pending = pendingThreatActionId === threat.id;
 
             return (
-              <article key={threat.id} className="panel-card detection-card">
+              <article key={threat.id} className={`panel-card detection-card${isRansomwareDetection(threat) ? " ransomware-banner" : ""}`}>
                 <div className="card-top-row">
                   <div>
                     <strong className="card-title">{threat.name}</strong>
@@ -82,36 +81,17 @@ export default function DetectionsPage({
                   <span className={`pill pill-${severityTone(threat.severity)}`}>{threat.severity}</span>
                 </div>
 
-                <div className="detection-meta">
-                  <span className="pill pill-muted">{threat.source}</span>
-                  <span>{threat.engineName || "Sentinel engine"}</span>
-                </div>
-
-                <p className="resource-inline font-mono" title={threat.resource ?? "Resource unavailable"}>
-                  {threat.resource ?? "Resource unavailable"}
-                </p>
-                <p className="card-description">{threat.description || "No analyst description is available for this detection."}</p>
-
-                <button
-                  className="inline-expand"
-                  type="button"
-                  onClick={() =>
-                    setExpandedEvidenceIds((current) =>
-                      current.includes(threat.id)
-                        ? current.filter((id) => id !== threat.id)
-                        : [...current, threat.id]
-                    )
-                  }
-                >
-                  {evidenceExpanded ? "Hide evidence" : "Show evidence"}
-                </button>
-
-                {evidenceExpanded ? (
-                  <div className="evidence-panel">
-                    <span>SHA-256</span>
-                    <code className="font-mono">{evidenceSha ?? "Unavailable"}</code>
+                {isRansomwareDetection(threat) ? (
+                  <div className="ransomware-alert">
+                    <strong>Ransomware Activity Detected</strong>
+                    {threat.description ? <p>{threat.description}</p> : null}
                   </div>
                 ) : null}
+
+                <p className="resource-inline" title={threat.resource ?? ""}>
+                  {threat.resource ? threat.resource.split("\\").pop() : ""}
+                </p>
+                {threat.description ? <p className="card-description">{threat.description}</p> : null}
 
                 <div className="quarantine-state">
                   <span className={threat.isQuarantined ? "text-healthy" : "text-critical"}>

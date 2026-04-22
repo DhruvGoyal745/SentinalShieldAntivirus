@@ -297,23 +297,6 @@ BEGIN
     );
 END;
 
-IF OBJECT_ID('dbo.LegacyParitySnapshots', 'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.LegacyParitySnapshots
-    (
-        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-        DeviceId NVARCHAR(200) NOT NULL,
-        OperatingSystem NVARCHAR(32) NOT NULL,
-        MalwareFamily NVARCHAR(128) NOT NULL,
-        DetectionRecallPercent DECIMAL(5,2) NOT NULL,
-        FalsePositiveRatePercent DECIMAL(5,2) NOT NULL,
-        VerdictLatencyMilliseconds DECIMAL(12,2) NOT NULL,
-        RemediationSuccessPercent DECIMAL(5,2) NOT NULL,
-        CrashTamperRatePercent DECIMAL(5,2) NOT NULL,
-        CreatedAt DATETIMEOFFSET NOT NULL
-    );
-END;
-
 IF OBJECT_ID('dbo.ComplianceReports', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.ComplianceReports
@@ -388,7 +371,7 @@ END;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_FileSecurityEvents_ObservedAt' AND object_id = OBJECT_ID('dbo.FileSecurityEvents'))
 BEGIN
-    CREATE INDEX IX_FileSecurityEvents_ObservedAt ON dbo.FileSecurityEvents(ObservedAt DESC);
+    CREATE INDEX IX_FileSecurityEvents_ObservedAt ON dbo.FileSecurityEvents(ObservedAt DESC, Id DESC);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_FileEngineResults_FileSecurityEventId' AND object_id = OBJECT_ID('dbo.FileEngineResults'))
@@ -406,11 +389,6 @@ BEGIN
     CREATE INDEX IX_SecurityIncidents_CreatedAt ON dbo.SecurityIncidents(CreatedAt DESC);
 END;
 
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LegacyParitySnapshots_CreatedAt' AND object_id = OBJECT_ID('dbo.LegacyParitySnapshots'))
-BEGIN
-    CREATE INDEX IX_LegacyParitySnapshots_CreatedAt ON dbo.LegacyParitySnapshots(CreatedAt DESC);
-END;
-
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_SandboxSubmissions_CreatedAt' AND object_id = OBJECT_ID('dbo.SandboxSubmissions'))
 BEGIN
     CREATE INDEX IX_SandboxSubmissions_CreatedAt ON dbo.SandboxSubmissions(CreatedAt DESC);
@@ -419,6 +397,66 @@ END;
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ScanReportExports_ExportedAt' AND object_id = OBJECT_ID('dbo.ScanReportExports'))
 BEGIN
     CREATE INDEX IX_ScanReportExports_ExportedAt ON dbo.ScanReportExports(ExportedAt DESC);
+END;
+
+-- ── Phase 2: Quarantine Vault ───────────────────────────────────
+
+IF OBJECT_ID('dbo.QuarantineItems', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.QuarantineItems
+    (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        OriginalPath NVARCHAR(512) NOT NULL,
+        OriginalFileName NVARCHAR(260) NOT NULL,
+        VaultPath NVARCHAR(512) NOT NULL,
+        HashSha256 NVARCHAR(128) NOT NULL,
+        FileSizeBytes BIGINT NOT NULL,
+        EncryptionKeyId NVARCHAR(64) NOT NULL,
+        EncryptionIV VARBINARY(16) NOT NULL,
+        ThreatName NVARCHAR(200) NULL,
+        ThreatSeverity NVARCHAR(32) NOT NULL CONSTRAINT DF_QuarantineItems_ThreatSeverity DEFAULT 'Medium',
+        ThreatSource NVARCHAR(64) NULL,
+        DetectionContextJson NVARCHAR(MAX) NULL,
+        PurgeState NVARCHAR(32) NOT NULL CONSTRAINT DF_QuarantineItems_PurgeState DEFAULT 'Active',
+        CreatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_QuarantineItems_CreatedAt DEFAULT SYSUTCDATETIME(),
+        RetentionExpiresAt DATETIMEOFFSET NOT NULL,
+        RestoredAt DATETIMEOFFSET NULL,
+        PurgedAt DATETIMEOFFSET NULL,
+        RestoredBy NVARCHAR(200) NULL
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_QuarantineItems_PurgeState' AND object_id = OBJECT_ID('dbo.QuarantineItems'))
+BEGIN
+    CREATE INDEX IX_QuarantineItems_PurgeState ON dbo.QuarantineItems(PurgeState, CreatedAt DESC);
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_QuarantineItems_RetentionExpiresAt' AND object_id = OBJECT_ID('dbo.QuarantineItems'))
+BEGIN
+    CREATE INDEX IX_QuarantineItems_RetentionExpiresAt ON dbo.QuarantineItems(RetentionExpiresAt) WHERE PurgeState = 'Active';
+END;
+
+-- ── Phase 2: Ransomware Shield ──────────────────────────────────
+
+IF OBJECT_ID('dbo.RansomwareSignals', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.RansomwareSignals
+    (
+        Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ProcessId INT NOT NULL,
+        ProcessPath NVARCHAR(512) NOT NULL,
+        AffectedFileCount INT NOT NULL,
+        MaxEntropyScore FLOAT NOT NULL,
+        ExtensionChangeCount INT NOT NULL,
+        RecommendedAction NVARCHAR(32) NOT NULL,
+        Summary NVARCHAR(MAX) NOT NULL,
+        DetectedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_RansomwareSignals_DetectedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_RansomwareSignals_DetectedAt' AND object_id = OBJECT_ID('dbo.RansomwareSignals'))
+BEGIN
+    CREATE INDEX IX_RansomwareSignals_DetectedAt ON dbo.RansomwareSignals(DetectedAt DESC);
 END;
 
 IF COL_LENGTH('dbo.SecurityIncidents', 'ScanJobId') IS NULL
@@ -431,11 +469,6 @@ BEGIN
     ALTER TABLE dbo.FileSecurityEvents ADD ScanJobId INT NULL;
 END;
 
-IF COL_LENGTH('dbo.LegacyParitySnapshots', 'ScanJobId') IS NULL
-BEGIN
-    ALTER TABLE dbo.LegacyParitySnapshots ADD ScanJobId INT NULL;
-END;
-
 IF COL_LENGTH('dbo.SandboxSubmissions', 'ScanJobId') IS NULL
 BEGIN
     ALTER TABLE dbo.SandboxSubmissions ADD ScanJobId INT NULL;
@@ -444,4 +477,184 @@ END;
 IF COL_LENGTH('dbo.FalsePositiveReviews', 'ScanJobId') IS NULL
 BEGIN
     ALTER TABLE dbo.FalsePositiveReviews ADD ScanJobId INT NULL;
+END;
+
+
+-- ── Phase 3: Cloud Reputation & Threat Intelligence ───────────
+
+IF OBJECT_ID('dbo.ThreatIntelSettings', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ThreatIntelSettings
+    (
+        TenantKey NVARCHAR(100) NOT NULL PRIMARY KEY,
+        SettingsJson NVARCHAR(MAX) NOT NULL,
+        UpdatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_ThreatIntelSettings_UpdatedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF OBJECT_ID('dbo.ReputationCache', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ReputationCache
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        Provider NVARCHAR(64) NOT NULL,
+        LookupType NVARCHAR(32) NOT NULL,
+        NormalizedValue NVARCHAR(512) NOT NULL,
+        VerdictJson NVARCHAR(MAX) NOT NULL,
+        Verdict NVARCHAR(32) NOT NULL,
+        Confidence DECIMAL(5,4) NOT NULL,
+        ExpiresAt DATETIMEOFFSET NOT NULL,
+        CreatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_ReputationCache_CreatedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_ReputationCache_Key' AND object_id = OBJECT_ID('dbo.ReputationCache'))
+BEGIN
+    CREATE UNIQUE INDEX UX_ReputationCache_Key ON dbo.ReputationCache(TenantKey, Provider, LookupType, NormalizedValue);
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ReputationCache_ExpiresAt' AND object_id = OBJECT_ID('dbo.ReputationCache'))
+BEGIN
+    CREATE INDEX IX_ReputationCache_ExpiresAt ON dbo.ReputationCache(ExpiresAt);
+END;
+
+IF OBJECT_ID('dbo.ReputationLookupAudit', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ReputationLookupAudit
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        CallerUser NVARCHAR(200) NULL,
+        LookupType NVARCHAR(32) NOT NULL,
+        RedactedValue NVARCHAR(256) NOT NULL,
+        ProvidersAttempted NVARCHAR(512) NOT NULL,
+        CacheHit BIT NOT NULL,
+        LocalIocHit BIT NOT NULL,
+        LatencyMs INT NOT NULL,
+        FinalVerdict NVARCHAR(32) NOT NULL,
+        FailureReason NVARCHAR(512) NULL,
+        CorrelationId NVARCHAR(100) NULL,
+        CreatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_ReputationLookupAudit_CreatedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ReputationLookupAudit_CreatedAt' AND object_id = OBJECT_ID('dbo.ReputationLookupAudit'))
+BEGIN
+    CREATE INDEX IX_ReputationLookupAudit_CreatedAt ON dbo.ReputationLookupAudit(TenantKey, CreatedAt DESC);
+END;
+
+IF OBJECT_ID('dbo.EncryptedSecrets', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.EncryptedSecrets
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        Provider NVARCHAR(64) NOT NULL,
+        SecretKey NVARCHAR(64) NOT NULL,
+        CipherText VARBINARY(MAX) NOT NULL,
+        Algorithm NVARCHAR(32) NOT NULL,
+        CreatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_EncryptedSecrets_CreatedAt DEFAULT SYSUTCDATETIME(),
+        UpdatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_EncryptedSecrets_UpdatedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_EncryptedSecrets_Key' AND object_id = OBJECT_ID('dbo.EncryptedSecrets'))
+BEGIN
+    CREATE UNIQUE INDEX UX_EncryptedSecrets_Key ON dbo.EncryptedSecrets(TenantKey, Provider, SecretKey);
+END;
+
+IF OBJECT_ID('dbo.IocIndicators', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.IocIndicators
+    (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        IocType NVARCHAR(32) NOT NULL,
+        NormalizedValue NVARCHAR(512) NOT NULL,
+        DisplayValue NVARCHAR(512) NOT NULL,
+        Source NVARCHAR(64) NOT NULL,
+        Severity NVARCHAR(32) NOT NULL CONSTRAINT DF_IocIndicators_Severity DEFAULT 'Medium',
+        Confidence DECIMAL(5,4) NOT NULL CONSTRAINT DF_IocIndicators_Confidence DEFAULT 0.5,
+        TagsJson NVARCHAR(1024) NULL,
+        Description NVARCHAR(MAX) NULL,
+        CreatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_IocIndicators_CreatedAt DEFAULT SYSUTCDATETIME(),
+        ExpiresAt DATETIMEOFFSET NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_IocIndicators_IsActive DEFAULT 1
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_IocIndicators_Dedupe' AND object_id = OBJECT_ID('dbo.IocIndicators'))
+BEGIN
+    CREATE UNIQUE INDEX UX_IocIndicators_Dedupe ON dbo.IocIndicators(TenantKey, IocType, NormalizedValue, Source);
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_IocIndicators_Lookup' AND object_id = OBJECT_ID('dbo.IocIndicators'))
+BEGIN
+    CREATE INDEX IX_IocIndicators_Lookup ON dbo.IocIndicators(TenantKey, IocType, NormalizedValue) WHERE IsActive = 1;
+END;
+
+IF OBJECT_ID('dbo.IocSources', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.IocSources
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        Provider NVARCHAR(64) NOT NULL,
+        LastSyncAt DATETIMEOFFSET NULL,
+        LastCursor NVARCHAR(512) NULL,
+        Enabled BIT NOT NULL CONSTRAINT DF_IocSources_Enabled DEFAULT 1
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_IocSources_TenantProvider' AND object_id = OBJECT_ID('dbo.IocSources'))
+BEGIN
+    CREATE UNIQUE INDEX UX_IocSources_TenantProvider ON dbo.IocSources(TenantKey, Provider);
+END;
+
+IF OBJECT_ID('dbo.IocFeedSyncRuns', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.IocFeedSyncRuns
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        Provider NVARCHAR(64) NOT NULL,
+        StartedAt DATETIMEOFFSET NOT NULL,
+        CompletedAt DATETIMEOFFSET NULL,
+        IndicatorsImported INT NOT NULL CONSTRAINT DF_IocFeedSyncRuns_Imported DEFAULT 0,
+        IndicatorsSkipped INT NOT NULL CONSTRAINT DF_IocFeedSyncRuns_Skipped DEFAULT 0,
+        Success BIT NOT NULL CONSTRAINT DF_IocFeedSyncRuns_Success DEFAULT 0,
+        FailureReason NVARCHAR(512) NULL,
+        CursorAfter NVARCHAR(512) NULL
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_IocFeedSyncRuns_StartedAt' AND object_id = OBJECT_ID('dbo.IocFeedSyncRuns'))
+BEGIN
+    CREATE INDEX IX_IocFeedSyncRuns_StartedAt ON dbo.IocFeedSyncRuns(TenantKey, Provider, StartedAt DESC);
+END;
+
+IF OBJECT_ID('dbo.ProviderHealthSnapshots', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ProviderHealthSnapshots
+    (
+        Id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        TenantKey NVARCHAR(100) NOT NULL,
+        Provider NVARCHAR(64) NOT NULL,
+        Enabled BIT NOT NULL,
+        LastSuccessAt DATETIMEOFFSET NULL,
+        LastFailureAt DATETIMEOFFSET NULL,
+        LastFailureReason NVARCHAR(512) NULL,
+        CircuitState NVARCHAR(16) NOT NULL CONSTRAINT DF_ProviderHealthSnapshots_CircuitState DEFAULT 'Closed',
+        RateLimitTokensRemaining INT NOT NULL CONSTRAINT DF_ProviderHealthSnapshots_RateLimit DEFAULT 0,
+        LastSyncDurationMs INT NOT NULL CONSTRAINT DF_ProviderHealthSnapshots_SyncDuration DEFAULT 0,
+        LastSyncCount INT NOT NULL CONSTRAINT DF_ProviderHealthSnapshots_SyncCount DEFAULT 0,
+        LastSyncAt DATETIMEOFFSET NULL,
+        UpdatedAt DATETIMEOFFSET NOT NULL CONSTRAINT DF_ProviderHealthSnapshots_UpdatedAt DEFAULT SYSUTCDATETIME()
+    );
+END;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_ProviderHealthSnapshots_TenantProvider' AND object_id = OBJECT_ID('dbo.ProviderHealthSnapshots'))
+BEGIN
+    CREATE UNIQUE INDEX UX_ProviderHealthSnapshots_TenantProvider ON dbo.ProviderHealthSnapshots(TenantKey, Provider);
 END;

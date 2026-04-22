@@ -16,10 +16,11 @@ export default function ScanSelector({ scans, label = "Scan context", id = "scan
         <option value="">All scans</option>
         {scans.map((scan) => (
           <option key={scan.id} value={scan.id}>
-            {`SCAN-${String(scan.id).padStart(5, "0")} - ${formatCompactDate(scan.createdAt)}`}
+            {`${scan.mode} scan — ${formatCompactDate(scan.createdAt)}`}
           </option>
         ))}
       </select>
     </label>
   );
 }
+    

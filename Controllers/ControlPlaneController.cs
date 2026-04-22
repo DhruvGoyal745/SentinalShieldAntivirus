@@ -1,11 +1,13 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/controlplane")]
+[Authorize(Policy = "AdminOnly")]
 public sealed class ControlPlaneController : ControllerBase
 {
     private readonly ITenantRegistry _tenantRegistry;

@@ -27,7 +27,6 @@ public sealed class EnterpriseDashboardService : IEnterpriseDashboardService
         var packs = await _controlPlaneRepository.GetSignaturePacksAsync(cancellationToken);
         var reviews = await _controlPlaneRepository.GetFalsePositiveReviewsAsync(cancellationToken);
         var sandbox = await _controlPlaneRepository.GetSandboxSubmissionsAsync(cancellationToken);
-        var parity = await _controlPlaneRepository.GetLegacyParitySnapshotsAsync(cancellationToken);
         var complianceReports = await _controlPlaneRepository.GetComplianceReportsAsync(cancellationToken);
         if (complianceReports.Count == 0)
         {
@@ -52,7 +51,6 @@ public sealed class EnterpriseDashboardService : IEnterpriseDashboardService
             PolicyCompliancePercent = latestCompliance.PolicyCompliancePercent,
             BaselineCoveragePercent = latestCompliance.BaselineScanCompletionPercent,
             SelfProtectionCoveragePercent = latestCompliance.SelfProtectionCoveragePercent,
-            LegacyShadowModeEnabled = devices.Any(device => device.LegacyShadowModeEnabled),
             CurrentPackVersion = currentPack?.Version ?? "Unavailable"
         };
 
@@ -64,7 +62,6 @@ public sealed class EnterpriseDashboardService : IEnterpriseDashboardService
             Incidents = incidents.Take(12).ToArray(),
             ComplianceReports = complianceReports.Take(6).ToArray(),
             SignaturePacks = packs.Take(6).ToArray(),
-            ParitySnapshots = parity.Take(8).ToArray(),
             SandboxSubmissions = sandbox.Take(8).ToArray(),
             FalsePositiveReviews = reviews.Take(8).ToArray()
         };

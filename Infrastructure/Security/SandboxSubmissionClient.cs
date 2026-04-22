@@ -7,12 +7,12 @@ namespace Antivirus.Infrastructure.Security;
 
 public sealed class SandboxSubmissionClient : ISandboxSubmissionClient
 {
-    private readonly IControlPlaneRepository _controlPlaneRepository;
+    private readonly IGovernanceRepository _governanceRepository;
     private readonly AntivirusPlatformOptions _options;
 
-    public SandboxSubmissionClient(IControlPlaneRepository controlPlaneRepository, IOptions<AntivirusPlatformOptions> options)
+    public SandboxSubmissionClient(IGovernanceRepository governanceRepository, IOptions<AntivirusPlatformOptions> options)
     {
-        _controlPlaneRepository = controlPlaneRepository;
+        _governanceRepository = governanceRepository;
         _options = options.Value;
     }
 
@@ -54,6 +54,6 @@ public sealed class SandboxSubmissionClient : ISandboxSubmissionClient
             CreatedAt = DateTimeOffset.UtcNow
         };
 
-        return await _controlPlaneRepository.CreateSandboxSubmissionAsync(submission, cancellationToken);
+        return await _governanceRepository.CreateSandboxSubmissionAsync(submission, cancellationToken);
     }
 }

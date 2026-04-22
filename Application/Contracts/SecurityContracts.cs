@@ -14,7 +14,9 @@ public interface ISqlConnectionFactory
     string MasterConnectionString { get; }
 }
 
-public interface ISecurityRepository
+// ── Segregated repository interfaces (ISP) ──────────────────────
+
+public interface IScanRepository
 {
     Task<int> CreateScanAsync(ScanRequest request, CancellationToken cancellationToken = default);
 
@@ -22,31 +24,17 @@ public interface ISecurityRepository
 
     Task<IReadOnlyCollection<ScanJob>> GetRecoverableScansAsync(CancellationToken cancellationToken = default);
 
-    Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<ScanJob>> GetRecentScansAsync(int take, CancellationToken cancellationToken = default);
 
-    Task UpdateFileEventAsync(
-        int fileEventId,
-        FileEventUpdate update,
-        CancellationToken cancellationToken = default);
-
-    Task SaveFileEngineResultsAsync(
-        int fileEventId,
-        IEnumerable<FileScannerEngineResult> results,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyCollection<FileSecurityEvent>> GetRecentFileEventsAsync(int take, CancellationToken cancellationToken = default);
-
-    Task UpdateScanStatusAsync(
-        int scanId,
-        ScanStatusUpdate update,
-        CancellationToken cancellationToken = default);
+    Task UpdateScanStatusAsync(int scanId, ScanStatusUpdate update, CancellationToken cancellationToken = default);
 
     Task AppendScanProgressAsync(ScanProgressEvent progressEvent, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<ScanJob>> GetRecentScansAsync(int take, CancellationToken cancellationToken = default);
-
     Task<IReadOnlyCollection<ScanProgressEvent>> GetScanProgressEventsAsync(int scanId, int take, CancellationToken cancellationToken = default);
+}
 
+public interface IThreatRepository
+{
     Task UpsertThreatsAsync(int? scanJobId, IEnumerable<ThreatDetection> threats, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<ThreatDetection>> GetThreatsAsync(bool activeOnly, CancellationToken cancellationToken = default);
@@ -54,14 +42,47 @@ public interface ISecurityRepository
     Task<ThreatDetection?> GetThreatByIdAsync(int id, CancellationToken cancellationToken = default);
 
     Task MarkThreatQuarantinedAsync(int id, string? quarantinePath, CancellationToken cancellationToken = default);
+}
 
-    Task<ScanReportExport> CreateScanReportExportAsync(ScanReportExport export, CancellationToken cancellationToken = default);
+public interface IFileEventRepository
+{
+    Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<ScanReportExport>> GetScanReportExportsAsync(int take, CancellationToken cancellationToken = default);
+    Task UpdateFileEventAsync(int fileEventId, FileEventUpdate update, CancellationToken cancellationToken = default);
 
+    Task SaveFileEngineResultsAsync(int fileEventId, IEnumerable<FileScannerEngineResult> results, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<FileSecurityEvent>> GetRecentFileEventsAsync(int take, CancellationToken cancellationToken = default);
+}
+
+public interface IHealthSnapshotRepository
+{
     Task SaveHealthSnapshotAsync(DeviceHealthSnapshot snapshot, CancellationToken cancellationToken = default);
 
     Task<DeviceHealthSnapshot?> GetLatestHealthSnapshotAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IReportExportRepository
+{
+    Task<ScanReportExport> CreateScanReportExportAsync(ScanReportExport export, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<ScanReportExport>> GetScanReportExportsAsync(int take, CancellationToken cancellationToken = default);
+}
+
+public interface ISecurityStatsRepository
+{
+    Task<int> GetDistinctFileCountAsync(CancellationToken cancellationToken = default);
+
+    Task<int> GetDistinctThreatCountAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Composite interface preserved for backward compatibility during migration.
+/// New consumers should depend on the specific segregated interface they need.
+/// </summary>
+public interface ISecurityRepository : IScanRepository, IThreatRepository, IFileEventRepository,
+    IHealthSnapshotRepository, IReportExportRepository, ISecurityStatsRepository
+{
 }
 
 public interface IPowerShellRunner
@@ -88,15 +109,6 @@ public interface IHeuristicRule
 public interface IHeuristicAnalyzer
 {
     Task<IReadOnlyCollection<ThreatDetection>> AnalyzeAsync(ScanRequest request, CancellationToken cancellationToken = default);
-}
-
-public interface IOpenSourceScannerEngine
-{
-    string EngineName { get; }
-
-    ThreatSource Source { get; }
-
-    Task<FileScannerEngineResult> ScanAsync(FileInfo file, CancellationToken cancellationToken = default);
 }
 
 public interface ISecurityOrchestrator
@@ -178,3 +190,54 @@ public interface IProcessCommandRunner
 }
 
 public sealed record ProcessCommandResult(int ExitCode, string StandardOutput, string StandardError);
+
+public interface IProcessTreeTracker
+{
+    ProcessLineage? GetProcessLineage(int processId, int maxDepth = 3);
+
+    bool IsLOLBinChain(string parentPath, string childPath);
+
+    bool IsSuspiciousParentChild(string parentPath, string childPath);
+}
+
+public interface IVerdictScoringEngine
+{
+    DetectionVerdict ComputeVerdict(
+        IReadOnlyCollection<DetectionEventRecord> detectionEvents,
+        ScoringThresholds? thresholds = null,
+        ScoringWeights? weights = null);
+}
+
+// ── Phase 2: Secure Quarantine & Ransomware Shield ──────────────
+
+public interface IQuarantineVault
+{
+    Task<QuarantineVaultItem> QuarantineAsync(FileInfo file, QuarantineDetectionContext context, CancellationToken ct = default);
+    Task<RestoreResult> RestoreAsync(Guid itemId, string requestedBy, string? restoreToPath = null, CancellationToken ct = default);
+    Task<bool> PurgeAsync(Guid itemId, CancellationToken ct = default);
+    Task<int> PurgeExpiredAsync(CancellationToken ct = default);
+    Task<QuarantineVaultItem?> GetItemAsync(Guid itemId, CancellationToken ct = default);
+    Task<IReadOnlyCollection<QuarantineVaultItem>> ListAsync(QuarantineListFilter filter, CancellationToken ct = default);
+}
+
+public interface IQuarantineRepository
+{
+    Task InsertAsync(QuarantineVaultItem item, CancellationToken ct = default);
+    Task UpdateAsync(QuarantineVaultItem item, CancellationToken ct = default);
+    Task<QuarantineVaultItem?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyCollection<QuarantineVaultItem>> ListAsync(QuarantineListFilter filter, CancellationToken ct = default);
+    Task<IReadOnlyCollection<QuarantineVaultItem>> GetExpiredActiveItemsAsync(CancellationToken ct = default);
+}
+
+public interface IRansomwareShield
+{
+    Task<RansomwareDetectionSignal?> RecordFileWriteAsync(FileWatchNotification notification, FileInfo file, CancellationToken ct = default);
+    bool IsProtectedFolder(string path);
+    IReadOnlyCollection<RansomwareDetectionSignal> GetRecentSignals(int maxCount = 20);
+}
+
+public interface IProcessRemediator
+{
+    bool KillProcess(int processId);
+    bool SuspendProcess(int processId);
+}

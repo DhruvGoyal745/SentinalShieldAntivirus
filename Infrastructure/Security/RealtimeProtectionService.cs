@@ -14,7 +14,6 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
     private readonly IControlPlaneRepository _controlPlaneRepository;
     private readonly IFileEventBackgroundQueue _fileEventBackgroundQueue;
     private readonly IProprietaryProtectionEngine _proprietaryProtectionEngine;
-    private readonly IReadOnlyCollection<IOpenSourceScannerEngine> _scannerEngines;
     private readonly ISentinelShieldControlApi _controlService;
     private readonly AntivirusPlatformOptions _options;
     private readonly ILogger<RealtimeProtectionService> _logger;
@@ -24,7 +23,6 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
         IControlPlaneRepository controlPlaneRepository,
         IFileEventBackgroundQueue fileEventBackgroundQueue,
         IProprietaryProtectionEngine proprietaryProtectionEngine,
-        IEnumerable<IOpenSourceScannerEngine> scannerEngines,
         ISentinelShieldControlApi controlService,
         IOptions<AntivirusPlatformOptions> options,
         ILogger<RealtimeProtectionService> logger)
@@ -33,7 +31,6 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
         _controlPlaneRepository = controlPlaneRepository;
         _fileEventBackgroundQueue = fileEventBackgroundQueue;
         _proprietaryProtectionEngine = proprietaryProtectionEngine;
-        _scannerEngines = scannerEngines.ToArray();
         _controlService = controlService;
         _options = options.Value;
         _logger = logger;
@@ -120,7 +117,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
             await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
             {
                 Status = FileEventStatus.Processing,
-                Notes = "Running proprietary engine analysis with legacy parity capture.",
+                Notes = "Running proprietary engine analysis.",
                 FileSizeBytes = fileInfo.Length
             }, cancellationToken);
 
@@ -137,63 +134,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
                 _options.DefaultRequestedBy,
                 cancellationToken);
 
-            var results = new List<FileScannerEngineResult>(primaryResult.EngineResults);
-            var legacyMatches = 0;
-            if (_options.UseLegacyShadowMode && _options.UseInHouseScanners)
-            {
-                foreach (var scanner in _scannerEngines)
-                {
-                    try
-                    {
-                        var result = await scanner.ScanAsync(fileInfo, cancellationToken);
-                        if (result.IsMatch)
-                        {
-                            legacyMatches++;
-                        }
-
-                        results.Add(new FileScannerEngineResult
-                        {
-                            EngineName = $"{result.EngineName} (shadow)",
-                            Source = result.Source,
-                            Status = result.Status,
-                            IsMatch = result.IsMatch,
-                            SignatureName = result.SignatureName,
-                            Details = result.Details,
-                            RawOutput = result.RawOutput,
-                            ScannedAt = result.ScannedAt
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Open-source engine {Engine} failed for {Path}.", scanner.EngineName, fileInfo.FullName);
-                        results.Add(new FileScannerEngineResult
-                        {
-                            EngineName = scanner.EngineName,
-                            Source = scanner.Source,
-                            Status = FileEngineResultStatus.Error,
-                            Details = ex.Message,
-                            RawOutput = ex.ToString()
-                        });
-                    }
-                }
-
-                await _controlPlaneRepository.SaveLegacyParitySnapshotAsync(
-                    new LegacyParitySnapshot
-                    {
-                        DeviceId = $"{Environment.MachineName.ToLowerInvariant()}-agent",
-                        OperatingSystem = OperatingSystemPlatform.Windows,
-                        MalwareFamily = primaryResult.Threats.FirstOrDefault()?.Name ?? "Unknown",
-                        DetectionRecallPercent = primaryResult.Threats.Count > 0 && legacyMatches > 0 ? 100m : primaryResult.Threats.Count == 0 && legacyMatches == 0 ? 100m : 50m,
-                        FalsePositiveRatePercent = primaryResult.Threats.Count == 0 && legacyMatches > 0 ? 100m : 0m,
-                        VerdictLatencyMilliseconds = 250m,
-                        RemediationSuccessPercent = primaryResult.Quarantined || primaryResult.Verdict != PipelineVerdict.Malicious ? 100m : 0m,
-                        CrashTamperRatePercent = 0m,
-                        CreatedAt = DateTimeOffset.UtcNow
-                    },
-                    cancellationToken);
-            }
-
-            await _repository.SaveFileEngineResultsAsync(workItem.FileEventId, results, cancellationToken);
+            await _repository.SaveFileEngineResultsAsync(workItem.FileEventId, primaryResult.EngineResults, cancellationToken);
 
             var threatDetections = primaryResult.Threats.ToArray();
 
@@ -203,7 +144,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
             }
 
             var finalStatus = ResolveStatus(primaryResult.Verdict);
-            var notes = BuildNotes(results, fileInfo.Length, primaryResult.Verdict, _options.UseLegacyShadowMode);
+            var notes = BuildNotes(primaryResult.EngineResults, fileInfo.Length, primaryResult.Verdict);
 
             await _repository.UpdateFileEventAsync(workItem.FileEventId, new FileEventUpdate
             {
@@ -247,7 +188,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
         };
     }
 
-    private static string BuildNotes(IReadOnlyCollection<FileScannerEngineResult> results, long fileSizeBytes, PipelineVerdict verdict, bool legacyShadowMode)
+    private static string BuildNotes(IReadOnlyCollection<FileScannerEngineResult> results, long fileSizeBytes, PipelineVerdict verdict)
     {
         var summary = results.Count == 0
             ? "No scanners were available."
@@ -256,8 +197,7 @@ public sealed class RealtimeProtectionService : IRealtimeProtectionService
                 results.Select(result =>
                     $"{result.EngineName}: {result.Status}{(string.IsNullOrWhiteSpace(result.SignatureName) ? string.Empty : $" ({result.SignatureName})")}"));
 
-        var shadowText = legacyShadowMode ? " Legacy engines were run in shadow mode for parity capture." : string.Empty;
-        return $"Size {fileSizeBytes} bytes. Primary verdict {verdict}. {summary}{shadowText}";
+        return $"Size {fileSizeBytes} bytes. Primary verdict {verdict}. {summary}";
     }
 
     private static async Task<string> ComputeSha256Async(FileInfo fileInfo, CancellationToken cancellationToken)

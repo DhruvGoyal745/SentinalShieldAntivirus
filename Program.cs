@@ -3,8 +3,11 @@ using Antivirus.Configuration;
 using Antivirus.Logging;
 using Antivirus.Middleware;
 using Antivirus.Startup;
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Hosting.WindowsServices;
+using Microsoft.IdentityModel.Tokens;
 
 var isWindowsService = WindowsServiceHelpers.IsWindowsService();
 
@@ -56,7 +59,35 @@ builder.Services.AddControllers()
     });
 builder.Services.AddEndpointsApiExplorer();
 
+var platformOptions = builder.Configuration
+    .GetSection(AntivirusPlatformOptions.SectionName)
+    .Get<AntivirusPlatformOptions>() ?? new AntivirusPlatformOptions();
+
+var jwtKey = platformOptions.JwtSigningKey
+    ?? "SentinelShield-Dev-JWT-Key-2026-CHANGE-IN-PRODUCTION!";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "SentinelShield",
+            ValidateAudience = true,
+            ValidAudience = "SentinelShield",
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
+
 builder.Services
+    .AddPlatformFoundation()
     .AddPersistence()
     .AddSecurityPipeline()
     .AddApplicationServices()
@@ -68,11 +99,16 @@ using (var scope = app.Services.CreateScope())
 {
     var bootstrapper = scope.ServiceProvider.GetRequiredService<IDatabaseBootstrapper>();
     await bootstrapper.InitializeAsync();
+
+    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+    await authService.EnsureDefaultAdminAsync();
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<TenantResolutionMiddleware>();
+app.UseMiddleware<LocalTrustMiddleware>();
 
 if (!isWindowsService)
 {
@@ -81,6 +117,9 @@ if (!isWindowsService)
 app.UseCors("frontend");
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");

@@ -13,6 +13,7 @@ internal sealed class EmbeddedServiceHost : IDisposable
 
     private static readonly string[] KnownServiceUrls =
     [
+        "https://localhost:44380",
         "http://127.0.0.1:5100",
         "http://localhost:5091",
         "https://localhost:7000"
@@ -36,27 +37,14 @@ internal sealed class EmbeddedServiceHost : IDisposable
             }
         }
 
-        var serviceExePath = FindServiceExecutable();
-        if (serviceExePath is null)
-        {
-            return false;
-        }
-
         var port = FindFreePort();
         var url2 = $"http://127.0.0.1:{port}";
 
-        var startInfo = new ProcessStartInfo
+        var startInfo = BuildServiceStartInfo(url2);
+        if (startInfo is null)
         {
-            FileName = serviceExePath,
-            Arguments = $"--urls \"{url2}\"",
-            WorkingDirectory = Path.GetDirectoryName(serviceExePath)!,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = false,
-            RedirectStandardError = false
-        };
-
-        startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Service";
+            return false;
+        }
 
         try
         {
@@ -75,7 +63,7 @@ internal sealed class EmbeddedServiceHost : IDisposable
 
         BaseUrl = url2;
 
-        var ready = await WaitForServiceStartupAsync(url2, TimeSpan.FromSeconds(30), cancellationToken);
+        var ready = await WaitForServiceStartupAsync(url2, TimeSpan.FromSeconds(60), cancellationToken);
         if (!ready)
         {
             StopEmbeddedProcess();
@@ -122,22 +110,66 @@ internal sealed class EmbeddedServiceHost : IDisposable
         }
     }
 
+    private static ProcessStartInfo? BuildServiceStartInfo(string url)
+    {
+        var exePath = FindServiceExecutable();
+        if (exePath is not null)
+        {
+            var info = new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = $"--urls \"{url}\"",
+                WorkingDirectory = Path.GetDirectoryName(exePath)!,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false
+            };
+            info.Environment["ASPNETCORE_ENVIRONMENT"] = "Service";
+            return info;
+        }
+
+        // Development fallback: use 'dotnet run' on the service .csproj
+        var projectPath = FindServiceProject();
+        if (projectPath is not null)
+        {
+            var info = new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = $"run --project \"{projectPath}\" --no-launch-profile -- --urls \"{url}\"",
+                WorkingDirectory = Path.GetDirectoryName(projectPath)!,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false
+            };
+            info.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+            info.Environment["BuildInstaller"] = "false";
+            return info;
+        }
+
+        return null;
+    }
+
     private static string? FindServiceExecutable()
     {
         var appDir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
 
+        // 1. Same folder as the desktop app (published/installed layout)
         var sameFolder = Path.Combine(appDir, ServiceExeName);
         if (File.Exists(sameFolder))
         {
             return sameFolder;
         }
 
+        // 2. Parent folder
         var parentFolder = Path.Combine(Directory.GetParent(appDir)?.FullName ?? appDir, ServiceExeName);
         if (File.Exists(parentFolder))
         {
             return parentFolder;
         }
 
+        // 3. Program Files (installed via installer)
         var programFiles = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             "SentinelShield",
@@ -145,6 +177,28 @@ internal sealed class EmbeddedServiceHost : IDisposable
         if (File.Exists(programFiles))
         {
             return programFiles;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Walks up from the desktop exe's directory to find Antivirus.csproj for 'dotnet run' during development.
+    /// </summary>
+    private static string? FindServiceProject()
+    {
+        var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+
+        for (var i = 0; i < 8 && dir is not null; i++)
+        {
+            dir = Directory.GetParent(dir)?.FullName;
+            if (dir is null) break;
+
+            var csproj = Path.Combine(dir, "Antivirus.csproj");
+            if (File.Exists(csproj))
+            {
+                return csproj;
+            }
         }
 
         return null;
@@ -169,7 +223,8 @@ internal sealed class EmbeddedServiceHost : IDisposable
             };
             using var http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(3) };
             using var response = await http.GetAsync($"{baseUrl}/api/service/status", cancellationToken);
-            return response.IsSuccessStatusCode;
+            // Any HTTP response means the service is running — even 401/403 from auth middleware.
+            return true;
         }
         catch
         {

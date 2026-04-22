@@ -1,5 +1,4 @@
 import ModalShell from "./ModalShell";
-import { formatAbsoluteTime } from "../ui/presentation";
 
 export default function SkippedFileModal({ skipPrompt, onDismiss, onRetry, onSkip, retryingSkippedFile }) {
   if (!skipPrompt) {
@@ -7,38 +6,31 @@ export default function SkippedFileModal({ skipPrompt, onDismiss, onRetry, onSki
   }
 
   const isWaiting = skipPrompt.stage === "WaitingForInput";
+  const fileName = skipPrompt.currentPath?.split("\\").pop() ?? skipPrompt.currentPath;
 
   return (
     <ModalShell titleId="skipped-file-title" onDismiss={onDismiss}>
-      <span className="modal-label">{isWaiting ? "Action Required" : "Skipped File"}</span>
+      <span className="modal-label">{isWaiting ? "Action Required" : "File Skipped"}</span>
       <h2 id="skipped-file-title">
         {isWaiting
-          ? `Scan #${skipPrompt.scanJobId} is paused — waiting for your decision`
-          : `The antivirus skipped a file during scan #${skipPrompt.scanJobId}`}
+          ? "The scan needs your help with a file"
+          : "A file was skipped during the scan"}
       </h2>
-      <p>{skipPrompt.detailMessage || "The file could not be scanned safely. Choose Retry to try again or Skip to continue the scan."}</p>
+      <p>{skipPrompt.detailMessage || "This file couldn't be scanned. You can retry or skip it to continue."}</p>
 
       <div className="modal-detail-grid">
         <div>
-          <span>File path</span>
-          <strong className="font-mono">{skipPrompt.currentPath ?? "Unknown path"}</strong>
-        </div>
-        <div>
-          <span>Stage</span>
-          <strong>{skipPrompt.stage}</strong>
-        </div>
-        <div>
-          <span>Recorded timestamp</span>
-          <strong className="font-mono">{formatAbsoluteTime(skipPrompt.recordedAt)}</strong>
+          <span>File</span>
+          <strong title={skipPrompt.currentPath ?? ""}>{fileName ?? "Unknown file"}</strong>
         </div>
       </div>
 
       <div className="modal-actions">
         <button className="button button-secondary" type="button" onClick={onSkip || onDismiss}>
-          Skip
+          Skip this file
         </button>
         <button className="button button-primary" type="button" onClick={onRetry} disabled={retryingSkippedFile}>
-          {retryingSkippedFile ? "Retrying..." : "Retry"}
+          {retryingSkippedFile ? "Retrying..." : "Try again"}
         </button>
       </div>
     </ModalShell>

@@ -1,5 +1,0 @@
-C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\SentinelShieldDesktop.pdb
-C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\Microsoft.Web.WebView2.Core.xml
-C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\Microsoft.Web.WebView2.WinForms.xml
-C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\Microsoft.Web.WebView2.Wpf.xml
-C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\SentinelShieldDesktop.exe

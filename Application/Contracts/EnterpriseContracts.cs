@@ -23,7 +23,9 @@ public interface ITenantRegistry
     Task<SqlConnection> OpenPlatformConnectionAsync(CancellationToken cancellationToken = default);
 }
 
-public interface IControlPlaneRepository
+// ── Segregated control-plane interfaces (ISP) ───────────────────
+
+public interface IDeviceRepository
 {
     Task<DeviceProfile> UpsertDeviceAsync(AgentRegistrationRequest request, CancellationToken cancellationToken = default);
 
@@ -32,7 +34,10 @@ public interface IControlPlaneRepository
     Task<IReadOnlyCollection<DeviceProfile>> GetDevicesAsync(CancellationToken cancellationToken = default);
 
     Task SaveHeartbeatAsync(AgentHeartbeatRequest request, CancellationToken cancellationToken = default);
+}
 
+public interface IPolicyRepository
+{
     Task<DevicePolicyBundle> GetActivePolicyAsync(CancellationToken cancellationToken = default);
 
     Task<SignaturePackManifest> GetCurrentSignaturePackAsync(CancellationToken cancellationToken = default);
@@ -40,7 +45,10 @@ public interface IControlPlaneRepository
     Task<IReadOnlyCollection<SignaturePackManifest>> GetSignaturePacksAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<SignatureRuleDefinition>> GetEnabledSignatureRulesAsync(CancellationToken cancellationToken = default);
+}
 
+public interface IIncidentRepository
+{
     Task<SecurityIncident> CreateIncidentAsync(SecurityIncident incident, CancellationToken cancellationToken = default);
 
     Task<bool> ResolveIncidentAsync(int incidentId, string resolvedBy, CancellationToken cancellationToken = default);
@@ -48,11 +56,17 @@ public interface IControlPlaneRepository
     Task<IReadOnlyCollection<SecurityIncident>> GetIncidentsAsync(CancellationToken cancellationToken = default);
 
     Task SaveRemediationActionAsync(RemediationActionRecord action, CancellationToken cancellationToken = default);
+}
 
+public interface IComplianceRepository
+{
     Task<IReadOnlyCollection<ComplianceReport>> GetComplianceReportsAsync(CancellationToken cancellationToken = default);
 
     Task<ComplianceReport> SaveComplianceReportAsync(ComplianceReport report, CancellationToken cancellationToken = default);
+}
 
+public interface IGovernanceRepository
+{
     Task<FalsePositiveReview> CreateFalsePositiveReviewAsync(FalsePositiveReview review, CancellationToken cancellationToken = default);
 
     Task<FalsePositiveReview?> DecideFalsePositiveReviewAsync(
@@ -67,10 +81,15 @@ public interface IControlPlaneRepository
     Task<SandboxSubmission> CreateSandboxSubmissionAsync(SandboxSubmission submission, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<SandboxSubmission>> GetSandboxSubmissionsAsync(CancellationToken cancellationToken = default);
+}
 
-    Task SaveLegacyParitySnapshotAsync(LegacyParitySnapshot snapshot, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyCollection<LegacyParitySnapshot>> GetLegacyParitySnapshotsAsync(CancellationToken cancellationToken = default);
+/// <summary>
+/// Composite interface preserved for backward compatibility during migration.
+/// New consumers should depend on the specific segregated interface they need.
+/// </summary>
+public interface IControlPlaneRepository : IDeviceRepository, IPolicyRepository, IIncidentRepository,
+    IComplianceRepository, IGovernanceRepository
+{
 }
 
 public interface IAgentControlPlaneService
@@ -98,11 +117,6 @@ public interface IStaticFileScanner
 public interface IBehaviorMonitor
 {
     Task<IReadOnlyCollection<DetectionEventRecord>> AnalyzeAsync(FileWatchNotification notification, FileInfo file, CancellationToken cancellationToken = default);
-}
-
-public interface IReputationClient
-{
-    Task<DetectionEventRecord?> EvaluateAsync(FileInfo file, string hashSha256, CancellationToken cancellationToken = default);
 }
 
 public interface IRemediationCoordinator

@@ -9,7 +9,8 @@ namespace Antivirus.Application.Services;
 public sealed class SentinelShieldControlService : ISentinelShieldControlApi
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ISecurityRepository _repository;
+    private readonly IScanRepository _scanRepository;
+    private readonly IThreatRepository _threatRepository;
     private readonly IProprietaryProtectionEngine _engine;
     private readonly AntivirusPlatformOptions _options;
     private readonly ILogger<SentinelShieldControlService> _logger;
@@ -18,13 +19,15 @@ public sealed class SentinelShieldControlService : ISentinelShieldControlApi
 
     public SentinelShieldControlService(
         IServiceScopeFactory scopeFactory,
-        ISecurityRepository repository,
+        IScanRepository scanRepository,
+        IThreatRepository threatRepository,
         IProprietaryProtectionEngine engine,
         IOptions<AntivirusPlatformOptions> options,
         ILogger<SentinelShieldControlService> logger)
     {
         _scopeFactory = scopeFactory;
-        _repository = repository;
+        _scanRepository = scanRepository;
+        _threatRepository = threatRepository;
         _engine = engine;
         _options = options.Value;
         _logger = logger;
@@ -36,8 +39,8 @@ public sealed class SentinelShieldControlService : ISentinelShieldControlApi
     public async Task<ServiceStatusDto> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         var health = await _engine.CaptureAgentHealthAsync(cancellationToken);
-        var threats = await _repository.GetThreatsAsync(activeOnly: true, cancellationToken);
-        var recentScans = await _repository.GetRecentScansAsync(1, cancellationToken);
+        var threats = await _threatRepository.GetThreatsAsync(activeOnly: true, cancellationToken);
+        var recentScans = await _scanRepository.GetRecentScansAsync(1, cancellationToken);
         var lastScan = recentScans.FirstOrDefault();
 
         return new ServiceStatusDto

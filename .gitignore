@@ -1,5 +1,36 @@
 # Build artifacts
+**/bin/
+**/obj/
+**/out/
 artifacts/
+**/artifacts/
 
-# Publish output
-bin/publish/
+# Generated frontend
+wwwroot/assets/
+wwwroot/index.html
+ClientApp/node_modules/
+ClientApp/dist/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+UpgradeLog.htm
+
+# Runtime data
+Data/Quarantine/
+Data/Logs/
+Logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# NuGet
+*.nupkg
+packages/
+
+# Native engine build
+NativeEngine/build/
+NativeEngine/out/

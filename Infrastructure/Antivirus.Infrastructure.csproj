@@ -13,12 +13,14 @@
     <ProjectReference Include="..\Application\Antivirus.Application.csproj" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="GlobalUsings.cs" />
     <Compile Include="Logging\**\*.cs" />
     <Compile Include="Persistence\**\*.cs" />
+    <Compile Include="Platform\**\*.cs" />
     <Compile Include="Runtime\**\*.cs" />
     <Compile Include="Security\**\*.cs" />
   </ItemGroup>

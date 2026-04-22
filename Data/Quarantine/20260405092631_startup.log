@@ -1,4 +1,0 @@
-[2026-04-05 14:56:30.861] [async_logger] [info] Starting Windows 365...
-[2026-04-05 14:56:31.057] [async_logger] [info] Logging continuing in "WindowsApp-BackgroundTasks.log".
-[2026-04-05 14:56:31.059] [async_logger] [info] Creating task server for args: -BackgroundTask 2F7AE860-CD2B-45D2-A656-D4132AE9D3FB -Embedding
-[2026-04-05 14:56:31.059] [async_logger] [info] SessionID: 87057aa6-1d42-4f83-b6dd-e9066c5c5b96

@@ -1,10 +1,12 @@
 using Antivirus.Application.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/engine")]
+[Authorize]
 public sealed class EngineController : ControllerBase
 {
     private readonly IEngineDaemonClient _engineDaemonClient;

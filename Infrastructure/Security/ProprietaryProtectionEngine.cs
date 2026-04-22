@@ -12,18 +12,21 @@ public sealed class ProprietaryProtectionEngine : IProprietaryProtectionEngine
     private readonly ISignaturePackProvider _signaturePackProvider;
     private readonly ISecurityRepository _securityRepository;
     private readonly AntivirusPlatformOptions _options;
+    private readonly IVerdictScoringEngine _scoringEngine;
     private readonly ConcurrentDictionary<int, ProgressWriteState> _progressWriteStates = new();
 
     public ProprietaryProtectionEngine(
         IEngineDaemonClient engineDaemonClient,
         ISignaturePackProvider signaturePackProvider,
         ISecurityRepository securityRepository,
-        IOptions<AntivirusPlatformOptions> options)
+        IOptions<AntivirusPlatformOptions> options,
+        IVerdictScoringEngine scoringEngine)
     {
         _engineDaemonClient = engineDaemonClient;
         _signaturePackProvider = signaturePackProvider;
         _securityRepository = securityRepository;
         _options = options.Value;
+        _scoringEngine = scoringEngine;
     }
 
     public async Task<PipelineScanResult> ScanFileAsync(
@@ -94,22 +97,27 @@ public sealed class ProprietaryProtectionEngine : IProprietaryProtectionEngine
             Details = detection.Summary
         }).ToArray();
 
+        var detectionRecords = detections.Select(detection => new DetectionEventRecord
+        {
+            RuleId = detection.RuleId,
+            EngineName = detection.EngineName,
+            Source = detection.Source,
+            Severity = detection.Severity,
+            Confidence = detection.Confidence,
+            Summary = detection.Summary
+        }).ToArray();
+
+        var verdict = _scoringEngine.ComputeVerdict(detectionRecords);
+
         return new PipelineScanResult
         {
-            Verdict = statusSnapshot.FindingsCount > 0 ? PipelineVerdict.Malicious : PipelineVerdict.Clean,
+            Verdict = verdict.Verdict,
+            Score = verdict.FinalScore,
             EngineResults = engineResults,
             Threats = threats,
             FilesScanned = statusSnapshot.FilesScanned,
             TotalFiles = statusSnapshot.TotalFiles ?? statusSnapshot.FilesScanned,
-            DetectionEvents = detections.Select(detection => new DetectionEventRecord
-            {
-                RuleId = detection.RuleId,
-                EngineName = detection.EngineName,
-                Source = detection.Source,
-                Severity = detection.Severity,
-                Confidence = detection.Confidence,
-                Summary = detection.Summary
-            }).ToArray(),
+            DetectionEvents = detectionRecords,
             Quarantined = threats.Any(threat => threat.IsQuarantined),
             QuarantinePath = threats.LastOrDefault(threat => threat.IsQuarantined)?.QuarantinePath
         };

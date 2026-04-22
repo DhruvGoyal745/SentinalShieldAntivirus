@@ -3,7 +3,7 @@ import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
 import { complianceTone, formatPercent } from "../ui/presentation";
 
-export default function FleetPage({ controlPlane, health, loading, error, onRefresh, lastUpdated }) {
+export default function FleetPage({ controlPlane, health, protectedFolders = [], loading, error, onRefresh, lastUpdated }) {
   const fleet = controlPlane?.fleet;
   const devices = controlPlane?.devices ?? [];
   const packs = controlPlane?.signaturePacks ?? [];
@@ -12,10 +12,9 @@ export default function FleetPage({ controlPlane, health, loading, error, onRefr
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Device Posture"
-        title="Fleet Posture"
+        eyebrow="Overview"
+        title="Devices"
         badge={`${devices.length} Devices`}
-        description="Monitor endpoint coverage, compliance, and signature deployment posture across the tenant."
         lastUpdated={lastUpdated}
       />
 
@@ -38,13 +37,17 @@ export default function FleetPage({ controlPlane, health, loading, error, onRefr
           <strong className={`text-${complianceTone(fleet?.policyCompliancePercent)}`}>{formatPercent(fleet?.policyCompliancePercent)}</strong>
         </article>
         <article className="metric-card">
-          <span>Self-Protection</span>
-          <strong>{health?.engineServiceEnabled ? "Enabled" : "Disabled"}</strong>
-          <small>{formatPercent(fleet?.selfProtectionCoveragePercent)} coverage</small>
+          <span>Tamper Protection</span>
+          <strong>{health?.engineServiceEnabled ? "On" : "Off"}</strong>
+        </article>
+        <article className="metric-card">
+          <span>Ransomware Shield</span>
+          <strong className="text-healthy">{protectedFolders.length} folders</strong>
+          <small>Protected</small>
         </article>
       </section>
 
-      <section className="fleet-layout">
+      <section>
         <div className="panel">
           <div className="section-head">
             <h2>Device Health</h2>
@@ -52,31 +55,31 @@ export default function FleetPage({ controlPlane, health, loading, error, onRefr
           {loading ? (
             <TableSkeleton rows={7} columns={7} />
           ) : devices.length === 0 ? (
-            <EmptyState title="No devices" description="No enrolled devices are currently registered for this tenant." />
+            <EmptyState title="No devices" description="No devices are connected to Sentinel Shield yet." />
           ) : (
             <div className="table-shell">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Device ID</th>
-                    <th>Antivirus Enabled</th>
+                    <th>Device</th>
+                    <th>Antivirus</th>
                     <th>Real-Time Protection</th>
-                    <th>Signature Version</th>
-                    <th>Last Updated</th>
-                    <th>Quick Scan Age</th>
-                    <th>Full Scan Age</th>
+                    <th>Last Seen</th>
+                    <th>Quick Scan</th>
+                    <th>Full Scan</th>
+                    <th>Ransomware Shield</th>
                   </tr>
                 </thead>
                 <tbody>
                   {devices.map((device) => (
                     <tr key={device.deviceId}>
-                      <td className="font-mono">{device.deviceId}</td>
+                      <td>{device.deviceId?.split("-agent")[0] ?? device.deviceId}</td>
                       <td>{health?.antivirusEnabled ? "✓" : "✗"}</td>
                       <td>{health?.realTimeProtectionEnabled ? "✓" : "✗"}</td>
-                      <td className="font-mono">{device.signaturePackVersion}</td>
                       <td><Timestamp value={device.lastSeenAt ?? device.createdAt} /></td>
-                      <td className={(health?.quickScanAgeDays ?? 0) > 7 ? "text-critical" : ""}>{health?.quickScanAgeDays ?? "n/a"} days</td>
-                      <td className={(health?.fullScanAgeDays ?? 0) > 30 ? "text-critical" : ""}>{health?.fullScanAgeDays ?? "n/a"} days</td>
+                      <td className={(health?.quickScanAgeDays ?? 0) > 7 ? "text-critical" : ""}>{health?.quickScanAgeDays != null ? `${health.quickScanAgeDays} days ago` : "—"}</td>
+                      <td className={(health?.fullScanAgeDays ?? 0) > 30 ? "text-critical" : ""}>{health?.fullScanAgeDays != null ? `${health.fullScanAgeDays} days ago` : "—"}</td>
+                      <td className="text-healthy">{protectedFolders.length > 0 ? `✓ (${protectedFolders.length})` : "✗"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -84,28 +87,6 @@ export default function FleetPage({ controlPlane, health, loading, error, onRefr
             </div>
           )}
         </div>
-
-        <aside className="panel deployment-panel">
-          <div className="section-head">
-            <h2>Signature Pack Deployment</h2>
-          </div>
-          <div className="deployment-detail">
-            <span>Current version</span>
-            <strong className="font-mono">{currentPack?.version ?? fleet?.currentPackVersion ?? "Unavailable"}</strong>
-          </div>
-          <div className="deployment-detail">
-            <span>Channel</span>
-            <strong><span className="pill pill-muted">{currentPack?.channel ?? "Stable"}</span></strong>
-          </div>
-          <div className="stepper">
-            <div className="stepper-line" />
-            <div className="stepper-node active">Canary</div>
-            <div className="stepper-node active">GA</div>
-          </div>
-          <p className="deployment-note">
-            {fleet?.legacyShadowModeEnabled ? "Legacy shadow mode remains enabled during rollout validation." : "Legacy shadow mode is disabled for this tenant."}
-          </p>
-        </aside>
       </section>
     </div>
   );

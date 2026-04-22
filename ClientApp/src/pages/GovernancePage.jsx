@@ -5,12 +5,13 @@ import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
 import { useDashboardStore } from "../state/useDashboardStore";
 import { governanceTabs } from "../ui/constants";
-import { getGovernanceTabFromHash, formatPercent, reviewStatusTone, sandboxVerdictTone } from "../ui/presentation";
+import { getGovernanceTabFromHash, formatPercent, reviewStatusTone, sandboxVerdictTone, ransomwareActionTone, formatEntropy } from "../ui/presentation";
 
 export default function GovernancePage({
   paritySnapshots,
   sandboxSubmissions,
   reviews,
+  ransomwareSignals = [],
   scans,
   onDecideReview,
   pendingReviewId,
@@ -51,13 +52,13 @@ export default function GovernancePage({
   const showParity = activeTab === "legacy-parity";
   const showSandbox = activeTab === "sandbox-queue";
   const showReviews = activeTab === "false-positive-reviews";
+  const showRansomwareAudit = activeTab === "ransomware-audit";
 
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Compliance & Audit"
-        title="Governance & Compliance"
-        description="Track parity, sandbox review, and analyst-driven false-positive decisions in one operational workspace."
+        eyebrow="Audit"
+        title="Reviews"
         lastUpdated={lastUpdated}
         actions={<ScanSelector scans={scans} label="Scan context" id="governance-scan-selector" />}
       />
@@ -83,15 +84,15 @@ export default function GovernancePage({
         <TableSkeleton rows={6} columns={5} />
       ) : showParity ? (
         filteredParitySnapshots.length === 0 ? (
-          <EmptyState title="No parity snapshots" description="No legacy parity comparisons matched the selected scan context." />
+          <EmptyState title="No comparisons yet" description="Engine comparison data will appear after scans complete." />
         ) : (
           <div className="table-shell">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Engine Name</th>
+                  <th>Malware Family</th>
                   <th>Match Rate</th>
-                  <th>Divergence Count</th>
+                  <th>Mismatches</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,14 +112,13 @@ export default function GovernancePage({
         )
       ) : showSandbox ? (
         filteredSandboxSubmissions.length === 0 ? (
-          <EmptyState title="No sandbox submissions" description="No sandbox submissions matched the selected scan context." />
+          <EmptyState title="No sandbox results" description="No files have been sent for sandbox analysis yet." />
         ) : (
           <div className="table-shell">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Correlation ID</th>
-                  <th>File Path</th>
+                  <th>File</th>
                   <th>Verdict</th>
                   <th>Behavior Summary</th>
                   <th>Submitted</th>
@@ -127,8 +127,7 @@ export default function GovernancePage({
               <tbody>
                 {filteredSandboxSubmissions.map((submission) => (
                   <tr key={submission.id}>
-                    <td className="font-mono">{submission.correlationId}</td>
-                    <td className="path-cell font-mono" title={submission.fileName}>{submission.fileName}</td>
+                    <td title={submission.fileName}>{submission.fileName?.split("\\").pop() ?? submission.fileName}</td>
                     <td><span className={`pill pill-${sandboxVerdictTone(submission.verdict)}`}>{submission.verdict}</span></td>
                     <td>{submission.behaviorSummary}</td>
                     <td><Timestamp value={submission.updatedAt ?? submission.createdAt} /></td>
@@ -139,15 +138,14 @@ export default function GovernancePage({
           </div>
         )
       ) : filteredReviews.length === 0 ? (
-        <EmptyState title="No review submissions" description="No false positive reviews matched the selected scan context." />
+        <EmptyState title="No reviews" description="No false positive reviews have been submitted yet." />
       ) : (
         <div className="table-shell">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Submission ID</th>
                 <th>Status</th>
-                <th>Reviewer</th>
+                <th>Submitted by</th>
                 <th>Notes</th>
                 <th>Actions</th>
               </tr>
@@ -155,7 +153,6 @@ export default function GovernancePage({
             <tbody>
               {filteredReviews.map((review) => (
                 <tr key={review.id}>
-                  <td className="font-mono">{review.id}</td>
                   <td><span className={`pill pill-${reviewStatusTone(review.status)}`}>{review.status}</span></td>
                   <td>{review.analyst}</td>
                   <td>{review.notes}</td>
@@ -183,6 +180,39 @@ export default function GovernancePage({
           </table>
         </div>
       )}
+
+      {showRansomwareAudit ? (
+        ransomwareSignals.length === 0 ? (
+          <EmptyState title="No ransomware signals" description="No ransomware activity has been detected." />
+        ) : (
+          <div className="table-shell">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Files Affected</th>
+                  <th>Max Entropy</th>
+                  <th>Ext Changes</th>
+                  <th>Action</th>
+                  <th>Detected</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ransomwareSignals.map((signal, index) => (
+                  <tr key={index}>
+                    <td title={signal.processPath}>{signal.processPath?.split("\\").pop() ?? signal.processPath}</td>
+                    <td>{signal.affectedFileCount}</td>
+                    <td className="entropy-indicator">{formatEntropy(signal.maxEntropyScore)}</td>
+                    <td>{signal.extensionChangeCount}</td>
+                    <td><span className={`pill pill-${ransomwareActionTone(signal.recommendedAction)}`}>{signal.recommendedAction}</span></td>
+                    <td><Timestamp value={signal.detectedAt} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      ) : null}
     </div>
   );
 }

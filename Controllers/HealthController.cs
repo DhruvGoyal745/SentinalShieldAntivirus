@@ -1,4 +1,5 @@
 using Antivirus.Application.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
@@ -14,6 +15,7 @@ public sealed class HealthController : ControllerBase
         _securityOrchestrator = securityOrchestrator;
     }
 
+    [AllowAnonymous]
     [HttpGet("status")]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {

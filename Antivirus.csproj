@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -11,13 +10,11 @@
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="Application\Antivirus.Application.csproj" />
     <ProjectReference Include="Domain\Antivirus.Domain.csproj" />
     <ProjectReference Include="Infrastructure\Antivirus.Infrastructure.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="Application\**\*.cs" />
     <Compile Remove="Configuration\AntivirusPlatformOptions.cs" />
@@ -27,16 +24,16 @@
     <Compile Remove="SentinelShield.Desktop\**" />
     <Compile Remove="SentinelShield.Tray\**" />
     <Compile Remove="SentinelShield.Installer\**" />
+    <Compile Remove="Tests\**" />
     <Content Remove="Data\Quarantine\**\*" />
     <Content Remove="SentinelShield.Desktop\**" />
     <Content Remove="SentinelShield.Tray\**" />
     <Content Remove="SentinelShield.Installer\**" />
+    <Content Remove="Tests\**" />
     <None Include="Data\Quarantine\**\*" Exclude="Data\Quarantine\**\*.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="Database\**\*.sql" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="NativeEngine\artifacts\**\*" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="artifacts\**" />
     <None Remove="artifacts\**" />
     <Content Remove="Application\bin\**;Application\obj\**;Application\artifacts\**" />
@@ -47,40 +44,70 @@
     <None Remove="Domain\bin\**;Domain\obj\**;Domain\artifacts\**" />
     <None Remove="Infrastructure\bin\**;Infrastructure\obj\**;Infrastructure\artifacts\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <Compile Include="Domain\ValueObjects.cs" />
-    <Compile Include="Infrastructure\Security\ScanFileDecisionRegistry.cs" />
+    <Compile Include="Infrastructure\Persistence\SecurityMappers.cs" />
+    <Compile Include="Infrastructure\Persistence\SqlHelper.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="SentinelShield.Installer\SentinelShield.Installer.wixproj" />
     <None Include="SentinelShield.Desktop\SentinelShield.Desktop.csproj" />
     <None Include="SentinelShield.Tray\SentinelShield.Tray.csproj" />
   </ItemGroup>
-
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0-preview.4.25258.110" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
   </ItemGroup>
-
   <!-- Build the React frontend before build/publish -->
   <Target Name="BuildClientApp" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html')">
     <Exec Command="npm install" WorkingDirectory="ClientApp" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
   </Target>
-
   <Target Name="PublishClientApp" BeforeTargets="Publish">
     <Exec Command="npm install" WorkingDirectory="ClientApp" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
   </Target>
-
-  <!-- Auto-publish the exe after every successful build -->
-  <Target Name="AutoPublishExe" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+  <!-- ============================================================ -->
+  <!-- Auto-generate installer after every successful build         -->
+  <!-- Set /p:BuildInstaller=false to skip installer generation     -->
+  <!-- ============================================================ -->
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..'))</RepoRoot>
+    <ArtifactsRoot>$(RepoRoot)\artifacts</ArtifactsRoot>
+    <ServicePublishDir>$(ArtifactsRoot)\publish\service</ServicePublishDir>
+    <DesktopPublishDir>$(ArtifactsRoot)\publish\desktop</DesktopPublishDir>
+    <TrayPublishDir>$(ArtifactsRoot)\publish\tray</TrayPublishDir>
+    <InstallerOutputDir>$(ArtifactsRoot)\installer</InstallerOutputDir>
+    <DesktopProject>$(MSBuildProjectDirectory)\SentinelShield.Desktop\SentinelShield.Desktop.csproj</DesktopProject>
+    <TrayProject>$(MSBuildProjectDirectory)\SentinelShield.Tray\SentinelShield.Tray.csproj</TrayProject>
+    <InnoSetupScript>$(MSBuildProjectDirectory)\SentinelShield.Installer\SentinelShieldSetup.iss</InnoSetupScript>
+    <BuildInstaller Condition="'$(BuildInstaller)' == ''">true</BuildInstaller>
+  </PropertyGroup>
+  <Target Name="BuildFullInstaller" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true' AND '$(BuildInstaller)' != 'false'">
+    <!-- Step 1: Build the React frontend -->
+    <Message Importance="high" Text="[Installer] Building React frontend..." />
+    <Exec Command="npm install --silent" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+    <!-- Step 2: Publish service -->
+    <Message Importance="high" Text="[Installer] Publishing service..." />
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c $(Configuration) -r win-x64 --self-contained -o &quot;$(ServicePublishDir)&quot; /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:EnableCompressionInSingleFile=true /p:BuildInstaller=false" />
+    <!-- Step 3: Publish desktop shell -->
+    <Message Importance="high" Text="[Installer] Publishing desktop shell..." />
+    <Exec Command="dotnet publish &quot;$(DesktopProject)&quot; -c $(Configuration) -r win-x64 --self-contained -o &quot;$(DesktopPublishDir)&quot; /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:EnableCompressionInSingleFile=true" />
+    <!-- Step 4: Publish tray app -->
+    <Message Importance="high" Text="[Installer] Publishing tray app..." />
+    <Exec Command="dotnet publish &quot;$(TrayProject)&quot; -c $(Configuration) -r win-x64 --self-contained -o &quot;$(TrayPublishDir)&quot; /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true" />
+    <!-- Step 5: Find Inno Setup and compile the installer -->
     <PropertyGroup>
-      <PublishOutputDir>$(MSBuildProjectDirectory)\bin\publish\win-x64</PublishOutputDir>
+      <InnoSetupExe Condition="Exists('$(ProgramFiles)\Inno Setup 6\ISCC.exe')">"$(ProgramFiles)\Inno Setup 6\ISCC.exe"</InnoSetupExe>
+      <InnoSetupExe Condition="'$(InnoSetupExe)' == '' AND Exists('$(MSBuildProgramFiles32)\Inno Setup 6\ISCC.exe')">"$(MSBuildProgramFiles32)\Inno Setup 6\ISCC.exe"</InnoSetupExe>
+      <InnoSetupExe Condition="'$(InnoSetupExe)' == '' AND Exists('$(LOCALAPPDATA)\Programs\Inno Setup 6\ISCC.exe')">"$(LOCALAPPDATA)\Programs\Inno Setup 6\ISCC.exe"</InnoSetupExe>
     </PropertyGroup>
-    <Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c $(Configuration) -r win-x64 --self-contained --no-build -o &quot;$(PublishOutputDir)&quot;" />
-    <Message Importance="high" Text="Published exe to $(PublishOutputDir)\SentinelShieldAntivirus.exe" />
+    <Error Condition="'$(InnoSetupExe)' == ''" Text="Inno Setup 6 not found. Install from https://jrsoftware.org/isdl.php or build with /p:BuildInstaller=false to skip." />
+    <Message Importance="high" Text="[Installer] Compiling installer with Inno Setup..." />
+    <MakeDir Directories="$(InstallerOutputDir)" />
+    <Exec Command="$(InnoSetupExe) &quot;$(InnoSetupScript)&quot;" />
+    <Message Importance="high" Text="====================================================" />
+    <Message Importance="high" Text="  INSTALLER READY: $(InstallerOutputDir)\SentinelShieldSetup.exe" />
+    <Message Importance="high" Text="====================================================" />
   </Target>
-
 </Project>

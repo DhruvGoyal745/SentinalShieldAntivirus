@@ -135,8 +135,6 @@ public sealed class FleetPostureSummary
 
     public decimal SelfProtectionCoveragePercent { get; init; }
 
-    public bool LegacyShadowModeEnabled { get; init; }
-
     public string CurrentPackVersion { get; init; } = string.Empty;
 }
 
@@ -179,8 +177,6 @@ public sealed class DeviceProfile
 
     public bool BaselineScanCompleted { get; init; }
 
-    public bool LegacyShadowModeEnabled { get; init; }
-
     public AgentSelfProtectionStatus SelfProtection { get; init; } = new();
 
     public IReadOnlyCollection<string> Capabilities { get; init; } = Array.Empty<string>();
@@ -206,7 +202,15 @@ public sealed class DevicePolicyBundle
 
     public bool AllowSampleUpload { get; init; }
 
-    public bool EnableLegacyShadowMode { get; init; } = true;
+    public int QuarantineRetentionDays { get; init; } = 30;
+
+    public bool RestoreApprovalRequired { get; init; }
+
+    public bool RansomwareShieldEnabled { get; init; } = true;
+
+    public string[] ProtectedFolders { get; init; } = Array.Empty<string>();
+
+    public int RansomwareFileWriteThresholdPerMinute { get; init; } = 50;
 
     public string PolicyJson { get; init; } = "{}";
 
@@ -325,31 +329,6 @@ public sealed class SandboxSubmission
     public DateTimeOffset? UpdatedAt { get; init; }
 }
 
-public sealed class LegacyParitySnapshot
-{
-    public int Id { get; init; }
-
-    public int? ScanJobId { get; init; }
-
-    public string DeviceId { get; init; } = string.Empty;
-
-    public OperatingSystemPlatform OperatingSystem { get; init; }
-
-    public string MalwareFamily { get; init; } = string.Empty;
-
-    public decimal DetectionRecallPercent { get; init; }
-
-    public decimal FalsePositiveRatePercent { get; init; }
-
-    public decimal VerdictLatencyMilliseconds { get; init; }
-
-    public decimal RemediationSuccessPercent { get; init; }
-
-    public decimal CrashTamperRatePercent { get; init; }
-
-    public DateTimeOffset CreatedAt { get; init; }
-}
-
 public sealed class SecurityIncident
 {
     public int Id { get; init; }
@@ -444,8 +423,6 @@ public sealed class AgentHeartbeatRequest
 
     public bool BaselineScanCompleted { get; init; }
 
-    public bool LegacyShadowModeEnabled { get; init; }
-
     public AgentSelfProtectionStatus SelfProtection { get; init; } = new();
 }
 
@@ -490,6 +467,8 @@ public sealed class PipelineScanResult
 {
     public PipelineVerdict Verdict { get; init; }
 
+    public decimal Score { get; init; }
+
     public IReadOnlyCollection<FileScannerEngineResult> EngineResults { get; init; } = Array.Empty<FileScannerEngineResult>();
 
     public IReadOnlyCollection<ThreatDetection> Threats { get; init; } = Array.Empty<ThreatDetection>();
@@ -520,8 +499,6 @@ public sealed class EnterpriseDashboardSummary
     public IReadOnlyCollection<ComplianceReport> ComplianceReports { get; init; } = Array.Empty<ComplianceReport>();
 
     public IReadOnlyCollection<SignaturePackManifest> SignaturePacks { get; init; } = Array.Empty<SignaturePackManifest>();
-
-    public IReadOnlyCollection<LegacyParitySnapshot> ParitySnapshots { get; init; } = Array.Empty<LegacyParitySnapshot>();
 
     public IReadOnlyCollection<SandboxSubmission> SandboxSubmissions { get; init; } = Array.Empty<SandboxSubmission>();
 

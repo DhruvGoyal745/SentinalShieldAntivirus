@@ -1,4 +1,5 @@
 using Antivirus.Application.Contracts;
+using Antivirus.Infrastructure.Platform;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
@@ -8,10 +9,29 @@ namespace Antivirus.Controllers;
 public sealed class ServiceControlController : ControllerBase
 {
     private readonly ISentinelShieldControlApi _controlApi;
+    private readonly ILocalTrustBoundary _trustBoundary;
 
-    public ServiceControlController(ISentinelShieldControlApi controlApi)
+    public ServiceControlController(ISentinelShieldControlApi controlApi, ILocalTrustBoundary trustBoundary)
     {
         _controlApi = controlApi;
+        _trustBoundary = trustBoundary;
+    }
+
+    /// <summary>
+    /// Returns a session token that local callers (Tray, Desktop) must include in the
+    /// X-Local-Token header for all subsequent /api/service/* calls.
+    /// This endpoint itself is only accessible from localhost.
+    /// </summary>
+    [HttpPost("local-token")]
+    public IActionResult GetLocalToken()
+    {
+        var remoteIp = HttpContext.Connection.RemoteIpAddress;
+        if (remoteIp is null || !System.Net.IPAddress.IsLoopback(remoteIp))
+        {
+            return Forbid();
+        }
+
+        return Ok(new { token = _trustBoundary.GenerateLocalToken() });
     }
 
     [HttpGet("status")]

@@ -11,6 +11,9 @@ import TelemetryPage from "./pages/TelemetryPage";
 import FleetPage from "./pages/FleetPage";
 import GovernancePage from "./pages/GovernancePage";
 import ReportsPage from "./pages/ReportsPage";
+import QuarantinePage from "./pages/QuarantinePage";
+import IntelPage from "./pages/IntelPage";
+import SettingsPage from "./pages/SettingsPage";
 import { buildAgentPayload, buildHeartbeatPayload } from "./ui/agentPayloads";
 import { liveScanStatuses, pageDefinitions, scanPipelineSteps, scanStageOrder } from "./ui/constants";
 import {
@@ -32,11 +35,16 @@ export default function App() {
   const [fileEvents, setFileEvents] = useState([]);
   const [health, setHealth] = useState(null);
   const [engineStatus, setEngineStatus] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState({ uniqueFilesChecked: 0, uniqueThreatsFound: 0 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [stoppingScanId, setStoppingScanId] = useState(null);
   const [pendingThreatActionId, setPendingThreatActionId] = useState(null);
   const [pendingReviewId, setPendingReviewId] = useState(null);
+  const [quarantineItems, setQuarantineItems] = useState([]);
+  const [pendingQuarantineActionId, setPendingQuarantineActionId] = useState(null);
+  const [ransomwareSignals, setRansomwareSignals] = useState([]);
+  const [protectedFolders, setProtectedFolders] = useState([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [analysisClock, setAnalysisClock] = useState(() => Date.now());
@@ -91,7 +99,11 @@ export default function App() {
         scanExportsResult,
         fileEventsResult,
         healthResult,
-        engineStatusResult
+        engineStatusResult,
+        dashboardResult,
+        quarantineResult,
+        ransomwareSignalsResult,
+        protectedFoldersResult
       ] = await Promise.all([
         api.getControlPlaneSummary(),
         api.getTenants(),
@@ -100,7 +112,11 @@ export default function App() {
         api.getScanExports(),
         api.getFileEvents(),
         api.getHealth(),
-        api.getEngineStatus().catch(() => null)
+        api.getEngineStatus().catch(() => null),
+        api.getDashboard().catch(() => null),
+        api.getQuarantineItems().catch(() => []),
+        api.getRansomwareSignals().catch(() => []),
+        api.getProtectedFolders().catch(() => [])
       ]);
 
       const timestamp = new Date().toISOString();
@@ -114,6 +130,15 @@ export default function App() {
         setFileEvents(fileEventsResult);
         setHealth(healthResult);
         setEngineStatus(engineStatusResult);
+        setQuarantineItems(quarantineResult);
+        setRansomwareSignals(ransomwareSignalsResult);
+        setProtectedFolders(protectedFoldersResult);
+        if (dashboardResult) {
+          setDashboardStats({
+            uniqueFilesChecked: dashboardResult.uniqueFilesChecked ?? 0,
+            uniqueThreatsFound: dashboardResult.uniqueThreatsFound ?? 0
+          });
+        }
         if (selectedScanId && !scansResult.some((scan) => scan.id === selectedScanId)) {
           setSelectedScanId(null);
         }
@@ -223,6 +248,10 @@ export default function App() {
   }, [selectedTenant, activeScanBase?.id, hasLiveScan, currentPage]);
 
   useEffect(() => {
+    if (!hasLiveScan) {
+      return;
+    }
+
     const nextSkippedEvent = [...scanProgressEvents]
       .reverse()
       .find((progressEvent) => progressEvent.isSkipped && !handledSkippedKeysRef.current.includes(getSkippedEventKey(progressEvent)));
@@ -230,7 +259,13 @@ export default function App() {
     if (nextSkippedEvent) {
       setSkipPrompt(nextSkippedEvent);
     }
-  }, [scanProgressEvents, handledSkippedEventKeys]);
+  }, [scanProgressEvents, handledSkippedEventKeys, hasLiveScan]);
+
+  useEffect(() => {
+    if (!hasLiveScan && skipPrompt) {
+      setSkipPrompt(null);
+    }
+  }, [hasLiveScan, skipPrompt]);
 
   useEffect(() => {
     if (!activeScan || activeScan.status !== "Completed") {
@@ -248,9 +283,13 @@ export default function App() {
   }, [activeScan, threatsForActiveScan, handledAttentionScanIds, dismissedAttentionScanId]);
 
   useEffect(() => {
+    if (currentPage !== "home" && !hasLiveScan) {
+      return undefined;
+    }
+
     const intervalId = window.setInterval(() => {
       loadData({ syncLifecycle: false, preserveMessage: true });
-    }, hasLiveScan || currentPage === "telemetry" ? 5000 : 15000);
+    }, hasLiveScan ? 5000 : 15000);
 
     return () => window.clearInterval(intervalId);
   }, [selectedTenant, hasLiveScan, currentPage]);
@@ -503,6 +542,48 @@ export default function App() {
     window.URL.revokeObjectURL(url);
   }
 
+  async function handleRestoreQuarantineItem(id) {
+    setPendingQuarantineActionId(id);
+    setError("");
+    setMessage("");
+    try {
+      const result = await api.restoreQuarantineItem(id);
+      setMessage(result.message || "File restored from quarantine.");
+      await loadData({ syncLifecycle: false, preserveMessage: true });
+    } catch (restoreError) {
+      setError(restoreError.message);
+    } finally {
+      setPendingQuarantineActionId(null);
+    }
+  }
+
+  async function handlePurgeQuarantineItem(id) {
+    setPendingQuarantineActionId(id);
+    setError("");
+    setMessage("");
+    try {
+      await api.purgeQuarantineItem(id);
+      setMessage("Quarantine item permanently purged.");
+      await loadData({ syncLifecycle: false, preserveMessage: true });
+    } catch (purgeError) {
+      setError(purgeError.message);
+    } finally {
+      setPendingQuarantineActionId(null);
+    }
+  }
+
+  async function handlePurgeExpiredQuarantine() {
+    setError("");
+    setMessage("");
+    try {
+      const result = await api.purgeExpiredQuarantine();
+      setMessage(`Purged ${result.purgedCount} expired quarantine items.`);
+      await loadData({ syncLifecycle: false, preserveMessage: true });
+    } catch (purgeError) {
+      setError(purgeError.message);
+    }
+  }
+
   const incidents = controlPlane?.incidents ?? [];
   const paritySnapshots = controlPlane?.paritySnapshots ?? [];
   const sandboxSubmissions = controlPlane?.sandboxSubmissions ?? [];
@@ -606,6 +687,9 @@ export default function App() {
               health={health}
               fleet={fleet}
               engineStatus={engineStatus}
+              dashboardStats={dashboardStats}
+              quarantineItems={quarantineItems}
+              ransomwareSignals={ransomwareSignals}
               onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
               onFocusScan={handleFocusScan}
               loading={loading}
@@ -640,11 +724,26 @@ export default function App() {
             />
           ) : null}
 
+          {currentPage === "quarantine" ? (
+            <QuarantinePage
+              quarantineItems={quarantineItems}
+              onRestore={handleRestoreQuarantineItem}
+              onPurge={handlePurgeQuarantineItem}
+              onPurgeExpired={handlePurgeExpiredQuarantine}
+              pendingActionId={pendingQuarantineActionId}
+              loading={loading}
+              error={error}
+              onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
+              lastUpdated={lastUpdatedByPage.quarantine}
+            />
+          ) : null}
+
           {currentPage === "telemetry" ? (
             <TelemetryPage
               fileEvents={fileEvents}
               scans={scans}
               scanProgressEvents={scanProgressEvents}
+              ransomwareSignals={ransomwareSignals}
               loading={loading}
               error={error}
               onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
@@ -656,6 +755,7 @@ export default function App() {
             <FleetPage
               controlPlane={controlPlane}
               health={health}
+              protectedFolders={protectedFolders}
               loading={loading}
               error={error}
               onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
@@ -668,6 +768,7 @@ export default function App() {
               paritySnapshots={paritySnapshots}
               sandboxSubmissions={sandboxSubmissions}
               reviews={reviews}
+              ransomwareSignals={ransomwareSignals}
               scans={scans}
               onDecideReview={handleDecideReview}
               pendingReviewId={pendingReviewId}
@@ -690,6 +791,14 @@ export default function App() {
               onRefresh={() => loadData({ syncLifecycle: false, preserveMessage: true })}
               lastUpdated={lastUpdatedByPage.reports}
             />
+          ) : null}
+
+          {currentPage === "intel" ? (
+            <IntelPage lastUpdated={lastUpdatedByPage.intel} />
+          ) : null}
+
+          {currentPage === "settings" ? (
+            <SettingsPage lastUpdated={lastUpdatedByPage.settings} />
           ) : null}
         </main>
       </div>

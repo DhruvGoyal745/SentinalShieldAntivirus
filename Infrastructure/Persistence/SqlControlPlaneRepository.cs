@@ -42,13 +42,13 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
                 INSERT INTO dbo.Devices
                 (
                     DeviceId, DeviceName, OperatingSystem, AgentVersion, EngineVersion, SignaturePackVersion, PolicyVersion,
-                    RolloutRing, EnrollmentStatus, BaselineScanCompleted, LegacyShadowModeEnabled, SelfProtectionJson,
+                    RolloutRing, EnrollmentStatus, BaselineScanCompleted, SelfProtectionJson,
                     CapabilitiesJson, LastSeenAt
                 )
                 VALUES
                 (
                     @DeviceId, @DeviceName, @OperatingSystem, @AgentVersion, @EngineVersion, @SignaturePackVersion, @PolicyVersion,
-                    @RolloutRing, @EnrollmentStatus, 0, @LegacyShadowModeEnabled, @SelfProtectionJson, @CapabilitiesJson, SYSUTCDATETIME()
+                    @RolloutRing, @EnrollmentStatus, 0, @SelfProtectionJson, @CapabilitiesJson, SYSUTCDATETIME()
                 );
                 """;
 
@@ -62,7 +62,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             insertCommand.Parameters.AddWithValue("@PolicyVersion", _options.CurrentPolicyVersion);
             insertCommand.Parameters.AddWithValue("@RolloutRing", request.RolloutRing.ToString());
             insertCommand.Parameters.AddWithValue("@EnrollmentStatus", DeviceEnrollmentStatus.Active.ToString());
-            insertCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", _options.UseLegacyShadowMode);
             insertCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
             insertCommand.Parameters.AddWithValue("@CapabilitiesJson", capabilitiesJson);
             await insertCommand.ExecuteNonQueryAsync(cancellationToken);
@@ -100,7 +99,7 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             SELECT TOP (1) Id, DeviceId, DeviceName, OperatingSystem, AgentVersion, EngineVersion, SignaturePackVersion, PolicyVersion,
-            RolloutRing, EnrollmentStatus, BaselineScanCompleted, LegacyShadowModeEnabled, SelfProtectionJson, CapabilitiesJson, CreatedAt, LastSeenAt
+            RolloutRing, EnrollmentStatus, BaselineScanCompleted, SelfProtectionJson, CapabilitiesJson, CreatedAt, LastSeenAt
             FROM dbo.Devices
             WHERE DeviceId = @DeviceId;
             """;
@@ -116,7 +115,7 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
     {
         const string sql = """
             SELECT Id, DeviceId, DeviceName, OperatingSystem, AgentVersion, EngineVersion, SignaturePackVersion, PolicyVersion,
-            RolloutRing, EnrollmentStatus, BaselineScanCompleted, LegacyShadowModeEnabled, SelfProtectionJson, CapabilitiesJson, CreatedAt, LastSeenAt
+            RolloutRing, EnrollmentStatus, BaselineScanCompleted, SelfProtectionJson, CapabilitiesJson, CreatedAt, LastSeenAt
             FROM dbo.Devices
             ORDER BY LastSeenAt DESC, CreatedAt DESC;
             """;
@@ -143,7 +142,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
                 SignaturePackVersion = @SignaturePackVersion,
                 PolicyVersion = @PolicyVersion,
                 BaselineScanCompleted = @BaselineScanCompleted,
-                LegacyShadowModeEnabled = @LegacyShadowModeEnabled,
                 SelfProtectionJson = @SelfProtectionJson,
                 LastSeenAt = SYSUTCDATETIME()
             WHERE DeviceId = @DeviceId;
@@ -170,7 +168,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
                 updateCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
                 updateCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
                 updateCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
-                updateCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
                 updateCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
                 await updateCommand.ExecuteNonQueryAsync(cancellationToken);
             }
@@ -183,7 +180,7 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
                 insertCommand.Parameters.AddWithValue("@SignaturePackVersion", request.SignaturePackVersion);
                 insertCommand.Parameters.AddWithValue("@PolicyVersion", request.PolicyVersion);
                 insertCommand.Parameters.AddWithValue("@BaselineScanCompleted", request.BaselineScanCompleted);
-                insertCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.LegacyShadowModeEnabled);
+                insertCommand.Parameters.AddWithValue("@LegacyShadowModeEnabled", request.SelfProtection.SignedUpdatesOnly);
                 insertCommand.Parameters.AddWithValue("@SelfProtectionJson", selfProtectionJson);
                 await insertCommand.ExecuteNonQueryAsync(cancellationToken);
             }
@@ -203,14 +200,14 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             IF NOT EXISTS (SELECT 1 FROM dbo.PolicyBundles WHERE IsActive = 1)
             BEGIN
                 INSERT INTO dbo.PolicyBundles
-                (PolicyName, Version, RolloutRing, QuarantineOnMalicious, BlockHighConfidenceDetections, AllowSampleUpload, EnableLegacyShadowMode, PolicyJson, IsActive)
+                (PolicyName, Version, RolloutRing, QuarantineOnMalicious, BlockHighConfidenceDetections, AllowSampleUpload, PolicyJson, IsActive)
                 VALUES
-                (N'Enterprise default policy', @Version, N'Canary', 1, 1, @AllowSampleUpload, @EnableLegacyShadowMode, @PolicyJson, 1);
+                (N'Enterprise default policy', @Version, N'Canary', 1, 1, @AllowSampleUpload, @PolicyJson, 1);
             END;
             """;
 
         const string sql = """
-            SELECT TOP (1) Id, PolicyName, Version, RolloutRing, QuarantineOnMalicious, BlockHighConfidenceDetections, AllowSampleUpload, EnableLegacyShadowMode, PolicyJson, CreatedAt
+            SELECT TOP (1) Id, PolicyName, Version, RolloutRing, QuarantineOnMalicious, BlockHighConfidenceDetections, AllowSampleUpload, PolicyJson, CreatedAt
             FROM dbo.PolicyBundles
             WHERE IsActive = 1
             ORDER BY CreatedAt DESC;
@@ -221,7 +218,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         {
             ensureCommand.Parameters.AddWithValue("@Version", _options.CurrentPolicyVersion);
             ensureCommand.Parameters.AddWithValue("@AllowSampleUpload", _options.AllowSampleUpload);
-            ensureCommand.Parameters.AddWithValue("@EnableLegacyShadowMode", _options.UseLegacyShadowMode);
             ensureCommand.Parameters.AddWithValue("@PolicyJson", BuildDefaultPolicyJson());
             await ensureCommand.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -239,9 +235,8 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             QuarantineOnMalicious = reader.GetBoolean(4),
             BlockHighConfidenceDetections = reader.GetBoolean(5),
             AllowSampleUpload = reader.GetBoolean(6),
-            EnableLegacyShadowMode = reader.GetBoolean(7),
-            PolicyJson = reader.GetString(8),
-            CreatedAt = reader.GetDateTimeOffset(9)
+            PolicyJson = reader.GetString(7),
+            CreatedAt = reader.GetDateTimeOffset(8)
         };
     }
 
@@ -771,63 +766,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
         return submissions;
     }
 
-    public async Task SaveLegacyParitySnapshotAsync(LegacyParitySnapshot snapshot, CancellationToken cancellationToken = default)
-    {
-        const string sql = """
-            INSERT INTO dbo.LegacyParitySnapshots
-            (ScanJobId, DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt)
-            VALUES
-            (@ScanJobId, @DeviceId, @OperatingSystem, @MalwareFamily, @DetectionRecallPercent, @FalsePositiveRatePercent, @VerdictLatencyMilliseconds, @RemediationSuccessPercent, @CrashTamperRatePercent, @CreatedAt);
-            """;
-
-        await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ScanJobId", snapshot.ScanJobId.HasValue ? snapshot.ScanJobId.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@DeviceId", snapshot.DeviceId);
-        command.Parameters.AddWithValue("@OperatingSystem", snapshot.OperatingSystem.ToString());
-        command.Parameters.AddWithValue("@MalwareFamily", snapshot.MalwareFamily);
-        command.Parameters.AddWithValue("@DetectionRecallPercent", snapshot.DetectionRecallPercent);
-        command.Parameters.AddWithValue("@FalsePositiveRatePercent", snapshot.FalsePositiveRatePercent);
-        command.Parameters.AddWithValue("@VerdictLatencyMilliseconds", snapshot.VerdictLatencyMilliseconds);
-        command.Parameters.AddWithValue("@RemediationSuccessPercent", snapshot.RemediationSuccessPercent);
-        command.Parameters.AddWithValue("@CrashTamperRatePercent", snapshot.CrashTamperRatePercent);
-        command.Parameters.AddWithValue("@CreatedAt", snapshot.CreatedAt);
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyCollection<LegacyParitySnapshot>> GetLegacyParitySnapshotsAsync(CancellationToken cancellationToken = default)
-    {
-        const string sql = """
-            SELECT Id, ScanJobId, DeviceId, OperatingSystem, MalwareFamily, DetectionRecallPercent, FalsePositiveRatePercent, VerdictLatencyMilliseconds, RemediationSuccessPercent, CrashTamperRatePercent, CreatedAt
-            FROM dbo.LegacyParitySnapshots
-            ORDER BY CreatedAt DESC;
-            """;
-
-        var snapshots = new List<LegacyParitySnapshot>();
-        await using var connection = await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            snapshots.Add(new LegacyParitySnapshot
-            {
-                Id = reader.GetInt32(0),
-                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                DeviceId = reader.GetString(2),
-                OperatingSystem = Enum.Parse<OperatingSystemPlatform>(reader.GetString(3)),
-                MalwareFamily = reader.GetString(4),
-                DetectionRecallPercent = reader.GetDecimal(5),
-                FalsePositiveRatePercent = reader.GetDecimal(6),
-                VerdictLatencyMilliseconds = reader.GetDecimal(7),
-                RemediationSuccessPercent = reader.GetDecimal(8),
-                CrashTamperRatePercent = reader.GetDecimal(9),
-                CreatedAt = reader.GetDateTimeOffset(10)
-            });
-        }
-
-        return snapshots;
-    }
-
     private static DeviceProfile MapDevice(SqlDataReader reader)
     {
         return new DeviceProfile
@@ -843,11 +781,10 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             RolloutRing = Enum.Parse<PackRolloutRing>(reader.GetString(8)),
             EnrollmentStatus = Enum.Parse<DeviceEnrollmentStatus>(reader.GetString(9)),
             BaselineScanCompleted = reader.GetBoolean(10),
-            LegacyShadowModeEnabled = reader.GetBoolean(11),
-            SelfProtection = JsonSerializer.Deserialize<AgentSelfProtectionStatus>(reader.GetString(12), JsonOptions) ?? new AgentSelfProtectionStatus(),
-            Capabilities = JsonSerializer.Deserialize<string[]>(reader.GetString(13), JsonOptions) ?? Array.Empty<string>(),
-            CreatedAt = reader.GetDateTimeOffset(14),
-            LastSeenAt = reader.IsDBNull(15) ? null : reader.GetFieldValue<DateTimeOffset>(15)
+            SelfProtection = JsonSerializer.Deserialize<AgentSelfProtectionStatus>(reader.GetString(11), JsonOptions) ?? new AgentSelfProtectionStatus(),
+            Capabilities = JsonSerializer.Deserialize<string[]>(reader.GetString(12), JsonOptions) ?? Array.Empty<string>(),
+            CreatedAt = reader.GetDateTimeOffset(13),
+            LastSeenAt = reader.IsDBNull(14) ? null : reader.GetFieldValue<DateTimeOffset>(14)
         };
     }
 
@@ -888,7 +825,6 @@ public sealed class SqlControlPlaneRepository : IControlPlaneRepository
             quarantineOnMalicious = true,
             blockHighConfidenceDetections = true,
             allowSampleUpload = _options.AllowSampleUpload,
-            enableLegacyShadowMode = _options.UseLegacyShadowMode,
             baselineScanMode = "Full",
             realtime = new
             {

@@ -1,36 +1,32 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/governance")]
+[Authorize]
 public sealed class GovernanceController : ControllerBase
 {
-    private readonly IControlPlaneRepository _controlPlaneRepository;
+    private readonly IGovernanceRepository _governanceRepository;
 
-    public GovernanceController(IControlPlaneRepository controlPlaneRepository)
+    public GovernanceController(IGovernanceRepository governanceRepository)
     {
-        _controlPlaneRepository = controlPlaneRepository;
-    }
-
-    [HttpGet("parity")]
-    public async Task<ActionResult<IReadOnlyCollection<LegacyParitySnapshot>>> GetParity(CancellationToken cancellationToken)
-    {
-        return Ok(await _controlPlaneRepository.GetLegacyParitySnapshotsAsync(cancellationToken));
+        _governanceRepository = governanceRepository;
     }
 
     [HttpGet("sandbox")]
     public async Task<ActionResult<IReadOnlyCollection<SandboxSubmission>>> GetSandbox(CancellationToken cancellationToken)
     {
-        return Ok(await _controlPlaneRepository.GetSandboxSubmissionsAsync(cancellationToken));
+        return Ok(await _governanceRepository.GetSandboxSubmissionsAsync(cancellationToken));
     }
 
     [HttpGet("reviews")]
     public async Task<ActionResult<IReadOnlyCollection<FalsePositiveReview>>> GetReviews(CancellationToken cancellationToken)
     {
-        return Ok(await _controlPlaneRepository.GetFalsePositiveReviewsAsync(cancellationToken));
+        return Ok(await _governanceRepository.GetFalsePositiveReviewsAsync(cancellationToken));
     }
 
     [HttpPost("reviews")]
@@ -48,7 +44,7 @@ public sealed class GovernanceController : ControllerBase
             SubmittedAt = DateTimeOffset.UtcNow
         };
 
-        return Ok(await _controlPlaneRepository.CreateFalsePositiveReviewAsync(request, cancellationToken));
+        return Ok(await _governanceRepository.CreateFalsePositiveReviewAsync(request, cancellationToken));
     }
 
     [HttpPost("reviews/{id:int}/decision")]
@@ -62,7 +58,7 @@ public sealed class GovernanceController : ControllerBase
             }));
         }
 
-        var review = await _controlPlaneRepository.DecideFalsePositiveReviewAsync(
+        var review = await _governanceRepository.DecideFalsePositiveReviewAsync(
             id,
             request.Status,
             string.IsNullOrWhiteSpace(request.Analyst) ? "analyst-console" : request.Analyst,

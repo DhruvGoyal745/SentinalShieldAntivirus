@@ -45,13 +45,10 @@ public enum ThreatSource
 {
     WindowsDefender,
     Heuristic,
-    Yara,
-    ClamAv,
     ProprietaryStatic,
     Behavior,
     Reputation,
     Sandbox,
-    LegacyShadow,
     PatternRule,
     SignatureHash
 }
@@ -400,6 +397,10 @@ public sealed class DashboardSummary
     public IReadOnlyCollection<ThreatDetection> ActiveThreats { get; init; } = Array.Empty<ThreatDetection>();
 
     public IReadOnlyCollection<FileSecurityEvent> RecentFileEvents { get; init; } = Array.Empty<FileSecurityEvent>();
+
+    public int UniqueFilesChecked { get; init; }
+
+    public int UniqueThreatsFound { get; init; }
 }
 
 public sealed class ScanExecutionResult

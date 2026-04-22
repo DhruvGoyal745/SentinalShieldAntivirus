@@ -36,17 +36,6 @@ public sealed class AntivirusPlatformOptions
 
     public bool UseInHouseScanners { get; set; } = true;
 
-    public bool UseLegacyShadowMode { get; set; } = true;
-
-    public bool UseNativeEngineBridge { get; set; } = true;
-
-    public bool UseManagedNativeEngineFallback { get; set; } = true;
-
-    public string NativeEngineDaemonPath { get; set; } = "NativeEngine\\artifacts\\sentinel-engine-daemon.exe";
-
-    public string NativeEnginePipeName { get; set; } = "sentinel-engine-daemon";
-
-    public string NativeEngineSocketPath { get; set; } = "/tmp/sentinel-engine-daemon.sock";
 
     public string SignaturePackRoot { get; set; } = "Data\\SignaturePacks";
 
@@ -71,4 +60,40 @@ public sealed class AntivirusPlatformOptions
     public string SignaturePackChannel { get; set; } = "stable";
 
     public string SignaturePackDownloadUrl { get; set; } = "/downloads/signature-pack";
+
+    // ── Phase 1: Platform Security ──────────────────────────────────────
+
+    public bool RequireSignedManifests { get; set; }
+
+    public bool LocalTrustBoundaryEnabled { get; set; }
+
+    public string LocalTrustTokenHeaderName { get; set; } = "X-Local-Token";
+
+    // ── Phase 0A: Authentication ────────────────────────────────────────
+
+    public string? JwtSigningKey { get; set; }
+
+    public string? DefaultAdminPassword { get; set; }
+
+    // ── Phase 2A: Secure Quarantine ─────────────────────────────────
+
+    public bool QuarantineEncryptionEnabled { get; set; } = true;
+
+    public int QuarantineRetentionDays { get; set; } = 30;
+
+    public int SecureDeletePasses { get; set; } = 3;
+
+    // ── Phase 2B: Ransomware Shield ─────────────────────────────────
+
+    public string[] ProtectedFolders { get; set; } = Array.Empty<string>();
+
+    public int RansomwareFileWriteThresholdPerMinute { get; set; } = 50;
+
+    public double RansomwareEntropyThreshold { get; set; } = 7.0;
+
+    public long RansomwareMaxEntropyFileSizeBytes { get; set; } = 33554432; // 32MB
+
+    public bool RansomwareAutoKillEnabled { get; set; }
+
+    public bool RansomwareAutoSuspendEnabled { get; set; }
 }

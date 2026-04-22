@@ -13,6 +13,10 @@ public sealed class SqlSecurityRepository : ISecurityRepository
         _tenantRegistry = tenantRegistry;
     }
 
+    private const string ScanJobColumns = "Id, Mode, TargetPath, RequestedBy, Status, Stage, PercentComplete, FilesScanned, TotalFiles, CurrentTarget, ThreatCount, Notes, CreatedAt, StartedAt, CompletedAt";
+
+    private const string ThreatColumns = "Id, ScanJobId, Name, Category, Severity, Source, Resource, Description, EngineName, IsQuarantined, QuarantinePath, EvidenceJson, DetectedAt";
+
     public async Task<int> CreateScanAsync(ScanRequest request, CancellationToken cancellationToken = default)
     {
         const string sql = """
@@ -22,422 +26,94 @@ public sealed class SqlSecurityRepository : ISecurityRepository
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Mode", request.Mode.ToString());
-        command.Parameters.AddWithValue("@TargetPath", (object?)request.TargetPath ?? DBNull.Value);
-        command.Parameters.AddWithValue("@RequestedBy", request.RequestedBy);
-        command.Parameters.AddWithValue("@Status", ScanStatus.Pending.ToString());
-        command.Parameters.AddWithValue("@Stage", ScanStage.Queued.ToString());
-
-        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return await connection.ExecuteScalarIntAsync(sql, p =>
+        {
+            p.AddWithValue("@Mode", request.Mode.ToString());
+            p.AddNullable("@TargetPath", request.TargetPath);
+            p.AddWithValue("@RequestedBy", request.RequestedBy);
+            p.AddWithValue("@Status", ScanStatus.Pending.ToString());
+            p.AddWithValue("@Stage", ScanStage.Queued.ToString());
+        }, cancellationToken);
     }
 
     public async Task<ScanJob?> GetScanByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            SELECT TOP (1) Id, Mode, TargetPath, RequestedBy, Status, Stage, PercentComplete, FilesScanned, TotalFiles, CurrentTarget, ThreatCount, Notes, CreatedAt, StartedAt, CompletedAt
-            FROM ScanJobs
-            WHERE Id = @Id;
-            """;
-
+        var sql = $"SELECT TOP (1) {ScanJobColumns} FROM ScanJobs WHERE Id = @Id;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Id", id);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
-        {
-            return null;
-        }
-
-        return new ScanJob
-        {
-            Id = reader.GetInt32(0),
-            Mode = Enum.Parse<ScanMode>(reader.GetString(1)),
-            TargetPath = reader.IsDBNull(2) ? null : reader.GetString(2),
-            RequestedBy = reader.GetString(3),
-            Status = Enum.Parse<ScanStatus>(reader.GetString(4)),
-            Stage = Enum.Parse<ScanStage>(reader.GetString(5)),
-            PercentComplete = reader.GetInt32(6),
-            FilesScanned = reader.GetInt32(7),
-            TotalFiles = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-            CurrentTarget = reader.IsDBNull(9) ? null : reader.GetString(9),
-            ThreatCount = reader.GetInt32(10),
-            Notes = reader.IsDBNull(11) ? null : reader.GetString(11),
-            CreatedAt = reader.GetDateTimeOffset(12),
-            StartedAt = reader.IsDBNull(13) ? null : reader.GetFieldValue<DateTimeOffset>(13),
-            CompletedAt = reader.IsDBNull(14) ? null : reader.GetFieldValue<DateTimeOffset>(14)
-        };
+        return await connection.QuerySingleOrDefaultAsync(sql, p => p.AddWithValue("@Id", id), SecurityMappers.MapScanJob, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<ScanJob>> GetRecoverableScansAsync(CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            SELECT Id, Mode, TargetPath, RequestedBy, Status, Stage, PercentComplete, FilesScanned, TotalFiles, CurrentTarget, ThreatCount, Notes, CreatedAt, StartedAt, CompletedAt
-            FROM ScanJobs
-            WHERE Status IN (@PendingStatus, @RunningStatus)
-            ORDER BY CreatedAt ASC;
-            """;
-
-        var scans = new List<ScanJob>();
+        var sql = $"SELECT {ScanJobColumns} FROM ScanJobs WHERE Status IN (@PendingStatus, @RunningStatus) ORDER BY CreatedAt ASC;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@PendingStatus", ScanStatus.Pending.ToString());
-        command.Parameters.AddWithValue("@RunningStatus", ScanStatus.Running.ToString());
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        while (await reader.ReadAsync(cancellationToken))
+        return await connection.QueryAsync(sql, p =>
         {
-            scans.Add(new ScanJob
-            {
-                Id = reader.GetInt32(0),
-                Mode = Enum.Parse<ScanMode>(reader.GetString(1)),
-                TargetPath = reader.IsDBNull(2) ? null : reader.GetString(2),
-                RequestedBy = reader.GetString(3),
-                Status = Enum.Parse<ScanStatus>(reader.GetString(4)),
-                Stage = Enum.Parse<ScanStage>(reader.GetString(5)),
-                PercentComplete = reader.GetInt32(6),
-                FilesScanned = reader.GetInt32(7),
-                TotalFiles = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                CurrentTarget = reader.IsDBNull(9) ? null : reader.GetString(9),
-                ThreatCount = reader.GetInt32(10),
-                Notes = reader.IsDBNull(11) ? null : reader.GetString(11),
-                CreatedAt = reader.GetDateTimeOffset(12),
-                StartedAt = reader.IsDBNull(13) ? null : reader.GetFieldValue<DateTimeOffset>(13),
-                CompletedAt = reader.IsDBNull(14) ? null : reader.GetFieldValue<DateTimeOffset>(14)
-            });
-        }
-
-        return scans;
+            p.AddWithValue("@PendingStatus", ScanStatus.Pending.ToString());
+            p.AddWithValue("@RunningStatus", ScanStatus.Running.ToString());
+        }, SecurityMappers.MapScanJob, cancellationToken);
     }
 
-    public async Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<ScanJob>> GetRecentScansAsync(int take, CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            INSERT INTO FileSecurityEvents (ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, ProcessedAt)
-            OUTPUT INSERTED.Id
-            VALUES (@ScanJobId, @FilePath, @PreviousPath, @EventType, @Status, NULL, NULL, 0, NULL, @ObservedAt, NULL);
-            """;
-
+        var sql = $"SELECT TOP (@Take) {ScanJobColumns} FROM ScanJobs ORDER BY CreatedAt DESC;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ScanJobId", scanJobId.HasValue ? scanJobId.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@FilePath", notification.FilePath);
-        command.Parameters.AddWithValue("@PreviousPath", (object?)notification.PreviousPath ?? DBNull.Value);
-        command.Parameters.AddWithValue("@EventType", notification.EventType.ToString());
-        command.Parameters.AddWithValue("@Status", FileEventStatus.Pending.ToString());
-        command.Parameters.AddWithValue("@ObservedAt", notification.ObservedAt);
-
-        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return await connection.QueryAsync(sql, p => p.AddWithValue("@Take", take), SecurityMappers.MapScanJob, cancellationToken);
     }
 
-    public async Task UpdateFileEventAsync(
-        int fileEventId,
-        FileEventUpdate update,
-        CancellationToken cancellationToken = default)
-    {
-        const string sql = """
-            UPDATE FileSecurityEvents
-            SET Status = @Status,
-                ThreatCount = @ThreatCount,
-                Notes = @Notes,
-                HashSha256 = COALESCE(@HashSha256, HashSha256),
-                FileSizeBytes = COALESCE(@FileSizeBytes, FileSizeBytes),
-                ProcessedAt = @ProcessedAt
-            WHERE Id = @Id;
-            """;
-
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Id", fileEventId);
-        command.Parameters.AddWithValue("@Status", update.Status.ToString());
-        command.Parameters.AddWithValue("@ThreatCount", update.ThreatCount);
-        command.Parameters.AddWithValue("@Notes", (object?)update.Notes ?? DBNull.Value);
-        command.Parameters.AddWithValue("@HashSha256", (object?)update.HashSha256 ?? DBNull.Value);
-        command.Parameters.AddWithValue("@FileSizeBytes", update.FileSizeBytes.HasValue ? update.FileSizeBytes.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@ProcessedAt", update.ProcessedAt.HasValue ? update.ProcessedAt.Value : DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    public async Task SaveFileEngineResultsAsync(
-        int fileEventId,
-        IEnumerable<FileScannerEngineResult> results,
-        CancellationToken cancellationToken = default)
-    {
-        const string sql = """
-            INSERT INTO FileEngineResults
-            (
-                FileSecurityEventId,
-                EngineName,
-                Source,
-                Status,
-                IsMatch,
-                SignatureName,
-                Details,
-                RawOutput,
-                ScannedAt
-            )
-            VALUES
-            (
-                @FileSecurityEventId,
-                @EngineName,
-                @Source,
-                @Status,
-                @IsMatch,
-                @SignatureName,
-                @Details,
-                @RawOutput,
-                @ScannedAt
-            );
-            """;
-
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-
-        foreach (var result in results)
-        {
-            await using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@FileSecurityEventId", fileEventId);
-            command.Parameters.AddWithValue("@EngineName", result.EngineName);
-            command.Parameters.AddWithValue("@Source", result.Source.ToString());
-            command.Parameters.AddWithValue("@Status", result.Status.ToString());
-            command.Parameters.AddWithValue("@IsMatch", result.IsMatch);
-            command.Parameters.AddWithValue("@SignatureName", (object?)result.SignatureName ?? DBNull.Value);
-            command.Parameters.AddWithValue("@Details", (object?)result.Details ?? DBNull.Value);
-            command.Parameters.AddWithValue("@RawOutput", (object?)result.RawOutput ?? DBNull.Value);
-            command.Parameters.AddWithValue("@ScannedAt", result.ScannedAt);
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
-    }
-
-    public async Task<IReadOnlyCollection<FileSecurityEvent>> GetRecentFileEventsAsync(int take, CancellationToken cancellationToken = default)
-    {
-        const string eventsSql = """
-            SELECT TOP (@Take) Id, ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, CreatedAt, ProcessedAt
-            FROM FileSecurityEvents
-            ORDER BY ObservedAt DESC, Id DESC;
-            """;
-
-        var events = new List<FileSecurityEvent>();
-
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using (var command = new SqlCommand(eventsSql, connection))
-        {
-            command.Parameters.AddWithValue("@Take", take);
-
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                events.Add(new FileSecurityEvent
-                {
-                    Id = reader.GetInt32(0),
-                    ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                    FilePath = reader.GetString(2),
-                    PreviousPath = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    EventType = Enum.Parse<FileEventType>(reader.GetString(4)),
-                    Status = Enum.Parse<FileEventStatus>(reader.GetString(5)),
-                    HashSha256 = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    FileSizeBytes = reader.IsDBNull(7) ? null : reader.GetInt64(7),
-                    ThreatCount = reader.GetInt32(8),
-                    Notes = reader.IsDBNull(9) ? null : reader.GetString(9),
-                    ObservedAt = reader.GetDateTimeOffset(10),
-                    CreatedAt = reader.GetDateTimeOffset(11),
-                    ProcessedAt = reader.IsDBNull(12) ? null : reader.GetFieldValue<DateTimeOffset>(12)
-                });
-            }
-        }
-
-        if (events.Count == 0)
-        {
-            return events;
-        }
-
-        var eventIds = string.Join(", ", events.Select(fileEvent => fileEvent.Id));
-        var resultsSql = $"""
-            SELECT Id, FileSecurityEventId, EngineName, Source, Status, IsMatch, SignatureName, Details, RawOutput, ScannedAt
-            FROM FileEngineResults
-            WHERE FileSecurityEventId IN ({eventIds})
-            ORDER BY ScannedAt DESC;
-            """;
-
-        var resultsByEventId = new Dictionary<int, List<FileEngineResult>>();
-        await using (var command = new SqlCommand(resultsSql, connection))
-        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
-        {
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                var result = new FileEngineResult
-                {
-                    Id = reader.GetInt32(0),
-                    FileSecurityEventId = reader.GetInt32(1),
-                    EngineName = reader.GetString(2),
-                    Source = Enum.Parse<ThreatSource>(reader.GetString(3)),
-                    Status = Enum.Parse<FileEngineResultStatus>(reader.GetString(4)),
-                    IsMatch = reader.GetBoolean(5),
-                    SignatureName = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    Details = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    RawOutput = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    ScannedAt = reader.GetDateTimeOffset(9)
-                };
-
-                if (!resultsByEventId.TryGetValue(result.FileSecurityEventId, out var bucket))
-                {
-                    bucket = new List<FileEngineResult>();
-                    resultsByEventId[result.FileSecurityEventId] = bucket;
-                }
-
-                bucket.Add(result);
-            }
-        }
-
-        return events
-            .Select(fileEvent => new FileSecurityEvent
-            {
-                Id = fileEvent.Id,
-                ScanJobId = fileEvent.ScanJobId,
-                FilePath = fileEvent.FilePath,
-                PreviousPath = fileEvent.PreviousPath,
-                EventType = fileEvent.EventType,
-                Status = fileEvent.Status,
-                HashSha256 = fileEvent.HashSha256,
-                FileSizeBytes = fileEvent.FileSizeBytes,
-                ThreatCount = fileEvent.ThreatCount,
-                Notes = fileEvent.Notes,
-                ObservedAt = fileEvent.ObservedAt,
-                CreatedAt = fileEvent.CreatedAt,
-                ProcessedAt = fileEvent.ProcessedAt,
-                EngineResults = resultsByEventId.TryGetValue(fileEvent.Id, out var bucket)
-                    ? bucket
-                    : Array.Empty<FileEngineResult>()
-            })
-            .ToArray();
-    }
-
-    public async Task UpdateScanStatusAsync(
-        int scanId,
-        ScanStatusUpdate update,
-        CancellationToken cancellationToken = default)
+    public async Task UpdateScanStatusAsync(int scanId, ScanStatusUpdate update, CancellationToken cancellationToken = default)
     {
         const string sql = """
             UPDATE ScanJobs
-            SET Status = @Status,
-                Stage = @Stage,
-                PercentComplete = @PercentComplete,
-                FilesScanned = @FilesScanned,
-                TotalFiles = @TotalFiles,
-                CurrentTarget = @CurrentTarget,
-                ThreatCount = @ThreatCount,
-                Notes = @Notes,
-                StartedAt = COALESCE(@StartedAt, StartedAt),
-                CompletedAt = @CompletedAt
+            SET Status = @Status, Stage = @Stage, PercentComplete = @PercentComplete,
+                FilesScanned = @FilesScanned, TotalFiles = @TotalFiles, CurrentTarget = @CurrentTarget,
+                ThreatCount = @ThreatCount, Notes = @Notes,
+                StartedAt = COALESCE(@StartedAt, StartedAt), CompletedAt = @CompletedAt
             WHERE Id = @Id;
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Id", scanId);
-        command.Parameters.AddWithValue("@Status", update.Status.ToString());
-        command.Parameters.AddWithValue("@Stage", update.Stage.ToString());
-        command.Parameters.AddWithValue("@PercentComplete", update.PercentComplete);
-        command.Parameters.AddWithValue("@FilesScanned", update.FilesScanned);
-        command.Parameters.AddWithValue("@TotalFiles", update.TotalFiles.HasValue ? update.TotalFiles.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@CurrentTarget", (object?)update.CurrentTarget ?? DBNull.Value);
-        command.Parameters.AddWithValue("@ThreatCount", update.ThreatCount);
-        command.Parameters.AddWithValue("@Notes", (object?)update.Notes ?? DBNull.Value);
-        command.Parameters.AddWithValue("@StartedAt", update.StartedAt.HasValue ? update.StartedAt.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@CompletedAt", update.CompletedAt.HasValue ? update.CompletedAt.Value : DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await connection.ExecuteNonQueryAsync(sql, p =>
+        {
+            p.AddWithValue("@Id", scanId);
+            p.AddWithValue("@Status", update.Status.ToString());
+            p.AddWithValue("@Stage", update.Stage.ToString());
+            p.AddWithValue("@PercentComplete", update.PercentComplete);
+            p.AddWithValue("@FilesScanned", update.FilesScanned);
+            p.AddNullable("@TotalFiles", update.TotalFiles);
+            p.AddNullable("@CurrentTarget", update.CurrentTarget);
+            p.AddWithValue("@ThreatCount", update.ThreatCount);
+            p.AddNullable("@Notes", update.Notes);
+            p.AddNullable("@StartedAt", update.StartedAt);
+            p.AddNullable("@CompletedAt", update.CompletedAt);
+        }, cancellationToken);
     }
 
     public async Task AppendScanProgressAsync(ScanProgressEvent progressEvent, CancellationToken cancellationToken = default)
     {
         const string sql = """
             INSERT INTO ScanProgressEvents
-            (
-                ScanJobId,
-                Stage,
-                PercentComplete,
-                CurrentPath,
-                FilesScanned,
-                TotalFiles,
-                FindingsCount,
-                IsSkipped,
-                DetailMessage,
-                StartedAt,
-                CompletedAt,
-                RecordedAt
-            )
+            (ScanJobId, Stage, PercentComplete, CurrentPath, FilesScanned, TotalFiles, FindingsCount, IsSkipped, DetailMessage, StartedAt, CompletedAt, RecordedAt)
             VALUES
-            (
-                @ScanJobId,
-                @Stage,
-                @PercentComplete,
-                @CurrentPath,
-                @FilesScanned,
-                @TotalFiles,
-                @FindingsCount,
-                @IsSkipped,
-                @DetailMessage,
-                @StartedAt,
-                @CompletedAt,
-                @RecordedAt
-            );
+            (@ScanJobId, @Stage, @PercentComplete, @CurrentPath, @FilesScanned, @TotalFiles, @FindingsCount, @IsSkipped, @DetailMessage, @StartedAt, @CompletedAt, @RecordedAt);
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ScanJobId", progressEvent.ScanJobId);
-        command.Parameters.AddWithValue("@Stage", progressEvent.Stage.ToString());
-        command.Parameters.AddWithValue("@PercentComplete", progressEvent.PercentComplete);
-        command.Parameters.AddWithValue("@CurrentPath", (object?)progressEvent.CurrentPath ?? DBNull.Value);
-        command.Parameters.AddWithValue("@FilesScanned", progressEvent.FilesScanned);
-        command.Parameters.AddWithValue("@TotalFiles", progressEvent.TotalFiles.HasValue ? progressEvent.TotalFiles.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@FindingsCount", progressEvent.FindingsCount);
-        command.Parameters.AddWithValue("@IsSkipped", progressEvent.IsSkipped);
-        command.Parameters.AddWithValue("@DetailMessage", (object?)progressEvent.DetailMessage ?? DBNull.Value);
-        command.Parameters.AddWithValue("@StartedAt", progressEvent.StartedAt);
-        command.Parameters.AddWithValue("@CompletedAt", progressEvent.CompletedAt.HasValue ? progressEvent.CompletedAt.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@RecordedAt", progressEvent.RecordedAt);
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyCollection<ScanJob>> GetRecentScansAsync(int take, CancellationToken cancellationToken = default)
-    {
-        const string sql = """
-            SELECT TOP (@Take) Id, Mode, TargetPath, RequestedBy, Status, Stage, PercentComplete, FilesScanned, TotalFiles, CurrentTarget, ThreatCount, Notes, CreatedAt, StartedAt, CompletedAt
-            FROM ScanJobs
-            ORDER BY CreatedAt DESC;
-            """;
-
-        var scans = new List<ScanJob>();
-
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Take", take);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        await connection.ExecuteNonQueryAsync(sql, p =>
         {
-            scans.Add(new ScanJob
-            {
-                Id = reader.GetInt32(0),
-                Mode = Enum.Parse<ScanMode>(reader.GetString(1)),
-                TargetPath = reader.IsDBNull(2) ? null : reader.GetString(2),
-                RequestedBy = reader.GetString(3),
-                Status = Enum.Parse<ScanStatus>(reader.GetString(4)),
-                Stage = Enum.Parse<ScanStage>(reader.GetString(5)),
-                PercentComplete = reader.GetInt32(6),
-                FilesScanned = reader.GetInt32(7),
-                TotalFiles = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                CurrentTarget = reader.IsDBNull(9) ? null : reader.GetString(9),
-                ThreatCount = reader.GetInt32(10),
-                Notes = reader.IsDBNull(11) ? null : reader.GetString(11),
-                CreatedAt = reader.GetDateTimeOffset(12),
-                StartedAt = reader.IsDBNull(13) ? null : reader.GetFieldValue<DateTimeOffset>(13),
-                CompletedAt = reader.IsDBNull(14) ? null : reader.GetFieldValue<DateTimeOffset>(14)
-            });
-        }
-
-        return scans;
+            p.AddWithValue("@ScanJobId", progressEvent.ScanJobId);
+            p.AddWithValue("@Stage", progressEvent.Stage.ToString());
+            p.AddWithValue("@PercentComplete", progressEvent.PercentComplete);
+            p.AddNullable("@CurrentPath", progressEvent.CurrentPath);
+            p.AddWithValue("@FilesScanned", progressEvent.FilesScanned);
+            p.AddNullable("@TotalFiles", progressEvent.TotalFiles);
+            p.AddWithValue("@FindingsCount", progressEvent.FindingsCount);
+            p.AddWithValue("@IsSkipped", progressEvent.IsSkipped);
+            p.AddNullable("@DetailMessage", progressEvent.DetailMessage);
+            p.AddWithValue("@StartedAt", progressEvent.StartedAt);
+            p.AddNullable("@CompletedAt", progressEvent.CompletedAt);
+            p.AddWithValue("@RecordedAt", progressEvent.RecordedAt);
+        }, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<ScanProgressEvent>> GetScanProgressEventsAsync(int scanId, int take, CancellationToken cancellationToken = default)
@@ -449,237 +125,206 @@ public sealed class SqlSecurityRepository : ISecurityRepository
             ORDER BY RecordedAt DESC, Id DESC;
             """;
 
-        var events = new List<ScanProgressEvent>();
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Take", take);
-        command.Parameters.AddWithValue("@ScanJobId", scanId);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        while (await reader.ReadAsync(cancellationToken))
+        return await connection.QueryAsync(sql, p =>
         {
-            events.Add(new ScanProgressEvent
-            {
-                ScanJobId = reader.GetInt32(0),
-                Stage = Enum.Parse<ScanStage>(reader.GetString(1)),
-                PercentComplete = reader.GetInt32(2),
-                CurrentPath = reader.IsDBNull(3) ? null : reader.GetString(3),
-                FilesScanned = reader.GetInt32(4),
-                TotalFiles = reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                FindingsCount = reader.GetInt32(6),
-                IsSkipped = reader.GetBoolean(7),
-                DetailMessage = reader.IsDBNull(8) ? null : reader.GetString(8),
-                StartedAt = reader.GetDateTimeOffset(9),
-                CompletedAt = reader.IsDBNull(10) ? null : reader.GetFieldValue<DateTimeOffset>(10),
-                RecordedAt = reader.GetDateTimeOffset(11)
-            });
-        }
+            p.AddWithValue("@Take", take);
+            p.AddWithValue("@ScanJobId", scanId);
+        }, SecurityMappers.MapProgressEvent, cancellationToken);
+    }
 
-        return events;
+    public async Task<int> CreateFileEventAsync(FileWatchNotification notification, int? scanJobId = null, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            INSERT INTO FileSecurityEvents (ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, ProcessedAt)
+            OUTPUT INSERTED.Id
+            VALUES (@ScanJobId, @FilePath, @PreviousPath, @EventType, @Status, NULL, NULL, 0, NULL, @ObservedAt, NULL);
+            """;
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await connection.ExecuteScalarIntAsync(sql, p =>
+        {
+            p.AddNullable("@ScanJobId", scanJobId);
+            p.AddWithValue("@FilePath", notification.FilePath);
+            p.AddNullable("@PreviousPath", notification.PreviousPath);
+            p.AddWithValue("@EventType", notification.EventType.ToString());
+            p.AddWithValue("@Status", FileEventStatus.Pending.ToString());
+            p.AddWithValue("@ObservedAt", notification.ObservedAt);
+        }, cancellationToken);
+    }
+
+    public async Task UpdateFileEventAsync(int fileEventId, FileEventUpdate update, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            UPDATE FileSecurityEvents
+            SET Status = @Status, ThreatCount = @ThreatCount, Notes = @Notes,
+                HashSha256 = COALESCE(@HashSha256, HashSha256),
+                FileSizeBytes = COALESCE(@FileSizeBytes, FileSizeBytes),
+                ProcessedAt = @ProcessedAt
+            WHERE Id = @Id;
+            """;
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await connection.ExecuteNonQueryAsync(sql, p =>
+        {
+            p.AddWithValue("@Id", fileEventId);
+            p.AddWithValue("@Status", update.Status.ToString());
+            p.AddWithValue("@ThreatCount", update.ThreatCount);
+            p.AddNullable("@Notes", update.Notes);
+            p.AddNullable("@HashSha256", update.HashSha256);
+            p.AddNullable("@FileSizeBytes", update.FileSizeBytes);
+            p.AddNullable("@ProcessedAt", update.ProcessedAt);
+        }, cancellationToken);
+    }
+
+    public async Task SaveFileEngineResultsAsync(int fileEventId, IEnumerable<FileScannerEngineResult> results, CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            INSERT INTO FileEngineResults
+            (FileSecurityEventId, EngineName, Source, Status, IsMatch, SignatureName, Details, RawOutput, ScannedAt)
+            VALUES
+            (@FileSecurityEventId, @EngineName, @Source, @Status, @IsMatch, @SignatureName, @Details, @RawOutput, @ScannedAt);
+            """;
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        foreach (var result in results)
+        {
+            await connection.ExecuteNonQueryAsync(sql, p =>
+            {
+                p.AddWithValue("@FileSecurityEventId", fileEventId);
+                p.AddWithValue("@EngineName", result.EngineName);
+                p.AddWithValue("@Source", result.Source.ToString());
+                p.AddWithValue("@Status", result.Status.ToString());
+                p.AddWithValue("@IsMatch", result.IsMatch);
+                p.AddNullable("@SignatureName", result.SignatureName);
+                p.AddNullable("@Details", result.Details);
+                p.AddNullable("@RawOutput", result.RawOutput);
+                p.AddWithValue("@ScannedAt", result.ScannedAt);
+            }, cancellationToken);
+        }
+    }
+
+    public async Task<IReadOnlyCollection<FileSecurityEvent>> GetRecentFileEventsAsync(int take, CancellationToken cancellationToken = default)
+    {
+        const string eventsSql = """
+            SELECT TOP (@Take) Id, ScanJobId, FilePath, PreviousPath, EventType, Status, HashSha256, FileSizeBytes, ThreatCount, Notes, ObservedAt, CreatedAt, ProcessedAt
+            FROM FileSecurityEvents
+            ORDER BY ObservedAt DESC, Id DESC;
+            """;
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var events = await connection.QueryAsync(eventsSql, p => p.AddWithValue("@Take", take), SecurityMappers.MapFileEvent, cancellationToken);
+
+        if (events.Count == 0) return events;
+
+        var engineResults = await LoadEngineResultsAsync(connection, events, cancellationToken);
+        return events.Select(e => new FileSecurityEvent
+        {
+            Id = e.Id, ScanJobId = e.ScanJobId, FilePath = e.FilePath, PreviousPath = e.PreviousPath,
+            EventType = e.EventType, Status = e.Status, HashSha256 = e.HashSha256, FileSizeBytes = e.FileSizeBytes,
+            ThreatCount = e.ThreatCount, Notes = e.Notes, ObservedAt = e.ObservedAt, CreatedAt = e.CreatedAt,
+            ProcessedAt = e.ProcessedAt,
+            EngineResults = engineResults.TryGetValue(e.Id, out var bucket) ? bucket : Array.Empty<FileEngineResult>()
+        }).ToArray();
+    }
+
+    private static async Task<Dictionary<int, List<FileEngineResult>>> LoadEngineResultsAsync(
+        SqlConnection connection, List<FileSecurityEvent> events, CancellationToken cancellationToken)
+    {
+        var eventIds = string.Join(", ", events.Select(e => e.Id));
+        var sql = $"SELECT Id, FileSecurityEventId, EngineName, Source, Status, IsMatch, SignatureName, Details, RawOutput, ScannedAt FROM FileEngineResults WHERE FileSecurityEventId IN ({eventIds}) ORDER BY ScannedAt DESC;";
+
+        var allResults = await connection.QueryAsync(sql, _ => { }, SecurityMappers.MapEngineResult, cancellationToken);
+        var grouped = new Dictionary<int, List<FileEngineResult>>();
+        foreach (var r in allResults)
+        {
+            if (!grouped.TryGetValue(r.FileSecurityEventId, out var bucket))
+            {
+                bucket = [];
+                grouped[r.FileSecurityEventId] = bucket;
+            }
+            bucket.Add(r);
+        }
+        return grouped;
     }
 
     public async Task UpsertThreatsAsync(int? scanJobId, IEnumerable<ThreatDetection> threats, CancellationToken cancellationToken = default)
     {
         const string sql = """
             IF NOT EXISTS (
-                SELECT 1
-                FROM ThreatDetections
-                WHERE Name = @Name
-                  AND Source = @Source
-                  AND ISNULL(Resource, '') = ISNULL(@Resource, '')
-                  AND DetectedAt = @DetectedAt
+                SELECT 1 FROM ThreatDetections
+                WHERE Name = @Name AND Source = @Source AND ISNULL(Resource, '') = ISNULL(@Resource, '') AND DetectedAt = @DetectedAt
             )
             BEGIN
-                INSERT INTO ThreatDetections
-                (
-                    ScanJobId,
-                    Name,
-                    Category,
-                    Severity,
-                    Source,
-                    Resource,
-                    Description,
-                    EngineName,
-                    IsQuarantined,
-                    QuarantinePath,
-                    EvidenceJson,
-                    DetectedAt
-                )
-                VALUES
-                (
-                    @ScanJobId,
-                    @Name,
-                    @Category,
-                    @Severity,
-                    @Source,
-                    @Resource,
-                    @Description,
-                    @EngineName,
-                    @IsQuarantined,
-                    @QuarantinePath,
-                    @EvidenceJson,
-                    @DetectedAt
-                );
+                INSERT INTO ThreatDetections (ScanJobId, Name, Category, Severity, Source, Resource, Description, EngineName, IsQuarantined, QuarantinePath, EvidenceJson, DetectedAt)
+                VALUES (@ScanJobId, @Name, @Category, @Severity, @Source, @Resource, @Description, @EngineName, @IsQuarantined, @QuarantinePath, @EvidenceJson, @DetectedAt);
             END
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-
         foreach (var threat in threats)
         {
-            await using var command = new SqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@ScanJobId", (object?)scanJobId ?? (object?)threat.ScanJobId ?? DBNull.Value);
-            command.Parameters.AddWithValue("@Name", threat.Name);
-            command.Parameters.AddWithValue("@Category", threat.Category);
-            command.Parameters.AddWithValue("@Severity", threat.Severity.ToString());
-            command.Parameters.AddWithValue("@Source", threat.Source.ToString());
-            command.Parameters.AddWithValue("@Resource", (object?)threat.Resource ?? DBNull.Value);
-            command.Parameters.AddWithValue("@Description", (object?)threat.Description ?? DBNull.Value);
-            command.Parameters.AddWithValue("@EngineName", (object?)threat.EngineName ?? DBNull.Value);
-            command.Parameters.AddWithValue("@IsQuarantined", threat.IsQuarantined);
-            command.Parameters.AddWithValue("@QuarantinePath", (object?)threat.QuarantinePath ?? DBNull.Value);
-            command.Parameters.AddWithValue("@EvidenceJson", (object?)threat.EvidenceJson ?? DBNull.Value);
-            command.Parameters.AddWithValue("@DetectedAt", threat.DetectedAt);
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            await connection.ExecuteNonQueryAsync(sql, p =>
+            {
+                p.AddNullable("@ScanJobId", (object?)scanJobId ?? threat.ScanJobId);
+                p.AddWithValue("@Name", threat.Name);
+                p.AddWithValue("@Category", threat.Category);
+                p.AddWithValue("@Severity", threat.Severity.ToString());
+                p.AddWithValue("@Source", threat.Source.ToString());
+                p.AddNullable("@Resource", threat.Resource);
+                p.AddNullable("@Description", threat.Description);
+                p.AddNullable("@EngineName", threat.EngineName);
+                p.AddWithValue("@IsQuarantined", threat.IsQuarantined);
+                p.AddNullable("@QuarantinePath", threat.QuarantinePath);
+                p.AddNullable("@EvidenceJson", threat.EvidenceJson);
+                p.AddWithValue("@DetectedAt", threat.DetectedAt);
+            }, cancellationToken);
         }
     }
 
     public async Task<IReadOnlyCollection<ThreatDetection>> GetThreatsAsync(bool activeOnly, CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            SELECT Id, ScanJobId, Name, Category, Severity, Source, Resource, Description, EngineName, IsQuarantined, QuarantinePath, EvidenceJson, DetectedAt
-            FROM ThreatDetections
-            WHERE (@ActiveOnly = 0 OR IsQuarantined = 0)
-            ORDER BY DetectedAt DESC;
-            """;
-
-        var threats = new List<ThreatDetection>();
-
+        var sql = $"SELECT {ThreatColumns} FROM ThreatDetections WHERE (@ActiveOnly = 0 OR IsQuarantined = 0) ORDER BY DetectedAt DESC;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ActiveOnly", activeOnly);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            threats.Add(new ThreatDetection
-            {
-                Id = reader.GetInt32(0),
-                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                Name = reader.GetString(2),
-                Category = reader.GetString(3),
-                Severity = Enum.Parse<ThreatSeverity>(reader.GetString(4)),
-                Source = Enum.Parse<ThreatSource>(reader.GetString(5)),
-                Resource = reader.IsDBNull(6) ? null : reader.GetString(6),
-                Description = reader.IsDBNull(7) ? null : reader.GetString(7),
-                EngineName = reader.IsDBNull(8) ? null : reader.GetString(8),
-                IsQuarantined = reader.GetBoolean(9),
-                QuarantinePath = reader.IsDBNull(10) ? null : reader.GetString(10),
-                EvidenceJson = reader.IsDBNull(11) ? null : reader.GetString(11),
-                DetectedAt = reader.GetDateTimeOffset(12)
-            });
-        }
-
-        return threats;
+        return await connection.QueryAsync(sql, p => p.AddWithValue("@ActiveOnly", activeOnly), SecurityMappers.MapThreat, cancellationToken);
     }
 
     public async Task<ThreatDetection?> GetThreatByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            SELECT TOP (1) Id, ScanJobId, Name, Category, Severity, Source, Resource, Description, EngineName, IsQuarantined, QuarantinePath, EvidenceJson, DetectedAt
-            FROM ThreatDetections
-            WHERE Id = @Id;
-            """;
-
+        var sql = $"SELECT TOP (1) {ThreatColumns} FROM ThreatDetections WHERE Id = @Id;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Id", id);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
-        {
-            return null;
-        }
-
-        return new ThreatDetection
-        {
-            Id = reader.GetInt32(0),
-            ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-            Name = reader.GetString(2),
-            Category = reader.GetString(3),
-            Severity = Enum.Parse<ThreatSeverity>(reader.GetString(4)),
-            Source = Enum.Parse<ThreatSource>(reader.GetString(5)),
-            Resource = reader.IsDBNull(6) ? null : reader.GetString(6),
-            Description = reader.IsDBNull(7) ? null : reader.GetString(7),
-            EngineName = reader.IsDBNull(8) ? null : reader.GetString(8),
-            IsQuarantined = reader.GetBoolean(9),
-            QuarantinePath = reader.IsDBNull(10) ? null : reader.GetString(10),
-            EvidenceJson = reader.IsDBNull(11) ? null : reader.GetString(11),
-            DetectedAt = reader.GetDateTimeOffset(12)
-        };
+        return await connection.QuerySingleOrDefaultAsync(sql, p => p.AddWithValue("@Id", id), SecurityMappers.MapThreat, cancellationToken);
     }
 
     public async Task MarkThreatQuarantinedAsync(int id, string? quarantinePath, CancellationToken cancellationToken = default)
     {
-        const string sql = """
-            UPDATE ThreatDetections
-            SET IsQuarantined = 1,
-                QuarantinePath = @QuarantinePath
-            WHERE Id = @Id;
-            """;
-
+        const string sql = "UPDATE ThreatDetections SET IsQuarantined = 1, QuarantinePath = @QuarantinePath WHERE Id = @Id;";
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Id", id);
-        command.Parameters.AddWithValue("@QuarantinePath", (object?)quarantinePath ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await connection.ExecuteNonQueryAsync(sql, p =>
+        {
+            p.AddWithValue("@Id", id);
+            p.AddNullable("@QuarantinePath", quarantinePath);
+        }, cancellationToken);
     }
 
     public async Task<ScanReportExport> CreateScanReportExportAsync(ScanReportExport export, CancellationToken cancellationToken = default)
     {
         const string sql = """
-            INSERT INTO ScanReportExports
-            (
-                ScanJobId,
-                FileName,
-                Format,
-                ExportedBy,
-                VulnerabilityCount,
-                ExportedAt
-            )
+            INSERT INTO ScanReportExports (ScanJobId, FileName, Format, ExportedBy, VulnerabilityCount, ExportedAt)
             OUTPUT INSERTED.Id, INSERTED.ScanJobId, INSERTED.FileName, INSERTED.Format, INSERTED.ExportedBy, INSERTED.VulnerabilityCount, INSERTED.ExportedAt
-            VALUES
-            (
-                @ScanJobId,
-                @FileName,
-                @Format,
-                @ExportedBy,
-                @VulnerabilityCount,
-                @ExportedAt
-            );
+            VALUES (@ScanJobId, @FileName, @Format, @ExportedBy, @VulnerabilityCount, @ExportedAt);
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ScanJobId", export.ScanJobId.HasValue ? export.ScanJobId.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@FileName", export.FileName);
-        command.Parameters.AddWithValue("@Format", export.Format);
-        command.Parameters.AddWithValue("@ExportedBy", export.ExportedBy);
-        command.Parameters.AddWithValue("@VulnerabilityCount", export.VulnerabilityCount);
-        command.Parameters.AddWithValue("@ExportedAt", export.ExportedAt);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        await reader.ReadAsync(cancellationToken);
-
-        return new ScanReportExport
+        return (await connection.QuerySingleOrDefaultAsync(sql, p =>
         {
-            Id = reader.GetInt32(0),
-            ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-            FileName = reader.GetString(2),
-            Format = reader.GetString(3),
-            ExportedBy = reader.GetString(4),
-            VulnerabilityCount = reader.GetInt32(5),
-            ExportedAt = reader.GetDateTimeOffset(6)
-        };
+            p.AddNullable("@ScanJobId", export.ScanJobId);
+            p.AddWithValue("@FileName", export.FileName);
+            p.AddWithValue("@Format", export.Format);
+            p.AddWithValue("@ExportedBy", export.ExportedBy);
+            p.AddWithValue("@VulnerabilityCount", export.VulnerabilityCount);
+            p.AddWithValue("@ExportedAt", export.ExportedAt);
+        }, SecurityMappers.MapReportExport, cancellationToken))!;
     }
 
     public async Task<IReadOnlyCollection<ScanReportExport>> GetScanReportExportsAsync(int take, CancellationToken cancellationToken = default)
@@ -690,76 +335,34 @@ public sealed class SqlSecurityRepository : ISecurityRepository
             ORDER BY ExportedAt DESC, Id DESC;
             """;
 
-        var exports = new List<ScanReportExport>();
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@Take", take);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            exports.Add(new ScanReportExport
-            {
-                Id = reader.GetInt32(0),
-                ScanJobId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                FileName = reader.GetString(2),
-                Format = reader.GetString(3),
-                ExportedBy = reader.GetString(4),
-                VulnerabilityCount = reader.GetInt32(5),
-                ExportedAt = reader.GetDateTimeOffset(6)
-            });
-        }
-
-        return exports;
+        return await connection.QueryAsync(sql, p => p.AddWithValue("@Take", take), SecurityMappers.MapReportExport, cancellationToken);
     }
 
     public async Task SaveHealthSnapshotAsync(DeviceHealthSnapshot snapshot, CancellationToken cancellationToken = default)
     {
         const string sql = """
             INSERT INTO DeviceHealthSnapshots
-            (
-                CapturedAt,
-                AntivirusEnabled,
-                RealTimeProtectionEnabled,
-                IoavProtectionEnabled,
-                NetworkInspectionEnabled,
-                EngineServiceEnabled,
-                SignaturesOutOfDate,
-                AntivirusSignatureVersion,
-                AntivirusSignatureLastUpdated,
-                QuickScanAgeDays,
-                FullScanAgeDays
-            )
+            (CapturedAt, AntivirusEnabled, RealTimeProtectionEnabled, IoavProtectionEnabled, NetworkInspectionEnabled, EngineServiceEnabled, SignaturesOutOfDate, AntivirusSignatureVersion, AntivirusSignatureLastUpdated, QuickScanAgeDays, FullScanAgeDays)
             VALUES
-            (
-                @CapturedAt,
-                @AntivirusEnabled,
-                @RealTimeProtectionEnabled,
-                @IoavProtectionEnabled,
-                @NetworkInspectionEnabled,
-                @EngineServiceEnabled,
-                @SignaturesOutOfDate,
-                @AntivirusSignatureVersion,
-                @AntivirusSignatureLastUpdated,
-                @QuickScanAgeDays,
-                @FullScanAgeDays
-            );
+            (@CapturedAt, @AntivirusEnabled, @RealTimeProtectionEnabled, @IoavProtectionEnabled, @NetworkInspectionEnabled, @EngineServiceEnabled, @SignaturesOutOfDate, @AntivirusSignatureVersion, @AntivirusSignatureLastUpdated, @QuickScanAgeDays, @FullScanAgeDays);
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@CapturedAt", snapshot.CapturedAt);
-        command.Parameters.AddWithValue("@AntivirusEnabled", snapshot.AntivirusEnabled);
-        command.Parameters.AddWithValue("@RealTimeProtectionEnabled", snapshot.RealTimeProtectionEnabled);
-        command.Parameters.AddWithValue("@IoavProtectionEnabled", snapshot.IoavProtectionEnabled);
-        command.Parameters.AddWithValue("@NetworkInspectionEnabled", snapshot.NetworkInspectionEnabled);
-        command.Parameters.AddWithValue("@EngineServiceEnabled", snapshot.EngineServiceEnabled);
-        command.Parameters.AddWithValue("@SignaturesOutOfDate", snapshot.SignaturesOutOfDate);
-        command.Parameters.AddWithValue("@AntivirusSignatureVersion", (object?)snapshot.AntivirusSignatureVersion ?? DBNull.Value);
-        command.Parameters.AddWithValue("@AntivirusSignatureLastUpdated", snapshot.AntivirusSignatureLastUpdated.HasValue ? snapshot.AntivirusSignatureLastUpdated.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@QuickScanAgeDays", snapshot.QuickScanAgeDays.HasValue ? snapshot.QuickScanAgeDays.Value : DBNull.Value);
-        command.Parameters.AddWithValue("@FullScanAgeDays", snapshot.FullScanAgeDays.HasValue ? snapshot.FullScanAgeDays.Value : DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await connection.ExecuteNonQueryAsync(sql, p =>
+        {
+            p.AddWithValue("@CapturedAt", snapshot.CapturedAt);
+            p.AddWithValue("@AntivirusEnabled", snapshot.AntivirusEnabled);
+            p.AddWithValue("@RealTimeProtectionEnabled", snapshot.RealTimeProtectionEnabled);
+            p.AddWithValue("@IoavProtectionEnabled", snapshot.IoavProtectionEnabled);
+            p.AddWithValue("@NetworkInspectionEnabled", snapshot.NetworkInspectionEnabled);
+            p.AddWithValue("@EngineServiceEnabled", snapshot.EngineServiceEnabled);
+            p.AddWithValue("@SignaturesOutOfDate", snapshot.SignaturesOutOfDate);
+            p.AddNullable("@AntivirusSignatureVersion", snapshot.AntivirusSignatureVersion);
+            p.AddNullable("@AntivirusSignatureLastUpdated", snapshot.AntivirusSignatureLastUpdated);
+            p.AddNullable("@QuickScanAgeDays", snapshot.QuickScanAgeDays);
+            p.AddNullable("@FullScanAgeDays", snapshot.FullScanAgeDays);
+        }, cancellationToken);
     }
 
     public async Task<DeviceHealthSnapshot?> GetLatestHealthSnapshotAsync(CancellationToken cancellationToken = default)
@@ -771,32 +374,24 @@ public sealed class SqlSecurityRepository : ISecurityRepository
             """;
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = new SqlCommand(sql, connection);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        if (!await reader.ReadAsync(cancellationToken))
-        {
-            return null;
-        }
-
-        return new DeviceHealthSnapshot
-        {
-            CapturedAt = reader.GetDateTimeOffset(0),
-            AntivirusEnabled = reader.GetBoolean(1),
-            RealTimeProtectionEnabled = reader.GetBoolean(2),
-            IoavProtectionEnabled = reader.GetBoolean(3),
-            NetworkInspectionEnabled = reader.GetBoolean(4),
-            EngineServiceEnabled = reader.GetBoolean(5),
-            SignaturesOutOfDate = reader.GetBoolean(6),
-            AntivirusSignatureVersion = reader.IsDBNull(7) ? null : reader.GetString(7),
-            AntivirusSignatureLastUpdated = reader.IsDBNull(8) ? null : reader.GetFieldValue<DateTimeOffset>(8),
-            QuickScanAgeDays = reader.IsDBNull(9) ? null : reader.GetInt32(9),
-            FullScanAgeDays = reader.IsDBNull(10) ? null : reader.GetInt32(10)
-        };
+        return await connection.QuerySingleOrDefaultAsync(sql, _ => { }, SecurityMappers.MapHealthSnapshot, cancellationToken);
     }
 
-    private async Task<SqlConnection> OpenConnectionAsync(CancellationToken cancellationToken)
+    public async Task<int> GetDistinctFileCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await connection.ExecuteScalarIntAsync("SELECT COUNT(DISTINCT FilePath) FROM FileSecurityEvents;", _ => { }, cancellationToken);
+    }
+
+    public async Task<int> GetDistinctThreatCountAsync(CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT COUNT(*) FROM (SELECT DISTINCT LOWER(Name) AS ThreatName, LOWER(ISNULL(Resource, '')) AS ThreatResource FROM ThreatDetections) AS UniquePairs;";
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await connection.ExecuteScalarIntAsync(sql, _ => { }, cancellationToken);
+    }
+
+    private Task<SqlConnection> OpenConnectionAsync(CancellationToken cancellationToken)
+    {
+        return _tenantRegistry.OpenTenantConnectionAsync(cancellationToken);
     }
 }

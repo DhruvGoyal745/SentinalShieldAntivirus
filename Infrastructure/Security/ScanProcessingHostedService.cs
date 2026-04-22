@@ -8,14 +8,14 @@ public sealed class ScanProcessingHostedService : BackgroundService
     private readonly IScanBackgroundQueue _scanBackgroundQueue;
     private readonly IScanCancellationRegistry _scanCancellationRegistry;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ISecurityRepository _securityRepository;
+    private readonly IScanRepository _securityRepository;
     private readonly ILogger<ScanProcessingHostedService> _logger;
 
     public ScanProcessingHostedService(
         IScanBackgroundQueue scanBackgroundQueue,
         IScanCancellationRegistry scanCancellationRegistry,
         IServiceScopeFactory scopeFactory,
-        ISecurityRepository securityRepository,
+        IScanRepository securityRepository,
         ILogger<ScanProcessingHostedService> logger)
     {
         _scanBackgroundQueue = scanBackgroundQueue;
@@ -73,19 +73,19 @@ public sealed class ScanProcessingHostedService : BackgroundService
         var recoverableScans = await _securityRepository.GetRecoverableScansAsync(stoppingToken);
         foreach (var scan in recoverableScans)
         {
-            await _securityRepository.UpdateScanStatusAsync(
-                scan.Id,
-                ScanStatus.Failed,
-                ScanStage.Failed,
-                scan.PercentComplete,
-                scan.FilesScanned,
-                scan.TotalFiles,
-                scan.CurrentTarget ?? scan.TargetPath,
-                scan.ThreatCount,
-                note,
-                scan.StartedAt ?? scan.CreatedAt,
-                DateTimeOffset.UtcNow,
-                stoppingToken);
+            await _securityRepository.UpdateScanStatusAsync(scan.Id, new ScanStatusUpdate
+            {
+                Status = ScanStatus.Failed,
+                Stage = ScanStage.Failed,
+                PercentComplete = scan.PercentComplete,
+                FilesScanned = scan.FilesScanned,
+                TotalFiles = scan.TotalFiles,
+                CurrentTarget = scan.CurrentTarget ?? scan.TargetPath,
+                ThreatCount = scan.ThreatCount,
+                Notes = note,
+                StartedAt = scan.StartedAt ?? scan.CreatedAt,
+                CompletedAt = DateTimeOffset.UtcNow
+            }, stoppingToken);
 
             _logger.LogWarning("Marked orphaned scan {ScanId} with previous status {Status} as failed during host reconciliation.", scan.Id, scan.Status);
         }

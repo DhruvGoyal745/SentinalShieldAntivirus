@@ -1,11 +1,13 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class ScansController : ControllerBase
 {
     private readonly ISecurityOrchestrator _securityOrchestrator;

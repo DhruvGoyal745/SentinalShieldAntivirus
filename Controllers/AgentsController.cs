@@ -1,20 +1,22 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/agent")]
+[Authorize]
 public sealed class AgentsController : ControllerBase
 {
     private readonly IAgentControlPlaneService _agentControlPlaneService;
-    private readonly IControlPlaneRepository _controlPlaneRepository;
+    private readonly IPolicyRepository _policyRepository;
 
-    public AgentsController(IAgentControlPlaneService agentControlPlaneService, IControlPlaneRepository controlPlaneRepository)
+    public AgentsController(IAgentControlPlaneService agentControlPlaneService, IPolicyRepository policyRepository)
     {
         _agentControlPlaneService = agentControlPlaneService;
-        _controlPlaneRepository = controlPlaneRepository;
+        _policyRepository = policyRepository;
     }
 
     [HttpPost("register")]
@@ -32,12 +34,12 @@ public sealed class AgentsController : ControllerBase
     [HttpGet("policy")]
     public async Task<ActionResult<DevicePolicyBundle>> GetPolicy(CancellationToken cancellationToken)
     {
-        return Ok(await _controlPlaneRepository.GetActivePolicyAsync(cancellationToken));
+        return Ok(await _policyRepository.GetActivePolicyAsync(cancellationToken));
     }
 
     [HttpGet("pack")]
     public async Task<ActionResult<SignaturePackManifest>> GetPack(CancellationToken cancellationToken)
     {
-        return Ok(await _controlPlaneRepository.GetCurrentSignaturePackAsync(cancellationToken));
+        return Ok(await _policyRepository.GetCurrentSignaturePackAsync(cancellationToken));
     }
 }

@@ -14,7 +14,8 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
 {
     private readonly IStaticFileScanner _staticFileScanner;
     private readonly IBehaviorMonitor _behaviorMonitor;
-    private readonly IReputationClient _reputationClient;
+    private readonly IReputationOrchestrator _reputationOrchestrator;
+    private readonly ITenantRegistry _tenantRegistry;
     private readonly ISandboxSubmissionClient _sandboxSubmissionClient;
     private readonly IRemediationCoordinator _remediationCoordinator;
     private readonly IControlPlaneRepository _controlPlaneRepository;
@@ -30,7 +31,8 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
     public ManagedEngineDaemonClient(
         IStaticFileScanner staticFileScanner,
         IBehaviorMonitor behaviorMonitor,
-        IReputationClient reputationClient,
+        IReputationOrchestrator reputationOrchestrator,
+        ITenantRegistry tenantRegistry,
         ISandboxSubmissionClient sandboxSubmissionClient,
         IRemediationCoordinator remediationCoordinator,
         IControlPlaneRepository controlPlaneRepository,
@@ -41,7 +43,8 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
     {
         _staticFileScanner = staticFileScanner;
         _behaviorMonitor = behaviorMonitor;
-        _reputationClient = reputationClient;
+        _reputationOrchestrator = reputationOrchestrator;
+        _tenantRegistry = tenantRegistry;
         _sandboxSubmissionClient = sandboxSubmissionClient;
         _remediationCoordinator = remediationCoordinator;
         _controlPlaneRepository = controlPlaneRepository;
@@ -459,7 +462,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
             SignaturePackVersion = currentPack?.Manifest.Version ?? "unloaded",
             ParserCompatibilityVersion = currentPack?.ParserCompatibilityVersion ?? _options.ParserCompatibilityVersion,
             RealtimeMonitoringEnabled = _options.RealtimeWatcherEnabled,
-            DaemonTransport = OperatingSystem.IsWindows() ? $"named-pipe:{_options.NativeEnginePipeName}" : $"unix-socket:{_options.NativeEngineSocketPath}",
+            DaemonTransport = "managed-engine",
             CapturedAt = DateTimeOffset.UtcNow
         });
     }
@@ -522,7 +525,7 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
 
         if (!string.IsNullOrWhiteSpace(hash))
         {
-            var reputationDetection = await _reputationClient.EvaluateAsync(file, hash, cancellationToken);
+            var reputationDetection = await EvaluateReputationAsync(file, hash!, cancellationToken);
             if (reputationDetection is not null)
             {
                 allDetections.Add(reputationDetection);
@@ -660,6 +663,55 @@ public sealed class ManagedEngineDaemonClient : IEngineDaemonClient
         using var sha256 = SHA256.Create();
         var hash = await sha256.ComputeHashAsync(stream, cancellationToken);
         return Convert.ToHexString(hash);
+    }
+
+    private async Task<DetectionEventRecord?> EvaluateReputationAsync(FileInfo file, string hashSha256, CancellationToken cancellationToken)
+    {
+        var tenantKey = _tenantRegistry.GetCurrentTenantKey();
+        var request = new ReputationLookupRequest
+        {
+            TenantKey = tenantKey,
+            LookupType = ReputationLookupType.Sha256,
+            Value = hashSha256,
+            RequestedBy = "engine-daemon",
+            CorrelationId = file.Name,
+            AllowCloud = true
+        };
+        ReputationLookupResult result;
+        try
+        {
+            result = await _reputationOrchestrator.EvaluateAsync(request, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Reputation orchestrator failed for {File}", file.FullName);
+            return null;
+        }
+
+        if (result.AggregateVerdict != ReputationVerdict.Malicious && result.AggregateVerdict != ReputationVerdict.Suspicious)
+        {
+            return null;
+        }
+
+        var severity = result.AggregateVerdict == ReputationVerdict.Malicious
+            ? (result.AggregateConfidence >= 0.9m ? ThreatSeverity.Critical : ThreatSeverity.High)
+            : ThreatSeverity.Medium;
+
+        var providers = result.ProviderResults
+            .Where(p => p.Verdict == ReputationVerdict.Malicious || p.Verdict == ReputationVerdict.Suspicious)
+            .Select(p => $"{p.Provider}={p.Verdict}({p.Confidence:F2})")
+            .ToArray();
+        var providerSummary = providers.Length > 0 ? string.Join(", ", providers) : "local-ioc";
+
+        return new DetectionEventRecord
+        {
+            RuleId = result.LocalIocMatch is not null ? "rep-local-ioc" : "rep-cloud",
+            EngineName = "Sentinel Reputation Orchestrator",
+            Source = ThreatSource.Reputation,
+            Severity = severity,
+            Confidence = result.AggregateConfidence,
+            Summary = $"Reputation {result.AggregateVerdict} for {file.Name} via {providerSummary}"
+        };
     }
 
     private IEnumerable<string> ResolveRoots(ScanRequest request)

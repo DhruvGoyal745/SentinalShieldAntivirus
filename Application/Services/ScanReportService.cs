@@ -7,28 +7,35 @@ namespace Antivirus.Application.Services;
 
 public sealed class ScanReportService : IScanReportService
 {
-    private readonly ISecurityRepository _securityRepository;
+    private readonly IScanRepository _scanRepository;
+    private readonly IThreatRepository _threatRepository;
+    private readonly IReportExportRepository _reportExportRepository;
 
-    public ScanReportService(ISecurityRepository securityRepository)
+    public ScanReportService(
+        IScanRepository scanRepository,
+        IThreatRepository threatRepository,
+        IReportExportRepository reportExportRepository)
     {
-        _securityRepository = securityRepository;
+        _scanRepository = scanRepository;
+        _threatRepository = threatRepository;
+        _reportExportRepository = reportExportRepository;
     }
 
     public Task<IReadOnlyCollection<ScanReportExport>> GetExportsAsync(CancellationToken cancellationToken = default) =>
-        _securityRepository.GetScanReportExportsAsync(50, cancellationToken);
+        _reportExportRepository.GetScanReportExportsAsync(50, cancellationToken);
 
     public async Task<(byte[] Content, string FileName, string ContentType)> ExportAllScansAsync(string requestedBy, CancellationToken cancellationToken = default)
     {
-        var scans = await _securityRepository.GetRecentScansAsync(500, cancellationToken);
-        var threats = await _securityRepository.GetThreatsAsync(activeOnly: false, cancellationToken);
+        var scans = await _scanRepository.GetRecentScansAsync(500, cancellationToken);
+        var threats = await _threatRepository.GetThreatsAsync(activeOnly: false, cancellationToken);
         return await BuildExportAsync(null, scans, threats, requestedBy, cancellationToken);
     }
 
     public async Task<(byte[] Content, string FileName, string ContentType)> ExportScanAsync(int scanId, string requestedBy, CancellationToken cancellationToken = default)
     {
-        var scan = await _securityRepository.GetScanByIdAsync(scanId, cancellationToken)
+        var scan = await _scanRepository.GetScanByIdAsync(scanId, cancellationToken)
             ?? throw new InvalidOperationException($"Scan {scanId} was not found.");
-        var threats = (await _securityRepository.GetThreatsAsync(activeOnly: false, cancellationToken))
+        var threats = (await _threatRepository.GetThreatsAsync(activeOnly: false, cancellationToken))
             .Where(threat => threat.ScanJobId == scanId)
             .ToArray();
         return await BuildExportAsync(scanId, new[] { scan }, threats, requestedBy, cancellationToken);
@@ -46,7 +53,7 @@ public sealed class ScanReportService : IScanReportService
             : $"scan-report-all-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.xls";
         var content = Encoding.UTF8.GetBytes(BuildSpreadsheetXml(scans, threats));
 
-        await _securityRepository.CreateScanReportExportAsync(
+        await _reportExportRepository.CreateScanReportExportAsync(
             new ScanReportExport
             {
                 ScanJobId = scanId,

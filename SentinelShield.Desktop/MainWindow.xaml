@@ -6,114 +6,109 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="Sentinel Shield"
+        Icon="{x:Null}"
         Width="1460"
         Height="920"
         MinWidth="1100"
         MinHeight="720"
-        Background="#081120"
+        Background="#0f1923"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen">
-    <Grid Background="#081120">
-        <Border Margin="20"
-                CornerRadius="28"
-                Background="#0D1B33"
-                BorderBrush="#1D3557"
-                BorderThickness="1">
-            <Grid>
-                <Grid x:Name="LoadingView">
-                    <StackPanel HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                MaxWidth="560">
-                        <TextBlock Text="Sentinel Shield"
+    <Grid Background="#0f1923">
+        <Grid x:Name="LoadingView">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="560">
+                <TextBlock Text="Sentinel Shield"
+                           Foreground="#F8FAFC"
+                           FontSize="34"
+                           FontWeight="SemiBold"
+                           TextAlignment="Center" />
+                <TextBlock Text="Desktop Security Console"
+                           Margin="0,10,0,0"
+                           Foreground="#93C5FD"
+                           FontSize="16"
+                           TextAlignment="Center" />
+                <Border Margin="0,28,0,0"
+                        Padding="24"
+                        CornerRadius="20"
+                        Background="#10213F"
+                        BorderBrush="#1E3A5F"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <ProgressBar IsIndeterminate="True"
+                                     Height="10"
+                                     Foreground="#4DA3FF"
+                                     Background="#19304F" />
+                        <TextBlock x:Name="LoadingTitle"
+                                   Margin="0,18,0,0"
                                    Foreground="#F8FAFC"
-                                   FontSize="34"
+                                   FontSize="20"
                                    FontWeight="SemiBold"
-                                   TextAlignment="Center" />
-                        <TextBlock Text="Desktop Security Console"
+                                   TextAlignment="Center"
+                                   Text="Connecting to the local protection service" />
+                        <TextBlock x:Name="LoadingMessage"
                                    Margin="0,10,0,0"
-                                   Foreground="#93C5FD"
-                                   FontSize="16"
-                                   TextAlignment="Center" />
-                        <Border Margin="0,28,0,0"
-                                Padding="24"
-                                CornerRadius="20"
-                                Background="#10213F"
-                                BorderBrush="#1E3A5F"
-                                BorderThickness="1">
-                            <StackPanel>
-                                <ProgressBar IsIndeterminate="True"
-                                             Height="10"
-                                             Foreground="#4DA3FF"
-                                             Background="#19304F" />
-                                <TextBlock x:Name="LoadingTitle"
-                                           Margin="0,18,0,0"
-                                           Foreground="#F8FAFC"
-                                           FontSize="20"
-                                           FontWeight="SemiBold"
-                                           TextAlignment="Center"
-                                           Text="Connecting to the local protection service" />
-                                <TextBlock x:Name="LoadingMessage"
-                                           Margin="0,10,0,0"
-                                           Foreground="#CBD5E1"
-                                           FontSize="14"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"
-                                           Text="The dashboard will appear here as soon as Sentinel Shield is ready." />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
-                <Grid x:Name="UnavailableView" Visibility="Collapsed">
-                    <StackPanel HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                MaxWidth="620">
-                        <TextBlock Text="Dashboard unavailable"
-                                   Foreground="#F8FAFC"
-                                   FontSize="32"
-                                   FontWeight="SemiBold"
-                                   TextAlignment="Center" />
-                        <TextBlock x:Name="UnavailableMessage"
-                                   Margin="0,16,0,0"
                                    Foreground="#CBD5E1"
-                                   FontSize="15"
+                                   FontSize="14"
                                    TextAlignment="Center"
                                    TextWrapping="Wrap"
-                                   Text="Sentinel Shield could not reach the local protection service." />
-                        <TextBlock x:Name="UnavailableDetails"
-                                   Margin="0,12,0,0"
-                                   Foreground="#93A4C3"
-                                   FontSize="13"
-                                   TextAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   Text="Start the protection service, then retry. Logs are available in ProgramData for quick troubleshooting." />
-                        <StackPanel Margin="0,28,0,0"
-                                    HorizontalAlignment="Center"
-                                    Orientation="Horizontal">
-                            <Button x:Name="RetryButton"
-                                    Width="150"
-                                    Height="42"
-                                    Margin="0,0,12,0"
-                                    Click="RetryButton_OnClick"
-                                    Content="Retry"
-                                    Background="#2A74FF"
-                                    Foreground="White"
-                                    BorderBrush="#2A74FF" />
-                            <Button x:Name="OpenLogsButton"
-                                    Width="150"
-                                    Height="42"
-                                    Click="OpenLogsButton_OnClick"
-                                    Content="Open Logs"
-                                    Background="#10213F"
-                                    Foreground="#E2E8F0"
-                                    BorderBrush="#36537C" />
-                        </StackPanel>
+                                   Text="The dashboard will appear here as soon as Sentinel Shield is ready." />
                     </StackPanel>
-                </Grid>
+                </Border>
+            </StackPanel>
+        </Grid>
 
-                <Grid x:Name="DashboardViewHost" Visibility="Collapsed">
-                    <wv2:WebView2 x:Name="DashboardWebView" />
-                </Grid>
-            </Grid>
-        </Border>
+        <Grid x:Name="UnavailableView" Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="620">
+                <TextBlock Text="Dashboard unavailable"
+                           Foreground="#F8FAFC"
+                           FontSize="32"
+                           FontWeight="SemiBold"
+                           TextAlignment="Center" />
+                <TextBlock x:Name="UnavailableMessage"
+                           Margin="0,16,0,0"
+                           Foreground="#CBD5E1"
+                           FontSize="15"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Text="Sentinel Shield could not reach the local protection service." />
+                <TextBlock x:Name="UnavailableDetails"
+                           Margin="0,12,0,0"
+                           Foreground="#93A4C3"
+                           FontSize="13"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Text="Start the protection service, then retry. Logs are available in ProgramData for quick troubleshooting." />
+                <StackPanel Margin="0,28,0,0"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                    <Button x:Name="RetryButton"
+                            Width="150"
+                            Height="42"
+                            Margin="0,0,12,0"
+                            Click="RetryButton_OnClick"
+                            Content="Retry"
+                            Background="#2A74FF"
+                            Foreground="White"
+                            BorderBrush="#2A74FF" />
+                    <Button x:Name="OpenLogsButton"
+                            Width="150"
+                            Height="42"
+                            Click="OpenLogsButton_OnClick"
+                            Content="Open Logs"
+                            Background="#10213F"
+                            Foreground="#E2E8F0"
+                            BorderBrush="#36537C" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="DashboardViewHost" Visibility="Collapsed">
+            <wv2:WebView2 x:Name="DashboardWebView" Margin="0" />
+        </Grid>
     </Grid>
 </Window>

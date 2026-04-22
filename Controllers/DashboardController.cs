@@ -1,10 +1,12 @@
 using Antivirus.Application.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class DashboardController : ControllerBase
 {
     private readonly IDashboardService _dashboardService;

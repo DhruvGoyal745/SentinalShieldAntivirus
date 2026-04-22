@@ -1,11 +1,11 @@
 import { useDeferredValue, useMemo, useState } from "react";
-import { File, FileCog, FilePenLine, FilePlus2, FileX2 } from "lucide-react";
+import { File, FileCog, FilePenLine, FilePlus2, FileX2, ShieldAlert } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import ScanSelector from "../components/ScanSelector";
 import Timestamp from "../components/Timestamp";
 import { EmptyState, ErrorState, TableSkeleton } from "../components/States";
 import { useDashboardStore } from "../state/useDashboardStore";
-import { fileEventTone, formatFileSize } from "../ui/presentation";
+import { fileEventTone, formatFileSize, formatEntropy, ransomwareActionTone } from "../ui/presentation";
 
 const iconByEvent = {
   Created: FilePlus2,
@@ -18,6 +18,7 @@ export default function TelemetryPage({
   fileEvents,
   scans,
   scanProgressEvents,
+  ransomwareSignals = [],
   loading,
   error,
   onRefresh,
@@ -47,19 +48,18 @@ export default function TelemetryPage({
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Real-Time Operations"
-        title="Real-Time Telemetry"
-        description="A live file-event stream and a scan-stage timeline for fast operational review."
+        eyebrow="Monitoring"
+        title="Activity"
         lastUpdated={lastUpdated}
         actions={
           <div className="header-inline-actions">
             <ScanSelector scans={scans} label="Scan context" id="telemetry-scan-selector" />
             <label className="field field-search">
-              <span>Search telemetry</span>
+              <span>Search</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search file path, status, note, or hash"
+                placeholder="Search by file name or status"
               />
             </label>
           </div>
@@ -68,14 +68,46 @@ export default function TelemetryPage({
 
       {error ? <ErrorState message={error} onRetry={onRefresh} /> : null}
 
+      {ransomwareSignals.length > 0 ? (
+        <section className="panel">
+          <div className="section-head">
+            <h2><ShieldAlert size={18} aria-hidden="true" /> Ransomware Activity</h2>
+          </div>
+          <div className="telemetry-stream">
+            {ransomwareSignals.map((signal, index) => (
+              <article key={`ransomware-${index}`} className="telemetry-item ransomware-signal-item">
+                <div className="telemetry-summary">
+                  <div className="telemetry-path">
+                    <ShieldAlert size={18} aria-hidden="true" />
+                    <span className="font-mono" title={signal.processPath}>{signal.processPath}</span>
+                  </div>
+                  <div className="telemetry-badges">
+                    <span className={`pill pill-${ransomwareActionTone(signal.recommendedAction)}`}>
+                      {signal.recommendedAction}
+                    </span>
+                    <span className="pill pill-critical">{signal.affectedFileCount} files affected</span>
+                  </div>
+                  <div className="telemetry-meta">
+                    <span className="entropy-indicator">Entropy: {formatEntropy(signal.maxEntropyScore)}</span>
+                    <span>{signal.extensionChangeCount} ext changes</span>
+                    <Timestamp value={signal.detectedAt} />
+                  </div>
+                </div>
+                {signal.summary ? <p className="card-description">{signal.summary}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="panel">
         <div className="section-head">
-          <h2>File Security Events</h2>
+          <h2>File Activity</h2>
         </div>
         {loading ? (
           <TableSkeleton rows={6} columns={5} />
         ) : filteredFileEvents.length === 0 ? (
-          <EmptyState title="No telemetry events" description="The realtime file event stream is currently empty for this tenant." />
+          <EmptyState title="No file activity yet" description="Files will appear here as Sentinel Shield monitors your system." />
         ) : (
           <div className="telemetry-stream">
             {filteredFileEvents.map((fileEvent) => {
@@ -106,11 +138,8 @@ export default function TelemetryPage({
                       <span className={`pill pill-${fileEventTone(fileEvent.status)}`}>{fileEvent.status}</span>
                     </div>
                     <div className="telemetry-meta">
-                      <code className="font-mono" title={fileEvent.hashSha256 ?? "Hash unavailable"}>
-                        {fileEvent.hashSha256 ? `${fileEvent.hashSha256.slice(0, 12)}...` : "Pending"}
-                      </code>
                       <span>{formatFileSize(fileEvent.fileSizeBytes)}</span>
-                      {fileEvent.threatCount > 0 ? <span className="pill pill-critical">{fileEvent.threatCount}</span> : null}
+                      {fileEvent.threatCount > 0 ? <span className="pill pill-critical">{fileEvent.threatCount} threat{fileEvent.threatCount > 1 ? "s" : ""}</span> : null}
                       <Timestamp value={fileEvent.observedAt} />
                     </div>
                   </button>
@@ -159,7 +188,7 @@ export default function TelemetryPage({
           <h2>Scan Progress Timeline</h2>
         </div>
         {!scanProgressEvents?.length ? (
-          <EmptyState title="No timeline events" description="Select or start a scan to populate stage transitions and skipped-file activity." />
+          <EmptyState title="No scan progress yet" description="Start a scan to see its progress here." />
         ) : (
           <ul className="timeline-list">
             {[...scanProgressEvents].reverse().map((event, index) => (

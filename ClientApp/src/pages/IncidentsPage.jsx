@@ -20,10 +20,9 @@ export default function IncidentsPage({ incidents, scans, onResolveIncident, loa
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="Security Operations"
-        title="Security Incidents"
+        eyebrow="Security"
+        title="Alerts"
         badge={`${openCount} Open`}
-        description="Investigate, compare, and contain active incidents without leaving the analyst workflow."
         lastUpdated={lastUpdated}
         actions={<ScanSelector scans={scans} label="Scan context" id="incident-scan-selector" />}
       />
@@ -33,19 +32,18 @@ export default function IncidentsPage({ incidents, scans, onResolveIncident, loa
       {loading ? (
         <TableSkeleton rows={8} columns={7} />
       ) : filteredIncidents.length === 0 ? (
-        <EmptyState title="No incidents" description="No open or historical incidents are available for the selected scan context." />
+        <EmptyState title="No alerts" description="No security alerts to show right now." />
       ) : (
         <div className="table-shell">
           <table className="data-table incidents-table">
             <thead>
               <tr>
                 <th>Severity</th>
-                <th>Title</th>
+                <th>Alert</th>
                 <th>Source</th>
-                <th>Primary Artifact</th>
+                <th>File</th>
                 <th>Status</th>
-                <th>Confidence</th>
-                <th>Detected</th>
+                <th>When</th>
               </tr>
             </thead>
             <tbody>
@@ -60,35 +58,30 @@ export default function IncidentsPage({ incidents, scans, onResolveIncident, loa
                       <td><span className={`pill pill-${severityTone(incident.severity)}`}>{incident.severity}</span></td>
                       <td><strong>{incident.title}</strong></td>
                       <td><span className="pill pill-muted">{incident.source}</span></td>
-                      <td className="path-cell font-mono" title={incident.primaryArtifact}>{incident.primaryArtifact}</td>
+                      <td title={incident.primaryArtifact}>{incident.primaryArtifact?.split("\\").pop() ?? incident.primaryArtifact}</td>
                       <td><span className={`pill pill-${incidentStatusTone(incident.status)}`}>{incident.status}</span></td>
-                      <td>{formatConfidence(incident.confidence)}</td>
                       <td><Timestamp value={incident.updatedAt ?? incident.createdAt} /></td>
                     </tr>
                     {expanded ? (
                       <tr className="detail-row">
-                        <td colSpan="7">
+                        <td colSpan="6">
                           <div className="incident-detail-grid">
                             <div>
-                              <span>Rule ID</span>
-                              <strong className="font-mono">{incident.ruleId}</strong>
-                            </div>
-                            <div>
-                              <span>Device ID</span>
-                              <strong className="font-mono">{incident.deviceId}</strong>
+                              <span>Device</span>
+                              <strong>{incident.deviceId?.split("-agent")[0] ?? incident.deviceId}</strong>
                             </div>
                             <div className="incident-detail-span">
-                              <span>Summary</span>
+                              <span>What happened</span>
                               <p>{incident.summary}</p>
                             </div>
                             <div className="incident-detail-span">
-                              <span>Remediation notes</span>
+                              <span>What to do</span>
                               <p>
                                 {incident.status === "Resolved"
-                                  ? "The incident has already been resolved and remains available for audit review."
+                                  ? "This alert has been resolved. No action needed."
                                   : incident.status === "Contained"
-                                    ? "Containment has been applied. Validate endpoint state and review adjacent artifacts."
-                                    : "Investigate the primary artifact, validate device state, and contain if the signal is confirmed."}
+                                    ? "The threat has been contained. Check your device to make sure everything looks normal."
+                                    : "Review this alert and mark it resolved if you recognize the file, or quarantine it from the Threats page."}
                               </p>
                             </div>
                             <div className="incident-detail-actions">

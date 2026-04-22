@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   FileText,
   Home,
+  Lock,
   Search,
   Server,
   Shield
@@ -13,6 +14,7 @@ const iconByPage = {
   home: Home,
   incidents: AlertTriangle,
   detections: Search,
+  quarantine: Lock,
   telemetry: Activity,
   fleet: Server,
   governance: ClipboardCheck,

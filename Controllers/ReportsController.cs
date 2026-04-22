@@ -1,11 +1,13 @@
 using Antivirus.Application.Contracts;
 using Antivirus.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Antivirus.Controllers;
 
 [ApiController]
 [Route("api/reports")]
+[Authorize]
 public sealed class ReportsController : ControllerBase
 {
     private readonly IScanReportService _scanReportService;

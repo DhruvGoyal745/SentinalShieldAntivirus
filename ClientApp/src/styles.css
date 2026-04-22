@@ -1114,3 +1114,63 @@ code {
 .mini-progress {
   height: 8px;
 }
+
+/* ── Phase 2: Ransomware & Quarantine Enhancement ── */
+
+.badge-encrypted {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.badge-unencrypted {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.ransomware-banner {
+  border-left: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.ransomware-alert {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  margin-bottom: 8px;
+}
+
+.ransomware-alert strong {
+  color: #ef4444;
+  font-size: 0.85rem;
+}
+
+.ransomware-alert p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.ransomware-signal-item {
+  border-left: 3px solid #f59e0b;
+}
+
+.entropy-indicator {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+}
+
+.retention-countdown {
+  font-size: 0.78rem;
+  margin-left: 4px;
+}

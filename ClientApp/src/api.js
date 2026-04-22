@@ -1,6 +1,7 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
 let activeTenantKey = "sentinel-demo";
+let authToken = null;
 
 function resolveTenantKey() {
   return activeTenantKey;
@@ -10,33 +11,72 @@ export function setTenantKey(value) {
   activeTenantKey = value || "sentinel-demo";
 }
 
+async function ensureAuthenticated() {
+  if (authToken) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "admin", password: "SentinelAdmin!2026" })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      authToken = data.token;
+    }
+  } catch {
+    // auth unavailable — proceed without token
+  }
+}
+
 async function request(path, options = {}) {
+  await ensureAuthenticated();
+
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Tenant-Key": resolveTenantKey(),
+    ...(options.headers ?? {})
+  };
+
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      "X-Tenant-Key": resolveTenantKey(),
-      ...(options.headers ?? {})
-    },
+    headers,
     ...options
   });
+
+  if (response.status === 401 && authToken) {
+    authToken = null;
+    return request(path, options);
+  }
 
   if (!response.ok) {
     let message = "Request failed";
 
     try {
-      const body = await response.json();
-      if (body.detail || body.error) {
-        message = body.detail ?? body.error;
-      } else if (body.title) {
-        const validationMessages = body.errors
-          ? Object.values(body.errors).flat().filter(Boolean)
-          : [];
-        message = validationMessages.length > 0
-          ? `${body.title}: ${validationMessages.join(" ")}`
-          : body.title;
+      const text = await response.text();
+      try {
+        const body = JSON.parse(text);
+        if (body.detail || body.error) {
+          message = body.detail ?? body.error;
+        } else if (body.title) {
+          const validationMessages = body.errors
+            ? Object.values(body.errors).flat().filter(Boolean)
+            : [];
+          message = validationMessages.length > 0
+            ? `${body.title}: ${validationMessages.join(" ")}`
+            : body.title;
+        }
+      } catch {
+        message = text || message;
       }
     } catch {
-      message = await response.text();
+      // body completely unreadable — use default message
     }
 
     throw new Error(message);
@@ -50,10 +90,18 @@ async function request(path, options = {}) {
 }
 
 async function download(path) {
+  await ensureAuthenticated();
+
+  const headers = {
+    "X-Tenant-Key": resolveTenantKey()
+  };
+
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      "X-Tenant-Key": resolveTenantKey()
-    }
+    headers
   });
 
   if (!response.ok) {
@@ -135,5 +183,84 @@ export const api = {
   quarantineThreat: (id) =>
     request(`/api/threats/${id}/quarantine`, {
       method: "POST"
-    })
+    }),
+
+  // ── Phase 1: Platform Foundation ──────────────────────────────────
+  getFeatureFlags: (tenant) =>
+    request(`/api/platform/flags${tenant ? `?tenant=${encodeURIComponent(tenant)}` : ""}`),
+  setFeatureFlag: (featureKey, enabled, tenant) =>
+    request(`/api/platform/flags/${encodeURIComponent(featureKey)}?enabled=${enabled}${tenant ? `&tenant=${encodeURIComponent(tenant)}` : ""}`, {
+      method: "POST"
+    }),
+  removeFeatureFlag: (featureKey, tenant) =>
+    request(`/api/platform/flags/${encodeURIComponent(featureKey)}${tenant ? `?tenant=${encodeURIComponent(tenant)}` : ""}`, {
+      method: "DELETE"
+    }),
+  getDeepHealth: () => request("/api/health/deep"),
+
+  // ── Phase 2: Quarantine Vault ─────────────────────────────────────
+  getQuarantineItems: (status, page, pageSize) => {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (page) params.set("page", String(page));
+    if (pageSize) params.set("pageSize", String(pageSize));
+    const qs = params.toString();
+    return request(`/api/quarantine${qs ? `?${qs}` : ""}`);
+  },
+  restoreQuarantineItem: (id) =>
+    request(`/api/quarantine/${id}/restore`, {
+      method: "POST",
+      body: JSON.stringify({})
+    }),
+  purgeQuarantineItem: (id) =>
+    request(`/api/quarantine/${id}`, {
+      method: "DELETE"
+    }),
+  purgeExpiredQuarantine: () =>
+    request("/api/quarantine/purge-expired", {
+      method: "POST"
+    }),
+
+  // ── Phase 2: Ransomware Shield ────────────────────────────────────
+  getRansomwareSignals: (maxCount) =>
+    request(`/api/ransomware/signals${maxCount ? `?maxCount=${maxCount}` : ""}`),
+  getProtectedFolders: () => request("/api/ransomware/protected-folders"),
+
+  // ── Phase 3: Threat Intelligence ──────────────────────────────────
+  reputationLookup: (body) =>
+    request("/api/reputation/lookup", { method: "POST", body: JSON.stringify(body) }),
+  getReputationProviderHealth: () => request("/api/reputation/providers/health"),
+  getReputationAudit: (max = 100) => request(`/api/reputation/audit?max=${max}`),
+
+  searchIocs: (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.set(k, v);
+    });
+    const qs = q.toString();
+    return request(`/api/iocs${qs ? `?${qs}` : ""}`);
+  },
+  getIocStats: () => request("/api/iocs/stats"),
+  createIoc: (body) => request("/api/iocs", { method: "POST", body: JSON.stringify(body) }),
+  deleteIoc: (id) => request(`/api/iocs/${id}`, { method: "DELETE" }),
+
+  getThreatFeedSettings: () => request("/api/threat-feeds/settings"),
+  updateThreatFeedSettings: (body) =>
+    request("/api/threat-feeds/settings", { method: "PUT", body: JSON.stringify(body) }),
+  syncThreatFeed: (provider) =>
+    request(`/api/threat-feeds/${encodeURIComponent(provider)}/sync`, { method: "POST" }),
+  getThreatFeedRuns: (provider, max = 50) => {
+    const q = new URLSearchParams({ max });
+    if (provider) q.set("provider", provider);
+    return request(`/api/threat-feeds/runs?${q.toString()}`);
+  },
+
+  listSecrets: () => request("/api/secrets"),
+  setSecret: (provider, key, value) =>
+    request(`/api/secrets/${encodeURIComponent(provider)}/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: JSON.stringify({ value })
+    }),
+  deleteSecret: (provider, key) =>
+    request(`/api/secrets/${encodeURIComponent(provider)}/${encodeURIComponent(key)}`, { method: "DELETE" }),
 };
