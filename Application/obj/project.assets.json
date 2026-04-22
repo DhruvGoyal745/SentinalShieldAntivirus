@@ -507,7 +507,9 @@
           }
         },
         "runtime": {
-          "runtimes/win/lib/net9.0/Microsoft.Data.SqlClient.dll": {}
+          "lib/net9.0/Microsoft.Data.SqlClient.dll": {
+            "related": ".xml"
+          }
         },
         "resource": {
           "lib/net9.0/cs/Microsoft.Data.SqlClient.resources.dll": {
@@ -779,7 +781,7 @@
           }
         },
         "runtime": {
-          "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
+          "lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
             "related": ".xml"
           }
         },
@@ -1944,5 +1946,12 @@
         "#import": []
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1007",
+      "level": "Error",
+      "message": "The runtime.json specified in the project 'C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json' could not be found."
+    }
+  ]
 }

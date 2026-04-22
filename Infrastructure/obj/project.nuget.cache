@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "5p8DU+O7PA8=",
-  "success": true,
+  "dgSpecHash": "NAzHR0VVjCw=",
+  "success": false,
   "projectFilePath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Infrastructure\\Antivirus.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
@@ -26,9 +26,18 @@
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.4\\system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.4\\system.security.cryptography.protecteddata.9.0.4.nupkg.sha512",
+    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.4\\microsoft.aspnetcore.app.runtime.win-x64.10.0.4.nupkg.sha512",
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.4\\microsoft.netcore.app.runtime.win-x64.10.0.4.nupkg.sha512",
-    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.4\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.4.nupkg.sha512",
-    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.4\\microsoft.aspnetcore.app.runtime.win-x64.10.0.4.nupkg.sha512"
+    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.4\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.4.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1007",
+      "level": "Error",
+      "message": "The runtime.json specified in the project 'C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json' could not be found.",
+      "projectPath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Infrastructure\\Antivirus.Infrastructure.csproj",
+      "filePath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Infrastructure\\Antivirus.Infrastructure.csproj",
+      "targetGraphs": []
+    }
+  ]
 }

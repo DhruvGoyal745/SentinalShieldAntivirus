@@ -1,0 +1,2 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\SentinelShieldDesktop.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\desktop\SentinelShieldDesktop.exe

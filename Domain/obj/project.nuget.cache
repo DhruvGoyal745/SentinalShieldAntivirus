@@ -1,13 +1,22 @@
 {
   "version": 2,
-  "dgSpecHash": "7IvsXqP7Y8Q=",
-  "success": true,
+  "dgSpecHash": "eG9HDd0WIjA=",
+  "success": false,
   "projectFilePath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Domain\\Antivirus.Domain.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.4\\microsoft.net.illink.tasks.10.0.4.nupkg.sha512",
+    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.4\\microsoft.aspnetcore.app.runtime.win-x64.10.0.4.nupkg.sha512",
     "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.4\\microsoft.netcore.app.runtime.win-x64.10.0.4.nupkg.sha512",
-    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.4\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.4.nupkg.sha512",
-    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.4\\microsoft.aspnetcore.app.runtime.win-x64.10.0.4.nupkg.sha512"
+    "C:\\Users\\dhruvgoyal\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.4\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.4.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1007",
+      "level": "Error",
+      "message": "The runtime.json specified in the project 'C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json' could not be found.",
+      "projectPath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Domain\\Antivirus.Domain.csproj",
+      "filePath": "C:\\Users\\dhruvgoyal\\source\\repos\\Antivirus\\Antivirus\\Domain\\Antivirus.Domain.csproj",
+      "targetGraphs": []
+    }
+  ]
 }

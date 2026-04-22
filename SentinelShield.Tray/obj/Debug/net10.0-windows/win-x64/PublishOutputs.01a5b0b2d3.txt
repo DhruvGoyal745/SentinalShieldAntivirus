@@ -1,0 +1,2 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\tray\SentinelShieldTray.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\tray\SentinelShieldTray.exe

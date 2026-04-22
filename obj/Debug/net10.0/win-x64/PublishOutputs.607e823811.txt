@@ -1,0 +1,11 @@
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\NuGet.Config
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\appsettings.Development.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\appsettings.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\appsettings.Service.json
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\SentinelShieldAntivirus.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\Database\schema.sql
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\Database\shared-schema.sql
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\Antivirus.Application.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\Antivirus.Domain.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\Antivirus.Infrastructure.pdb
+C:\Users\dhruvgoyal\source\repos\Antivirus\artifacts\publish\service\SentinelShieldAntivirus.exe

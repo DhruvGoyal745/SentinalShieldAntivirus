@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SentinelShieldDesktop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a54f518bacce26fa0f171acad3041773fe1d9eae")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+829eb8d27094b50885534bf8347cfe7332651033")]
 [assembly: System.Reflection.AssemblyProductAttribute("SentinelShieldDesktop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SentinelShieldDesktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
